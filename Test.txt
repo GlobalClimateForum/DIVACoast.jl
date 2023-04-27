@@ -6,4 +6,8 @@ Helen: :P
 
 Daniel: geht doch!!
 
+<<<<<<< HEAD
 Geht es wirklich?
+=======
+Daniel: Muss gehen!!
+>>>>>>> 36622cc9e31d6baba3d61b36ec6417b5a00cea57
