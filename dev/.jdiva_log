@@ -1,0 +1,3 @@
+┌ Error: 	2023-06-27T16:13:22.651 after  2961 milliseconds from /home/lincke/Repositories/diva++/lib/diva_library_julia/dev/datatypes/hypsometric_profiles/hypsometric_profile_fixed.jl: 
+│  unequal delta: x1[6]-x1[5] = 6-4 = 2 != 1
+└ @ Main.ExtendedLogging /home/lincke/Repositories/diva++/lib/diva_library_julia/dev/logger/jdiva_logger.jl:38
