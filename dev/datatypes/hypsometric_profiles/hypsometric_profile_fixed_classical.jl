@@ -12,23 +12,26 @@ mutable struct HypsometricProfileFixedClassical
   cummulativeArea       :: Array{Float32}
   cummulativePopulation :: Array{Float32}
   cummulativeAssets     :: Array{Float32}
-  logger     :: ExtendedLogging.ExtendedLogger
 
-  function HypsometricProfileFixedClassical(w,m,x1,x2,x3,x4,logger)
+  function HypsometricProfileFixedClassical(w,x1,x2,x3,x4,logger)
     if (length(x1)!=length(x2)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x2) as length($x1) != length($x2) as $(length(x1)) != $(length(x2))") end
     if (length(x1)!=length(x3)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x3) as length($x1) != length($x3) as $(length(x1)) != $(length(x3))") end
     if (length(x1)!=length(x4)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x4) as length($x1) != length($x4) as $(length(x1)) != $(length(x4))") end
 
-    if (length(x1) < 1) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(x1) = length($x1) = $(length(x1)) < 2 which is not allowed") end
-    if (x1[1] < m) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n x1[1] = $(x1[1]) < minimum elevation m = $m which is not allowed") end
+    if (length(x1) < 2) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(x1) = length($x1) = $(length(x1)) < 2 which is not allowed") end
 
-    delta = x1[1] - m
+    delta = x1[2] - x1[1]
     for x in 2:(length(x1)) 
       if ((x1[x]-x1[x-1])!=delta) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n unequal delta: x1[$x]-x1[$(x-1)] = $(x1[x])-$(x1[x-1]) = $(x1[x]-x1[x-1]) != $delta") end
     end
 
     if (!issorted(x1)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n x1 is not sorted: $x1") end
-    new(w,m,x1[length(x1)], delta, pushfirst!(x1,m), cumsum(pushfirst!(x2,0)), cumsum(pushfirst!(x3,0)), cumsum(pushfirst!(x4,0)), logger)
+
+    if (x2[1]!=0) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n x2[1] should be zero, but is not: $x2") end
+    if (x3[1]!=0) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n x3[1] should be zero, but is not: $x3") end
+    if (x4[1]!=0) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n x4[1] should be zero, but is not: $x4") end
+
+    new(w,x1[1],x1[length(x1)], delta, pushfirst!(x1), cumsum(pushfirst!(x2)), cumsum(pushfirst!(x3)), cumsum(pushfirst!(x4)))
   end
 
 end
@@ -62,7 +65,7 @@ function sed_above(hspf :: HypsometricProfileFixedClassical, above, popfactor, a
     return 
   end
 
-  s = floor(Int, (above-hspf.minElevation) / hspf.delta) + 2
+  s = floor(Int, (above-hspf.minElevation) / hspf.delta) + 1
 
   for i in s:(length(hspf.elevation))
     hspf.cummulativePopulation[i] *= popfactor
