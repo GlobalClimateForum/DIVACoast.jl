@@ -3,22 +3,18 @@ using Logging
 
 export exposure, sed, sed_above, sed_below, remove_below, add_above, add_between
 
-mutable struct HypsometricProfileFixed
-  width        :: Float64
-  minElevation :: Float64
-  maxElevation :: Float64
-  delta        :: Float64
-  elevation  :: Array{Float64}
-  area       :: Array{Float64}
-  population :: Array{Float64}
-  assets     :: Array{Float64}
-  cummulativeArea       :: Array{Float64}
-  cummulativePopulation :: Array{Float64}
-  cummulativeAssets     :: Array{Float64}
+mutable struct HypsometricProfileFixedClassical
+  width        :: Float32
+  minElevation :: Float32
+  maxElevation :: Float32
+  delta        :: Float32
+  elevation    :: Array{Float32}
+  cummulativeArea       :: Array{Float32}
+  cummulativePopulation :: Array{Float32}
+  cummulativeAssets     :: Array{Float32}
   logger     :: ExtendedLogging.ExtendedLogger
-  #  map :: Dict{(Int64,Int64),Int64}
 
-  function HypsometricProfileFixed(w,m,x1,x2,x3,x4,logger)
+  function HypsometricProfileFixedClassical(w,m,x1,x2,x3,x4,logger)
     if (length(x1)!=length(x2)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x2) as length($x1) != length($x2) as $(length(x1)) != $(length(x2))") end
     if (length(x1)!=length(x3)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x3) as length($x1) != length($x3) as $(length(x1)) != $(length(x3))") end
     if (length(x1)!=length(x4)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x4) as length($x1) != length($x4) as $(length(x1)) != $(length(x4))") end
@@ -32,34 +28,32 @@ mutable struct HypsometricProfileFixed
     end
 
     if (!issorted(x1)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n x1 is not sorted: $x1") end
-    new(w,m,x1[length(x1)],delta,pushfirst!(x1,m),pushfirst!(x2,0),pushfirst!(x3,0),pushfirst!(x4,0), cumsum(x2), cumsum(x3), cumsum(x4), logger)
+    new(w,m,x1[length(x1)], delta, pushfirst!(x1,m), cumsum(pushfirst!(x2,0)), cumsum(pushfirst!(x3,0)), cumsum(pushfirst!(x4,0)), logger)
   end
 
 end
 
 
-function exposure(hspf :: HypsometricProfileFixed, e) 
-  if (e < hspf.minElevation) return (0,0,0) end
+function exposure(hspf :: HypsometricProfileFixedClassical, e) 
+  if (e < hspf.minElevation) return (0f0,0f0,0f0) end
   if (e > hspf.maxElevation) return (hspf.cummulativeArea[length(hspf.cummulativeArea)], hspf.cummulativePopulation[length(hspf.cummulativePopulation)], hspf.cummulativeAssets[length(hspf.cummulativeAssets)]) end
 
   i = floor(Int, (e-hspf.minElevation) / hspf.delta) + 1
   @inbounds r = (e - hspf.elevation[i]) / hspf.delta
   
-  @inbounds return ( hspf.cummulativeArea[i] + (hspf.cummulativeArea[i+1] - hspf.cummulativeArea[i])*r,
-                     hspf.cummulativePopulation[i] + (hspf.cummulativePopulation[i+1] - hspf.cummulativePopulation[i])*r,
-                     hspf.cummulativeAssets[i] + (hspf.cummulativeAssets[i+1] - hspf.cummulativeAssets[i])*r  )
+  @inbounds return ( Float32(hspf.cummulativeArea[i] + (hspf.cummulativeArea[i+1] - hspf.cummulativeArea[i])*r),
+                     Float32(hspf.cummulativePopulation[i] + (hspf.cummulativePopulation[i+1] - hspf.cummulativePopulation[i])*r),
+                     Float32(hspf.cummulativeAssets[i] + (hspf.cummulativeAssets[i+1] - hspf.cummulativeAssets[i])*r)  )
 end
 
 
-function sed(hspf, popfactor, assetfactor)
-  hspf.population *= popfactor
-  hspf.assets *= assetfactor
+function sed(hspf :: HypsometricProfileFixedClassical, popfactor, assetfactor)
   hspf.cummulativePopulation *= popfactor
   hspf.cummulativeAssets *= assetfactor
 end 
 
 
-function sed_above(hspf, above, popfactor, assetfactor)
+function sed_above(hspf :: HypsometricProfileFixedClassical, above, popfactor, assetfactor)
   if (above < hspf.minElevation) 
     sed(hspf, popfactor, assetfactor) 
     return 
@@ -68,18 +62,16 @@ function sed_above(hspf, above, popfactor, assetfactor)
     return 
   end
 
-  s = floor(Int, (above-hspf.minElevation) / hspf.delta) + 1
+  s = floor(Int, (above-hspf.minElevation) / hspf.delta) + 2
 
   for i in s:(length(hspf.elevation))
-    hspf.population[i] *= popfactor
-    hspf.assets[i] *= assetfactor
+    hspf.cummulativePopulation[i] *= popfactor
+    hspf.cummulativeAssets[i] *= assetfactor
   end
-  hspf.cummulativePopulation = cumsum(hspf.population)
-  hspf.cummulativeAssets     = cumsum(hspf.assets)
 end 
 
 
-function sed_below(hspf, below, popfactor, assetfactor)
+function sed_below(hspf :: HypsometricProfileFixedClassical, below, popfactor, assetfactor)
   if (below < hspf.minElevation) 
     return 
   end
@@ -88,30 +80,31 @@ function sed_below(hspf, below, popfactor, assetfactor)
     return 
   end
 
-  s = floor(Int, (below-hspf.minElevation) / hspf.delta) 
+  s = floor(Int, (below-hspf.minElevation) / hspf.delta) + 1
 
   for i in 1:s
-    hspf.population[i] *= popfactor
-    hspf.assets[i] *= assetfactor
+    hspf.cummulativePopulation[i] *= popfactor
+    hspf.cummulativeAssets[i] *= assetfactor
   end
-  hspf.cummulativePopulation = cumsum(hspf.population)
-  hspf.cummulativeAssets     = cumsum(hspf.assets)
+
+  for i in (s+1):length(hspf.elevation)
+    hspf.cummulativePopulation[i] += (hspf.cummulativePopulation[s] - (hspf.cummulativePopulation[s] / popfactor))
+    hspf.cummulativeAssets[i] += (hspf.cummulativeAssets[s] - (hspf.cummulativeAssets[s] / assetfactor))
+  end
 end 
 
 
-function remove_below(hspf, below)
+function remove_below(hspf :: HypsometricProfileFixedClassical, below)
   if (below < hspf.minElevation) 
-    return (0.0,0.0)
+    return (0.0f0,0.0f0)
   end
 
-  removed_pop = 0.0
-  removed_assets = 0.0
+  removed_pop = 0.0f0
+  removed_assets = 0.0f0
 
   if (below >= hspf.maxElevation) 
     removed_pop = hspf.cummulativePopulation[length(hspf.cummulativePopulation)]
     removed_assets = hspf.cummulativeAssets[length(hspf.cummulativeAssets)]
-    hspf.population = zeros(length(hspf.population))
-    hspf.assets = zeros(length(hspf.assets))
 
     hspf.cummulativePopulation = zeros(length(hspf.cummulativePopulation))
     hspf.cummulativeAssets = zeros(length(hspf.cummulativeAssets))
@@ -120,22 +113,24 @@ function remove_below(hspf, below)
 
   s = floor(Int, (below-hspf.minElevation) / hspf.delta) 
 
+  removed_pop    = hspf.cummulativePopulation[s]
+  removed_assets = hspf.cummulativeAssets[s]
+
   for i in 1:s
-    if (hspf.elevation[i]<below)
-      removed_pop += hspf.population[i] 
-      hspf.population[i] = 0.0
-      removed_assets += hspf.assets[i] 
-      hspf.assets[i] = 0.0
-    end
+    hspf.cummulativePopulation[i] = 0.0
+    hspf.cummulativeAssets[i] = 0.0
   end
-  hspf.cummulativePopulation = cumsum(hspf.population)
-  hspf.cummulativeAssets     = cumsum(hspf.assets)
+
+  for i in (s+1):length(hspf.elevation)
+    hspf.cummulativePopulation[i] -= removed_pop
+    hspf.cummulativeAssets[i] -= removed_assets
+  end
 
   return (removed_pop,removed_assets)
 end
 
 
-function add_above(hspf, above, pop, assets)
+function add_above(hspf :: HypsometricProfileFixedClassical, above, pop, assets)
   if (above > hspf.maxElevation) 
     return 
   end
@@ -144,16 +139,13 @@ function add_above(hspf, above, pop, assets)
   if (s<2) s=2 end
 
   for i in s:(length(hspf.elevation))
-    hspf.population[i] +=  pop    / (1 + length(hspf.elevation) - s)
-    hspf.assets[i]     +=  assets / (1 + length(hspf.elevation) - s)
+    hspf.cummulativePopulation[i] += ((1+i-s) *  pop    / (1 + length(hspf.elevation) - s))
+    hspf.cummulativeAssets[i]     += ((1+i-s) *  assets / (1 + length(hspf.elevation) - s))
   end  
-
-  hspf.cummulativePopulation = cumsum(hspf.population)
-  hspf.cummulativeAssets     = cumsum(hspf.assets)
 end
 
 
-function add_between(hspf, above, below, pop, assets)
+function add_between(hspf :: HypsometricProfileFixedClassical, above, below, pop, assets)
   if (above > below) 
     return 
   end
@@ -170,11 +162,13 @@ function add_between(hspf, above, below, pop, assets)
   end
 
   for i in s1:s2
-    hspf.population[i] +=  pop    / (1 + s2 - s1)
-    hspf.assets[i]     +=  assets / (1 + s2 - s1)
+    hspf.cummulativePopulation[i] += ((1+i-s1) *  pop    / (1 + s2 - s1))
+    hspf.cummulativeAssets[i]     += ((1+i-s1) *  assets / (1 + s2 - s1))
   end  
 
-  hspf.cummulativePopulation = cumsum(hspf.population)
-  hspf.cummulativeAssets     = cumsum(hspf.assets)
-end
+  for i in (s2+1):(length(hspf.elevation))
+    hspf.cummulativePopulation[i] += pop 
+    hspf.cummulativeAssets[i]     += assets
+  end  
 
+end
