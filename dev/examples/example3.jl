@@ -12,7 +12,7 @@ logger = Main.ExtendedLogging.ExtendedLogger(simple_logger,io,now())
 
 using Main.jdiva.HypsometricProfiles
 
-hp = Main.jdiva.HypsometricProfiles.HypsometricProfileFixedArray(1, [-1f0, 0f0, 1f0, 2f0, 3f0, 4f0, 5f0], [0f0 1f0 1f0 1f0 1f0 1f0 1f0; 0f0 2f2 2f0 2f0 2f0 2f0 2f0], [0f0 1f0 1f0 1f0 1f0 1f0 1f0; 0f0 4f0 4f0 4f0 4f0 4f0 4f0], [], [], logger)
+hp = Main.jdiva.HypsometricProfiles.HypsometricProfileFixedArray(1, [-1f0, 0f0, 1f0, 2f0, 3f0, 4f0, 5f0], [0f0, 1f0, 1f0, 2f0, 3f0, 2f0, 1f0], [0f0 1f0 1f0 1f0 1f0 1f0 1f0; 0f0 2f2 2f0 2f0 2f0 2f0 2f0], [0f0 1f0 1f0 1f0 1f0 1f0 1f0; 0f0 4f0 4f0 4f0 4f0 4f0 4f0], [], [], logger)
 
 
 function test(hp)
@@ -24,7 +24,7 @@ end
 
 function test(n :: Int64)
   for i in 1:n
-    global hp = Main.jdiva.HypsometricProfiles.HypsometricProfileFixedArray(1, [-1f0, 0f0, 1f0, 2f0, 3f0, 4f0, 5f0], [0f0 1f0 1f0 1f0 1f0 1f0 1f0; 0f0 2f2 2f0 2f0 2f0 2f0 2f0], [0f0 1f0 1f0 1f0 1f0 1f0 1f0; 0f0 4f0 4f0 4f0 4f0 4f0 4f0], [], [], logger)
+    global hp = Main.jdiva.HypsometricProfiles.HypsometricProfileFixedArray(1, [-1f0, 0f0, 1f0, 2f0, 3f0, 4f0, 5f0], [0f0, 1f0, 1f0, 2f0, 3f0, 2f0, 1f0], [0f0 1f0 1f0 1f0 1f0 1f0 1f0; 0f0 2f2 2f0 2f0 2f0 2f0 2f0], [0f0 1f0 1f0 1f0 1f0 1f0 1f0; 0f0 4f0 4f0 4f0 4f0 4f0 4f0], [], [], logger)
     test(hp)
   end
 end
