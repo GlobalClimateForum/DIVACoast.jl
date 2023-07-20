@@ -12,7 +12,7 @@ logger = Main.ExtendedLogging.ExtendedLogger(simple_logger,io,now())
 
 using Main.jdiva.HypsometricProfiles
 
-hp = Main.jdiva.HypsometricProfiles.HypsometricProfileClassical(1, 0, [1, 2, 3, 4, 5], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], logger)
+hp = Main.jdiva.HypsometricProfiles.HypsometricProfileFixedClassical(1, 0, [1, 2, 3, 4, 5], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], logger)
 
 println()
 println("orig:")
