@@ -11,15 +11,16 @@ mutable struct HypsometricProfileFixedArray
   maxElevation :: Float32
   delta        :: Float32
   elevation    :: Array{Float32}
-  cummulativeImmobileExposure :: Array{Float32,2}
-  cummulativeMobileExposure   :: Array{Float32,2}
-  cummulativeImmobileExposureNames :: Array{String}
-  cummulativeMobileExposureNames   :: Array{String}
+  cummulativeArea             :: Array{Float32}
+  cummulativeStaticExposure   :: Array{Float32,2}
+  cummulativeDynamicExposure  :: Array{Float32,2}
+  cummulativeStaticExposureNames  :: Array{String}
+  cummulativeDynamicExposureNames :: Array{String}
   logger     :: ExtendedLogging.ExtendedLogger
 
-  function HypsometricProfileFixedArray(w, elevations, imexp, mexp, imexp_names, mexp_names, logger)
-    if (length(elevations)!=size(imexp,2)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(elevations) != size(imexp,2) as length($elevations) != size($imexp,2) as $(length(elevations)) != $(size(imexp,2))") end
-    if (length(elevations)!=size(mexp,2))  Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(elevations) != size(mexp,2)  as length($elevations) != size($mexp,2)  as $(length(elevations)) != $(size(mexp,2))") end
+  function HypsometricProfileFixedArray(w, elevations, areas,s_exposure, d_exposure, d_exposure_names, s_exposure_names, logger)
+    if (length(elevations)!=size(d_exposure,2)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(elevations) != size(d_exposure,2) as length($elevations) != size($d_exposure,2) as $(length(elevations)) != $(size(d_exposure,2))") end
+    if (length(elevations)!=size(s_exposure,2)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(elevations) != size(s_exposure,2) as length($elevations) != size($s_exposure,2) as $(length(elevations)) != $(size(s_exposure,2))") end
 
     if (length(elevations) < 2)  Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed") end
 
@@ -29,32 +30,34 @@ mutable struct HypsometricProfileFixedArray
     end
 
     if (!issorted(elevations)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n elevations is not sorted: $elevations") end
-    if (imexp[:,1] != zeros(size(imexp,1))) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n imexp first column should be zero, but its not: $imexp") end
-    if (mexp[:,1] != zeros(size(mexp,1)))   Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n mexp first column should be zero, but its not: $mexp")   end
+    if (areas[1] != 0) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n area[1] should be zero, but its not: $areas") end
+    if (s_exposure[:,1] != zeros(size(s_exposure,1))) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n s_exposure first column should be zero, but its not: $s_exposure") end
+    if (d_exposure[:,1] != zeros(size(d_exposure,1))) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n d_exposure first column should be zero, but its not: $d_exposure") end
 
-    new(w,elevations[1],elevations[length(elevations)], delta, elevations, cumsum(imexp,dims=2), cumsum(mexp,dims=2), imexp_names, mexp_names, logger)
+    new(w,elevations[1],elevations[length(elevations)], delta, elevations, cumsum(areas), cumsum(s_exposure,dims=2), cumsum(d_exposure,dims=2), s_exposure_names, d_exposure_names, logger)
   end
 
 end
 
 
 function exposure(hspf :: HypsometricProfileFixedArray, e) 
-  if (e < hspf.minElevation) return (hspf.cummulativeImmobileExposure[:, 1], hspf.cummulativeMobileExposure[:, 1]) end
-  if (e > hspf.maxElevation) return (hspf.cummulativeImmobileExposure[:, size(hspf.cummulativeImmobileExposure,2)], hspf.cummulativeMobileExposure[:, size(hspf.cummulativeMobileExposure,2)]) end
+  if (e < hspf.minElevation) return (hspf.cummulativeArea[1], hspf.cummulativeStaticExposure[:, 1], hspf.cummulativeDynamicExposure[:, 1]) end
+  if (e > hspf.maxElevation) return (hspf.cummulativeArea[length(hspf.cummulativeArea)], hspf.cummulativeStaticExposure[:, size(hspf.cummulativeStaticExposure,2)], hspf.cummulativeDynamicExposure[:, size(hspf.cummulativeDynamicExposure,2)]) end
 
   i = floor(Int, (e-hspf.minElevation) / hspf.delta) + 1
   @inbounds r = (Float32)(e - hspf.elevation[i]) / hspf.delta
   
-  @inbounds return ( hspf.cummulativeImmobileExposure[:, i] + (hspf.cummulativeImmobileExposure[:, i+1] - hspf.cummulativeImmobileExposure[:, 1]*r),
-                     hspf.cummulativeMobileExposure[:, i] + (hspf.cummulativeMobileExposure[:, i+1] - hspf.cummulativeMobileExposure[:, 1]*r) )
+  @inbounds return ( hspf.cummulativeArea[i] + (hspf.cummulativeArea[i+1] - hspf.cummulativeArea[i]*r),
+                     hspf.cummulativeStaticExposure[:, i] + (hspf.cummulativeStaticExposure[:, i+1] - hspf.cummulativeStaticExposure[:, i]*r),
+                     hspf.cummulativeDynamicExposure[:, i] + (hspf.cummulativeDynamicExposure[:, i+1] - hspf.cummulativeDynamicExposure[:, i]*r) )
 end
 
 
 function sed(hspf :: HypsometricProfileFixedArray, factors)
-  if (size(hspf.cummulativeMobileExposure,1)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,"\n size(hspf.cummulativeMobileExposure,1)!=length(factors) as size($hspf.cummulativeMobileExposure,1)!=length($factors) as $(size(hspf.cummulativeMobileExposure,1))!=$(length(factors))") end
+  if (size(hspf.cummulativeDynamicExposure,1)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,"\n size(hspf.cummulativeDynamicExposure,1)!=length(factors) as size($hspf.cummulativeDynamicExposure,1)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,1))!=$(length(factors))") end
 
-  for i in 1:(size(hspf.cummulativeMobileExposure,1))
-    hspf.cummulativeMobileExposure[i,:] *= factors[i]
+  for i in 1:(size(hspf.cummulativeDynamicExposure,1))
+    hspf.cummulativeDynamicExposure[i,:] *= factors[i]
   end
 end 
 
@@ -68,13 +71,13 @@ function sed_above(hspf, above, factors)
     return 
   end
 
-  if (size(hspf.cummulativeMobileExposure,1)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,"\n size(hspf.cummulativeMobileExposure,1)!=length(factors) as size($hspf.cummulativeMobileExposure,1)!=length($factors) as $(size(hspf.cummulativeMobileExposure,1))!=$(length(factors))") end
+  if (size(hspf.cummulativeDynamicExposure,1)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,"\n size(hspf.cummulativeDynamicExposure,1)!=length(factors) as size($hspf.cummulativeDynamicExposure,1)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,1))!=$(length(factors))") end
 
   s = floor(Int, (above-hspf.minElevation) / hspf.delta) + 2
 
-  for i in s:(size(hspf.cummulativeMobileExposure,2))
-    for j in 1:(size(hspf.cummulativeMobileExposure,1))
-      hspf.cummulativeMobileExposure[j,i] *= factors[j]
+  for i in s:(size(hspf.cummulativeDynamicExposure,2))
+    for j in 1:(size(hspf.cummulativeDynamicExposure,1))
+      hspf.cummulativeDynamicExposure[j,i] *= factors[j]
     end
   end
 end 
@@ -89,20 +92,20 @@ function sed_below(hspf, below, factors)
     return 
   end
 
-  if (size(hspf.cummulativeMobileExposure,1)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,"\n size(hspf.cummulativeMobileExposure,1)!=length(factors) as size($hspf.cummulativeMobileExposure,1)!=length($factors) as $(size(hspf.cummulativeMobileExposure,1))!=$(length(factors))") end
+  if (size(hspf.cummulativeDynamicExposure,1)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,"\n size(hspf.cummulativeDynamicExposure,1)!=length(factors) as size($hspf.cummulativeDynamicExposure,1)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,1))!=$(length(factors))") end
 
   s = floor(Int, (below-hspf.minElevation) / hspf.delta) + 1
 
 
   for i in 1:s
-    for j in 1:(size(hspf.cummulativeMobileExposure,1))
-      hspf.cummulativeMobileExposure[j,i] *= factors[j]
+    for j in 1:(size(hspf.cummulativeDynamicExposure,1))
+      hspf.cummulativeDynamicExposure[j,i] *= factors[j]
     end
   end
 
-  for i in (s+1):(size(hspf.cummulativeMobileExposure,2))
-    for j in 1:(size(hspf.cummulativeMobileExposure,1))
-      hspf.cummulativeMobileExposure[j,i] += (hspf.cummulativeMobileExposure[j,s] - (hspf.cummulativeMobileExposure[j,s] / factors[j]))
+  for i in (s+1):(size(hspf.cummulativeDynamicExposure,2))
+    for j in 1:(size(hspf.cummulativeDynamicExposure,1))
+      hspf.cummulativeDynamicExposure[j,i] += (hspf.cummulativeDynamicExposure[j,s] - (hspf.cummulativeDynamicExposure[j,s] / factors[j]))
     end
   end
 end 
@@ -110,33 +113,33 @@ end
 
 function remove_below(hspf, below)
   if (below < hspf.minElevation) 
-    return (hspf.cummulativeMobileExposure[:, 1])
+    return (hspf.cummulativeDynamicExposure[:, 1])
   end
 
-  removed = hspf.cummulativeMobileExposure[:, 1]
+  removed = hspf.cummulativeDynamicExposure[:, 1]
 
   if (below >= hspf.maxElevation) 
-    removed = hspf.cummulativeMobileExposure[:, size(hspf.cummulativeMobileExposure,2)]
+    removed = hspf.cummulativeDynamicExposure[:, size(hspf.cummulativeDynamicExposure,2)]
 
-    for j in 1:(size(hspf.cummulativeMobileExposure,1))
-	hspf.cummulativeMobileExposure = zeros(size(hspf.cummulativeMobileExposure,1),size(hspf.cummulativeMobileExposure,2))
+    for j in 1:(size(hspf.cummulativeDynamicExposure,1))
+	hspf.cummulativeDynamicExposure = zeros(size(hspf.cummulativeDynamicExposure,1),size(hspf.cummulativeDynamicExposure,2))
     end
     return removed
   end
 
   s = floor(Int, (below-hspf.minElevation) / hspf.delta) 
 
-  removed = hspf.cummulativeMobileExposure[:, s]
+  removed = hspf.cummulativeDynamicExposure[:, s]
 
   for i in 1:s
-    for j in 1:(size(hspf.cummulativeMobileExposure,1))
-      hspf.cummulativeMobileExposure[j,i] = 0f0
+    for j in 1:(size(hspf.cummulativeDynamicExposure,1))
+      hspf.cummulativeDynamicExposure[j,i] = 0f0
     end 
   end
 
   for i in (s+1):length(hspf.elevation)
-    for j in 1:(size(hspf.cummulativeMobileExposure,1))
-      hspf.cummulativeMobileExposure[j,i] -= removed[j]
+    for j in 1:(size(hspf.cummulativeDynamicExposure,1))
+      hspf.cummulativeDynamicExposure[j,i] -= removed[j]
     end
   end
 
