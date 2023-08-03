@@ -38,8 +38,8 @@ end
 
 
 function exposure(hspf :: HypsometricProfileFixedClassical, e) 
-  if (e < hspf.minElevation) return (0f0,0f0,0f0) end
-  if (e > hspf.maxElevation) return (hspf.cummulativeArea[length(hspf.cummulativeArea)], hspf.cummulativePopulation[length(hspf.cummulativePopulation)], hspf.cummulativeAssets[length(hspf.cummulativeAssets)]) end
+  if (e <= hspf.minElevation) return (0f0,0f0,0f0) end
+  if (e >= hspf.maxElevation) return (hspf.cummulativeArea[length(hspf.cummulativeArea)], hspf.cummulativePopulation[length(hspf.cummulativePopulation)], hspf.cummulativeAssets[length(hspf.cummulativeAssets)]) end
 
   i = floor(Int, (e-hspf.minElevation) / hspf.delta) + 1
   @inbounds r = (e - hspf.elevation[i]) / hspf.delta

@@ -25,8 +25,8 @@ function initHPFixedClassical()
     return hp
 end
 
-minExposure = 1
-maxExposure = 6
+minElevation = 0.0f0
+maxElevation = 5.0f0
     
 @testset "HypsometricProfileFixedClassical" begin
     
@@ -34,24 +34,31 @@ maxExposure = 6
     #function sed() requires a hypsometric Profile and a factor for population development and asset development
     #function sed_above() requires a hypsometric Profile and an elevation, a factor for pop development and a factor for asset development
     
-    @testset "exposure() at exposure $i" for i in minExposure:maxExposure
-        hp = initHPFixedClassical()
+    hp = initHPFixedClassical()
+    @testset "exposure() at exposure $i" for i in minElevation:maxElevation
         exposure = hypProf.exposure(hp, i)
         expected = Float32.((i + 1, i + 1, i + 1))
         @test exposure == expected
     end
 
-    @testset "sed() at exposure $i" for i in minExposure:maxExposure
-        hp = initHPFixedClassical()
+    @testset "exposure() below min Elevation ($i)" for i in hp.minElevation-2:hp.minElevation
+        @test hypProf.exposure(hp, i) == Float32.((0, 0, 0))
+    end
+
+    @testset "exposure() below min Elevation ($i)" for i in hp.maxElevation:hp.maxElevation+2
+        @test hypProf.exposure(hp, i) == hypProf.exposure(hp, hp.maxElevation)
+    end
+
+    @testset "sed() at exposure $i" for i in minElevation:maxElevation
         hypProf.sed(hp, 0.5, 0.5)
         exposure = hypProf.exposure(hp, i)
-        expected = [i + 1, (i + 1) * 0.5, (i + 1) * 0.5]
+        expected = [i + 1, (i + 1) * 0.5^((i+1)-minElevation), (i + 1) * 0.5^((i+1)-minElevation)]
         expected = Float32.(expected)
         @test collect(exposure) == expected
     end
 
-     @testset "sed_above(3) at exposure $i" for i in minExposure:maxExposure
-        hp = initHPFixedClassical()
+    hp = initHPFixedClassical()
+    @testset "sed_above(3) at exposure $i" for i in minElevation:maxElevation
         hypProf.sed_above(hp, 3, 0.5, 0.5)
         expectedExp = [e < 3 ? 1 : 0.5 for e in 0:6][1:i + 1]
         expected = Float32.([i + 1, sum(expectedExp), sum(expectedExp)])
@@ -59,7 +66,7 @@ maxExposure = 6
         @test collect(exposure) == expected
      end
 
-     @testset "sed_below(3) at exposure $i" for i in minExposure:maxExposure
+     @testset "sed_below(3) at exposure $i" for i in minElevation:maxElevation
         hp = initHPFixedClassical()
         hypProf.sed_below(hp, 3, 0.5, 0.5)
         expectedExp = [e < 3 ? 0.5 : 1 for e in 0:6][1:i + 1]
@@ -68,7 +75,7 @@ maxExposure = 6
         @test collect(exposure) == expected
      end
 
-     @testset "remove_below($i)" for i in minExposure:maxExposure
+     @testset "remove_below($i)" for i in minElevation:maxElevation
         hp = initHPFixedClassical()
         hypProf.remove_below(hp, i)
 
@@ -78,7 +85,7 @@ maxExposure = 6
         @test expected == hp.cummulativeAssets == hp.cummulativePopulation
      end
 
-     @testset "add_above($i, 1, 1)" for i in minExposure:maxExposure
+     @testset "add_above($i, 1, 1)" for i in minElevation:maxElevation
         hp = initHPFixedClassical()
         expected = [e > i ? (hp.cummulativeAssets[e] + 1) : hp.cummulativeAssets[e] for e in 1:length(hp.cummulativeAssets)]
         hypProf.add_above(hp, i, 1, 1) 
