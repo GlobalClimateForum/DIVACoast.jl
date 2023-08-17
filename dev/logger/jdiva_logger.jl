@@ -11,32 +11,32 @@ struct ExtendedLogger
     starttime
 end
 
-function log(logger,command,caller,message)
+function log(logger,command,caller1,caller2,message)
     if (command==Logging.Debug) 
 	with_logger(logger.mylogger) do
-	    @debug "\t$(now()) after  $(now()-logger.starttime) from " * caller * ": " * message
+	    @debug "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message
 	end
 	flush(logger.io)
     end
 
     if (command==Logging.Info) 
 	with_logger(logger.mylogger) do
-	    @info "\t$(now()) after  $(now()-logger.starttime) from " * caller * ": " * message
+	    @info "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message
 	end
 	flush(logger.io)
     end
 
     if (command==Logging.Warn) 
 	with_logger(logger.mylogger) do
-	    @warn "\t$(now()) after  $(now()-logger.starttime) from " * caller * ": " * message
+	    @warn "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 *  ": " * message
 	end
 	flush(logger.io)
     end
 
     if (command==Logging.Error) 
 	with_logger(logger.mylogger) do
-	    @error "\t$(now()) after  $(now()-logger.starttime) from " * caller * ": " * message
-	    println("ERROR: $(now()) after  $(now()-logger.starttime) from " * caller * ": " * message)
+	    @error "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 *  ": " * message
+	    println("ERROR: $(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 *  ": " * message)
 	end
 	flush(logger.io)
 	exit() 
