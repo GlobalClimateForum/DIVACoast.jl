@@ -289,3 +289,10 @@ function private_match_factors(hspf :: HypsometricProfileFixed, factors) :: Arra
 
   return fac_array
 end 
+
+
+function private_slope(hspf :: HypsometricProfileFlex, i :: Int64) :: Float32
+  if (i<=1) return Inf end
+  if (i>size(hspf.elevation,1)) return (hspf.elevation[size(hspf.elevation,1)]-hspf.elevation[size(hspf.elevation,1)-1]) * (hspf.width/hspf.cummulativeArea[size(hspf.elevation,1)]) end
+  return (hspf.elevation[i]-hspf.elevation[i-1]) * (hspf.width/hspf.cummulativeArea[i])
+end
