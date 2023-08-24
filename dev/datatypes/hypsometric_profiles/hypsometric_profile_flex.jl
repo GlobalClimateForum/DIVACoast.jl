@@ -284,7 +284,6 @@ function damage(hspf :: HypsometricProfileFlex, wl :: Real, i1 :: Int64, i2 :: I
 
   part_exp = hspf.cummulativeStaticExposure[i2, :] - hspf.cummulativeStaticExposure[i1, :]
 # (10,20,3,8)
-
 end 
 
 
