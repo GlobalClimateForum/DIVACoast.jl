@@ -57,6 +57,21 @@ function exposure_named(hspf :: HypsometricProfileFlex, e :: Real)
 end
 
 
+function distance(hspf :: HypsometricProfileFlex, e :: Real) :: Float32
+  ind :: Int64 = searchsortedfirst(hspf.elevation, e)
+
+  if (e in hspf.elevation) 
+    return cos(asin(hspf.elevation[i]/(hspf.cummulativeArea[ind]/hspf.width)))*(hspf.cummulativeArea[ind]/hspf.width)
+  else 
+    @inbounds if (ind == 1) return 0.0f0 end
+    @inbounds if (ind >= size(hspf.elevation,1)) cos(asin(hspf.elevation[size(hspf.elevation,1)]/(hspf.cummulativeArea[size(hspf.elevation,1)]/hspf.width)))*(hspf.cummulativeArea[size(hspf.elevation,1)]/hspf.width) end
+    @inbounds r = (Float32)(e-hspf.elevation[ind-1]) / (hspf.elevation[ind]-hspf.elevation[ind-1])
+
+    @inbounds return cos(asin(hspf.elevation[ind-1] + ((hspf.elevation[ind] - hspf.elevation[ind-1])*r)/(hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1])*r)/hspf.width)))*(hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1])*r)/hspf.width)
+  end
+end
+
+
 function sed(hspf :: HypsometricProfileFlex, factors :: Array{T}) where {T <: Real}
   if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
@@ -243,6 +258,36 @@ function add_between(hspf :: HypsometricProfileFlex, above :: Real, below :: Rea
 end
 
 
+### Damage
+function damage(hspf :: HypsometricProfileFlex, wl :: Real, protection :: Real, hdds_static :: Array{T1}, hdds_dynamic :: Array{T2}) where {T1,T2 <: Real} 
+  if (wl <= protection) return (hspf.cummulativeArea[1], hspf.cummulativeStaticExposure[1,:], hspf.cummulativeDynamicExposure[1,:]) end
+
+  ind :: Int64 = searchsortedfirst(hspf.elevation, wl)
+  @inbounds if (ind == 1) return (hspf.cummulativeArea[ind], hspf.cummulativeStaticExposure[ind,:], hspf.cummulativeDynamicExposure[ind,:]) end
+
+  @inbounds r = (Float32)(wl-hspf.elevation[ind-1]) / (hspf.elevation[ind]-hspf.elevation[ind-1])
+
+  for i in 1:(ind-1)
+    dam = damage(hspf, i, i+1, protection, hdds)
+  end
+
+#  if (r==0)
+#  else
+#  end
+end 
+
+
+function damage(hspf :: HypsometricProfileFlex, wl :: Real, i1 :: Int64, i2 :: Int64, hdds_static :: Array{T1}, hdds_dynamic :: Array{T2}) where {T1,T2 <: Real} 
+  delta_el = hspf.elevation[i2] - hspf.elevation[i1]
+  factor_static = map(h -> (h * log((h+wl-hspf.elevation[i2])/(h+wl-hspf.elevation[i1])) + delta_el), hdd_static)
+  factor_dynamic = map(h -> (h * log((h+wl-hspf.elevation[i2])/(h+wl-hspf.elevation[i1])) + delta_el), hdd_dynamic)
+
+  part_exp = hspf.cummulativeStaticExposure[i2, :] - hspf.cummulativeStaticExposure[i1, :]
+# (10,20,3,8)
+
+end 
+
+
 function private_convert_strarray_to_array(sarr :: StructArray{T1}) :: Array{Float32} where{T1} 
   ret :: Array{Float32,2} = Array{Float32, 2}(undef, length(sarr), length(fieldarrays(sarr))) 
   for i in 1:size(ret,1)
@@ -285,19 +330,37 @@ end
 
 
 function private_clean_up(hspf :: HypsometricProfileFlex)
-  for i in 3:size(hspf.cummulativeDynamicExposure,1)
-    ex1 = exposure(hspf, hspf.elevation[i-1])
-    ex2 = exposure(hspf, hspf.elevation[i])
-    if ex1==ex2 
-      newarray = hspf.elevation[1:end .!= (i-1), :]
-      hpsf.elevation = newarray
-      newarray = hspf.cummulativeArea[1:end .!= (i-1), :]
-      hpsf.cummulativeArea = newarray
-      newarray = hspf.cummulativeStaticExposure[1:end .!= (i-1), :]
-      hspf.cummulativeStaticExposure = newarray
-      newarray = hspf.cummulativeDynamicExposure[1:end .!= (i-1), :]
-      hspf.cummulativeDynamicExposure = newarray
-    end
+  for i in 3:size(hspf.cummulativeDynamicExposure,1)-1
+    if private_colinear_lines(hspf,i-1,i,i+1) private_remove_line(hpsf, i) end
   end
+end
+
+
+function private_colinear_lines(hspf :: HypsometricProfileFlex, i1 :: Int64, i2 :: Int64, i3 :: Int64) :: Bool
+  ex1 = exposure(hspf, hspf.elevation[i1])
+  ex2 = exposure(hspf, hspf.elevation[i2])
+  ex3 = exposure(hspf, hspf.elevation[i3])
+  r = (hspf.elevation[i2]-hspf.elevation[i1])/(hspf.elevation[i3]-hspf.elevation[i1])
+  return isapprox(ex2[1],ex1[1]+r*(ex2[1]-ex1[1])) && isapprox(ex2[2],ex1[2]+r*(ex2[2]-ex1[2])) && isapprox(ex2[3],ex1[3]+r*(ex2[3]-ex1[3])) 
+end
+
+
+function private_remove_line(hspf :: HypsometricProfileFlex, i)
+  # probably not efficient
+  newarray = hspf.elevation[1:end .!= (i), :]
+  hpsf.elevation = newarray
+  newarray = hspf.cummulativeArea[1:end .!= (i), :]
+  hpsf.cummulativeArea = newarray
+  newarray = hspf.cummulativeStaticExposure[1:end .!= (i), :]
+  hspf.cummulativeStaticExposure = newarray
+  newarray = hspf.cummulativeDynamicExposure[1:end .!= (i), :]
+  hspf.cummulativeDynamicExposure = newarray
+end
+
+
+function private_slope(hspf :: HypsometricProfileFlex, i :: Int64) :: Float32
+  if (i<=1) return Inf end
+  if (i>size(hspf.elevation,1)) return (hspf.elevation[size(hspf.elevation,1)]-hspf.elevation[size(hspf.elevation,1)-1]) * (hspf.width/hspf.cummulativeArea[size(hspf.elevation,1)]) end
+  return (hspf.elevation[i]-hspf.elevation[i-1]) * (hspf.width/hspf.cummulativeArea[i])
 end
 
