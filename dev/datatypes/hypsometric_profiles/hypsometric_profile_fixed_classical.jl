@@ -148,7 +148,7 @@ function add_above(hspf :: HypsometricProfileFixedClassical, above, pop, assets)
 end
 
 
-function add_between(hspf :: HypsometricProfileFixedClassical, above, below, pop, assets)
+function add_between(hspf :: HypsometricProfileFixedClassical, below, above, pop, assets)
   if (above > below) 
     return 
   end

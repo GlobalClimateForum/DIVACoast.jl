@@ -85,10 +85,20 @@ maxElevation = 5.0f0
         @test expected == hp.cummulativeAssets == hp.cummulativePopulation
      end
 
-     @testset "add_above($i, 1, 1)" for i in minElevation:maxElevation
+     function expectedAddBetween(hp, from, to)
+        sliced = hp.cummulativeAssets[from:to]
+        add = 1 / length(sliced)
+        new = [e + add for e in sliced]
+        exp = cat(hp.cummulativeAssets[1:from], new, hp.cummulativeAssets[to:end], dims = 1)
+        return Float32.(exp)
+        end 
+
+     @testset "add_between(1,$i,1,1)" for i in minElevation:maxElevation
+
         hp = initHPFixedClassical()
-        expected = [e > i ? (hp.cummulativeAssets[e] + 1) : hp.cummulativeAssets[e] for e in 1:length(hp.cummulativeAssets)]
-        hypProf.add_above(hp, i, 1, 1) 
-        @test expected == hp.cummulativeAssets == hp.cummulativePopulation
+        expected = expectedAddBetween(hp, 1, i)
+        hypProf.add_between(hp, 1, i, 1, 1) 
+        @test expected == hp.cummulativeAssets
+
     end
 end
