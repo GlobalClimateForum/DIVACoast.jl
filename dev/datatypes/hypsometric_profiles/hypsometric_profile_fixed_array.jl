@@ -1,10 +1,9 @@
-using Main.ExtendedLogging
 using Logging
 using StructArrays
 
-
 export exposure, sed, sed_above, sed_below, remove_below, add_above, add_between
 
+#include("../../logger/jdiva_logger.jl")
 
 mutable struct HypsometricProfileFixed
   width        :: Float32
@@ -19,45 +18,25 @@ mutable struct HypsometricProfileFixed
 #  cummulativeDynamicSymbols  :: NTuple{N, Symbol}
   cummulativeStaticSymbols   
   cummulativeDynamicSymbols  
-  logger     :: ExtendedLogging.ExtendedLogger
-
-#=
-  function HypsometricProfileFixedArray(w::Float32, elevations::Vector{Float32}, area::Vector{Float32},s_exposure, d_exposure, d_exposure_names, s_exposure_names, logger)
-    if (length(elevations)!=size(d_exposure,2)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != size(d_exposure,2) as length($elevations) != size($d_exposure,2) as $(length(elevations)) != $(size(d_exposure,2))") end
-    if (length(elevations)!=size(s_exposure,2)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != size(s_exposure,2) as length($elevations) != size($s_exposure,2) as $(length(elevations)) != $(size(s_exposure,2))") end
-    if (length(elevations) < 2)  Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed") end
-    if (!issorted(elevations)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n elevations is not sorted: $elevations") end
-
-    delta = elevations[2] - elevations[1]
-    for x in 2:(length(elevations)) 
-      if ((elevations[x]-elevations[x-1])!=delta) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n unequal delta: elevations[$x]-elevations[$(x-1)] = $(elevations[x])-$(elevations[x-1]) = $(elevations[x]-elevations[x-1]) != $delta") end
-    end
-
-    if (area[1] != 0) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n area[1] should be zero, but its not: $area") end
-    if (s_exposure[:,1] != zeros(size(s_exposure,1))) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n s_exposure first column should be zero, but its not: $s_exposure") end
-    if (d_exposure[:,1] != zeros(size(d_exposure,1))) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $d_exposure") end
-
-    new(w,elevations[1],elevations[length(elevations)], delta, elevations, cumsum(area), cumsum(s_exposure,dims=2), cumsum(d_exposure,dims=2), s_exposure_names, d_exposure_names, logger)
-  end
-=#
+  logger     :: ExtendedLogger
 
   # Constructor
-  function HypsometricProfileFixed(w::Float32, elevations::Vector{Float32}, area::Vector{Float32}, s_exposure :: StructArray{T1}, d_exposure :: StructArray{T2}, logger :: ExtendedLogging.ExtendedLogger) where {T1,T2}
-    if (length(elevations)!=length(area))  Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))") end
-    if (length(elevations)!=size(s_exposure,1)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))") end
-    if (length(elevations)!=size(d_exposure,1))  Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))") end
-    if (length(elevations) < 2)  Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed") end
-    if (!issorted(elevations)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n elevations is not sorted: $elevations") end
+  function HypsometricProfileFixed(w::Float32, elevations::Vector{Float32}, area::Vector{Float32}, s_exposure :: StructArray{T1}, d_exposure :: StructArray{T2}, logger :: ExtendedLogger) where {T1,T2}
+    if (length(elevations)!=length(area))  log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))") end
+    if (length(elevations)!=size(s_exposure,1)) log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))") end
+    if (length(elevations)!=size(d_exposure,1))  log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))") end
+    if (length(elevations) < 2)  log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed") end
+    if (!issorted(elevations)) log(logger,Logging.Error,@__FILE__,"\n elevations is not sorted: $elevations") end
 
     delta = elevations[2] - elevations[1]
     for x in 2:(length(elevations)) 
-      if ((elevations[x]-elevations[x-1])!=delta) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n unequal delta: elevations[$x]-elevations[$(x-1)] = $(elevations[x])-$(elevations[x-1]) = $(elevations[x]-elevations[x-1]) != $delta") end
+      if ((elevations[x]-elevations[x-1])!=delta) log(logger,Logging.Error,@__FILE__,"\n unequal delta: elevations[$x]-elevations[$(x-1)] = $(elevations[x])-$(elevations[x-1]) = $(elevations[x]-elevations[x-1]) != $delta") end
     end
 
-    if (!issorted(elevations)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n elevations is not sorted: $elevations") end
-    if (area[1] != 0) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,"\n area[1] should be zero, but its not: $area") end
-    if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $s_exposure") end
-    if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...)) Main.ExtendedLogging.log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $d_exposure") end
+    if (!issorted(elevations)) log(logger,Logging.Error,@__FILE__,"\n elevations is not sorted: $elevations") end
+    if (area[1] != 0) log(logger,Logging.Error,@__FILE__,"\n area[1] should be zero, but its not: $area") end
+    if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...)) log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $s_exposure") end
+    if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...)) log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $d_exposure") end
 
     s_exposure_arrays = private_convert_strarray_to_array(s_exposure)
     d_exposure_arrays = private_convert_strarray_to_array(d_exposure)
@@ -94,7 +73,7 @@ end
 
 
 function sed(hspf :: HypsometricProfileFixed, factors :: Array{T}) where {T <: Real}
-  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
+  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
   for j in 1:(size(hspf.cummulativeDynamicExposure,2))
     hspf.cummulativeDynamicExposure[:,j] *= factors[j]
@@ -103,7 +82,7 @@ end
 
 
 function sed(hspf :: HypsometricProfileFixed, factors) 
-  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
+  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
   fac_array :: Array{Float32} = private_match_factors(hspf, factors)
   sed(hspf, fac_array)
@@ -111,7 +90,7 @@ end
 
 
 function sed_above(hspf :: HypsometricProfileFixed, above :: Real, factors :: Array{T}) where {T <: Real}
-  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
+  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
   if (above < hspf.minElevation) 
     sed(hspf, factors) 
     return 
@@ -130,7 +109,7 @@ end
 
 
 function sed_above(hspf :: HypsometricProfileFixed, above :: Real, factors)
-  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
+  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
   fac_array :: Array{Float32} = private_match_factors(hspf, factors)
   sed_above(hspf, above, fac_array)
@@ -138,7 +117,7 @@ end
 
 
 function sed_below(hspf :: HypsometricProfileFixed, below :: Real, factors :: Array{T}) where {T <: Real}
-  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
+  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
   if (below < hspf.minElevation) 
     return 
@@ -165,7 +144,7 @@ end
 
 
 function sed_below(hspf :: HypsometricProfileFixed, below, factors)
-  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
+  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
   fac_array :: Array{Float32} = private_match_factors(hspf, factors)
   sed_below(hspf, below, fac_array)
@@ -211,7 +190,7 @@ end
 
 
 function add_above(hspf :: HypsometricProfileFixed, above :: Real, values :: Array{T}) where {T <: Real}
-  if (size(hspf.cummulativeDynamicExposure,2)!=length(values)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(values) as size($hspf.cummulativeDynamicExposure,2)!=length($values) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(values))") end
+  if (size(hspf.cummulativeDynamicExposure,2)!=length(values)) log(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(values) as size($hspf.cummulativeDynamicExposure,2)!=length($values) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(values))") end
 
   if (above > hspf.maxElevation) 
     return 
@@ -275,7 +254,7 @@ end
 
 
 function private_match_factors(hspf :: HypsometricProfileFixed, factors) :: Array{Float32} 
-  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) Main.ExtendedLogging.log(hspf.logger, Logging.Error,@__FILE__,"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
+  if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) log(hspf.logger, Logging.Error,@__FILE__,"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
   fac_array :: Array{Float32} = fill(1.0f0, size(hspf.cummulativeDynamicExposure,2))
 
