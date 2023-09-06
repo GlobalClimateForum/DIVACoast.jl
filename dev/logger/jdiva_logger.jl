@@ -1,9 +1,7 @@
-module ExtendedLogging
-
-export ExtendedLogger, log
-
 using Logging
 using Dates
+
+export ExtendedLogger, log
 
 struct ExtendedLogger
     mylogger
@@ -43,4 +41,4 @@ function log(logger,command,caller1,caller2,message)
     end
 end
 
-end
+
