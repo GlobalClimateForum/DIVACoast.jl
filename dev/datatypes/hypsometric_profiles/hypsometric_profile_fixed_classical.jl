@@ -10,6 +10,16 @@ mutable struct HypsometricProfileFixedClassical
   cummulativePopulation :: Array{Float32}
   cummulativeAssets     :: Array{Float32}
 
+  @doc raw"""
+  Constructor to initialize a Hypsometric Profile.
+    Takes the following Parameter:
+      w  : the width associated with the Hypsometric Profile (e.g. the lenght of the coast segment)
+      x1 : elevation (Array with a fixed increment in elevation)
+      x2 : area (Array starting with 0)
+      x3 : Population (Array starting with 0)
+      x4 : Assets (Array starting with 0)
+      !note: all parameters have to be provided non-cumulative!
+  """
   function HypsometricProfileFixedClassical(w,x1,x2,x3,x4,logger = ExtendedLogger())
     if (length(x1)!=length(x2)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(x1) != length(x2) as length($x1) != length($x2) as $(length(x1)) != $(length(x2))") end
     if (length(x1)!=length(x3)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(x1) != length(x3) as length($x1) != length($x3) as $(length(x1)) != $(length(x3))") end
@@ -33,7 +43,11 @@ mutable struct HypsometricProfileFixedClassical
 
 end
 
-
+@doc raw"""
+exposure(e) returns the area, population, asset below an elevation e.
+The method interpolates between the defined fixed elevation increments 
+if a specific elevation was not provided in the initial elevation array.
+"""
 function exposure(hspf :: HypsometricProfileFixedClassical, e) 
   if (e <= hspf.minElevation) return (0f0,0f0,0f0) end
   if (e >= hspf.maxElevation) return (hspf.cummulativeArea[length(hspf.cummulativeArea)], hspf.cummulativePopulation[length(hspf.cummulativePopulation)], hspf.cummulativeAssets[length(hspf.cummulativeAssets)]) end
@@ -46,13 +60,20 @@ function exposure(hspf :: HypsometricProfileFixedClassical, e)
                      Float32(hspf.cummulativeAssets[i] + (hspf.cummulativeAssets[i+1] - hspf.cummulativeAssets[i])*r)  )
 end
 
-
+@doc """
+The sed(popfactor, assetfactor) applies a socio-economic development
+(a factor) to the current population and asset.
+"""
 function sed(hspf :: HypsometricProfileFixedClassical, popfactor, assetfactor)
   hspf.cummulativePopulation *= popfactor
   hspf.cummulativeAssets *= assetfactor
 end 
 
-
+@doc """
+The sed_above(above, popfactor, assetfactor) function applies a socio-economic
+development (a factor) to the current population asset above a defined
+elevation 'above'.
+"""
 function sed_above(hspf :: HypsometricProfileFixedClassical, above, popfactor, assetfactor)
   if (above < hspf.minElevation) 
     sed(hspf, popfactor, assetfactor) 
