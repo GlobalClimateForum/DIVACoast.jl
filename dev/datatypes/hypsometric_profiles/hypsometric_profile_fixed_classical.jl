@@ -1,4 +1,4 @@
-export exposure, sed, sed_above, sed_below, remove_below, add_above, add_between
+export HypsometricProfileFixedClassical, exposure, sed, sed_above, sed_below, remove_below, add_above, add_between
 
 mutable struct HypsometricProfileFixedClassical
   width        :: Float32
@@ -10,7 +10,7 @@ mutable struct HypsometricProfileFixedClassical
   cummulativePopulation :: Array{Float32}
   cummulativeAssets     :: Array{Float32}
 
-  function HypsometricProfileFixedClassical(w,x1,x2,x3,x4,logger)
+  function HypsometricProfileFixedClassical(w,x1,x2,x3,x4,logger = ExtendedLogger())
     if (length(x1)!=length(x2)) log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x2) as length($x1) != length($x2) as $(length(x1)) != $(length(x2))") end
     if (length(x1)!=length(x3)) log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x3) as length($x1) != length($x3) as $(length(x1)) != $(length(x3))") end
     if (length(x1)!=length(x4)) log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x4) as length($x1) != length($x4) as $(length(x1)) != $(length(x4))") end

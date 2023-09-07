@@ -1,6 +1,6 @@
 using StructArrays
 
-export exposure, sed, sed_above, sed_below, remove_below, add_above, add_between
+export HypsometricProfileFlex, exposure, sed, sed_above, sed_below, remove_below, add_above, add_between
 
 mutable struct HypsometricProfileFlex
   width        :: Float32
@@ -13,7 +13,7 @@ mutable struct HypsometricProfileFlex
   logger     :: ExtendedLogger
 
   # Constructor
-  function HypsometricProfileFlex(w::Float32, elevations::Vector{Float32}, area::Vector{Float32}, s_exposure :: StructArray{T1}, d_exposure :: StructArray{T2}, logger :: ExtendedLogger) where {T1,T2}
+  function HypsometricProfileFlex(w::Float32, elevations::Vector{Float32}, area::Vector{Float32}, s_exposure :: StructArray{T1}, d_exposure :: StructArray{T2}, logger :: ExtendedLogger = ExtendedLogger()) where {T1,T2}
     if (length(elevations)!=length(area))  log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))") end
     if (length(elevations)!=size(s_exposure,1)) log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))") end
     if (length(elevations)!=size(d_exposure,1))  log(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))") end

@@ -9,6 +9,11 @@ struct ExtendedLogger
     starttime
 end
 
+function ExtendedLogger() 
+  io = open(".jdiva_log", "w+")
+  ExtendedLogger(SimpleLogger(io),io,now())
+end 
+
 function log(logger,command,caller1,caller2,message)
     if (command==Logging.Debug) 
 	with_logger(logger.mylogger) do

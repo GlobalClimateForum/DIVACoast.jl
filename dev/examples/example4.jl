@@ -1,15 +1,8 @@
-include("../logger/jdiva_logger.jl")
-
-using Logging
-using Dates
-using StructArrays
-
 include("../jdiva_lib.jl")
-using Main.ExtendedLogging
 
 io = open(".jdiva_log", "w+")
 simple_logger = Logging.SimpleLogger(io)
-logger = Main.ExtendedLogging.ExtendedLogger(simple_logger,io,now())
+logger = ExtendedLogger(simple_logger,io,now())
 
 using Main.jdiva.HypsometricProfiles
 
