@@ -11,22 +11,22 @@ mutable struct HypsometricProfileFixedClassical
   cummulativeAssets     :: Array{Float32}
 
   function HypsometricProfileFixedClassical(w,x1,x2,x3,x4,logger = ExtendedLogger())
-    if (length(x1)!=length(x2)) log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x2) as length($x1) != length($x2) as $(length(x1)) != $(length(x2))") end
-    if (length(x1)!=length(x3)) log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x3) as length($x1) != length($x3) as $(length(x1)) != $(length(x3))") end
-    if (length(x1)!=length(x4)) log(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x4) as length($x1) != length($x4) as $(length(x1)) != $(length(x4))") end
+    if (length(x1)!=length(x2)) logg(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x2) as length($x1) != length($x2) as $(length(x1)) != $(length(x2))") end
+    if (length(x1)!=length(x3)) logg(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x3) as length($x1) != length($x3) as $(length(x1)) != $(length(x3))") end
+    if (length(x1)!=length(x4)) logg(logger,Logging.Error,@__FILE__,"\n length(x1) != length(x4) as length($x1) != length($x4) as $(length(x1)) != $(length(x4))") end
 
-    if (length(x1) < 2) log(logger,Logging.Error,@__FILE__,"\n length(x1) = length($x1) = $(length(x1)) < 2 which is not allowed") end
+    if (length(x1) < 2) logg(logger,Logging.Error,@__FILE__,"\n length(x1) = length($x1) = $(length(x1)) < 2 which is not allowed") end
 
     delta = x1[2] - x1[1]
     for x in 2:(length(x1)) 
-      if ((x1[x]-x1[x-1])!=delta) log(logger,Logging.Error,@__FILE__,"\n unequal delta: x1[$x]-x1[$(x-1)] = $(x1[x])-$(x1[x-1]) = $(x1[x]-x1[x-1]) != $delta") end
+      if ((x1[x]-x1[x-1])!=delta) logg(logger,Logging.Error,@__FILE__,"\n unequal delta: x1[$x]-x1[$(x-1)] = $(x1[x])-$(x1[x-1]) = $(x1[x]-x1[x-1]) != $delta") end
     end
 
-    if (!issorted(x1)) log(logger,Logging.Error,@__FILE__,"\n x1 is not sorted: $x1") end
+    if (!issorted(x1)) logg(logger,Logging.Error,@__FILE__,"\n x1 is not sorted: $x1") end
 
-    if (x2[1]!=0) log(logger,Logging.Error,@__FILE__,"\n x2[1] should be zero, but is not: $x2") end
-    if (x3[1]!=0) log(logger,Logging.Error,@__FILE__,"\n x3[1] should be zero, but is not: $x3") end
-    if (x4[1]!=0) log(logger,Logging.Error,@__FILE__,"\n x4[1] should be zero, but is not: $x4") end
+    if (x2[1]!=0) logg(logger,Logging.Error,@__FILE__,"\n x2[1] should be zero, but is not: $x2") end
+    if (x3[1]!=0) logg(logger,Logging.Error,@__FILE__,"\n x3[1] should be zero, but is not: $x3") end
+    if (x4[1]!=0) logg(logger,Logging.Error,@__FILE__,"\n x4[1] should be zero, but is not: $x4") end
 
     new(w,x1[1],x1[length(x1)], delta, pushfirst!(x1), cumsum(pushfirst!(x2)), cumsum(pushfirst!(x3)), cumsum(pushfirst!(x4)))
   end
