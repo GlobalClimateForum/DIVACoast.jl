@@ -1,7 +1,7 @@
 using Logging
 using Dates
 
-export ExtendedLogger, log
+export ExtendedLogger, logg
 
 struct ExtendedLogger
     mylogger
@@ -14,7 +14,7 @@ function ExtendedLogger()
   ExtendedLogger(SimpleLogger(io),io,now())
 end 
 
-function log(logger,command,caller1,caller2,message)
+function logg(logger,command,caller1,caller2,message)
     if (command==Logging.Debug) 
 	with_logger(logger.mylogger) do
 	    @debug "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message
