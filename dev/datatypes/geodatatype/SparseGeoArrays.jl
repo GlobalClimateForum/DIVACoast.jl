@@ -7,5 +7,6 @@ include("geoutils.jl")
 
 export SparseGeoArray
 export readGEOTiffDataComplete, saveGEOTiffDataComplete
+export readGEOTiffDataCategorised
 export nh4, nh8
-export coords, indices, AbstractStrategy, Center, UpperLeft, UpperRight, LowerLeft, LowerRight
+export coords, indices, AbstractStrategy, Center, UpperLeft, UpperRight, LowerLeft, LowerRight, crop!

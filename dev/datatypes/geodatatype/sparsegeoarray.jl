@@ -25,17 +25,6 @@ function SparseGeoArray{DT,IT}(filename :: String, band :: Integer = 1) :: Spars
   sga
 end
 
-#  function SparseGeoArray(a :: AbstractArray{DT,2}, nodatavalue :: DT, crs :: GFT.WellKnownText{GFT.CRS}) where {DT<:Real}
-#    data :: Dict{Tuple{Int32,Int32},DT} = Dict{Tuple{Int32,Int32},DT}()
-#    for i in 1:size(a,1)
-#      for j in 1:size(a,2)
-#	if (a[i,j]!=nodatavalue) data[(i,j)]=a[i,j] end
-#      end
-#    end
-#    new{DT,Int32}(data, nodatavalue, crs, Dict{String,Any}(), size(a,1), size(a,2))
-#  end
-
-
 # Behave like an Array
 Base.size(sga::SparseGeoArray) = (sga.xsize,sga.ysize)
 Base.IndexStyle(::Type{<:SparseGeoArray}) = IndexCartesian()
@@ -78,11 +67,11 @@ function Base.getindex(sga :: SparseGeoArray{DT, IT}, xrange::AbstractRange, yra
     for x in 1:sga.xsize
       if ((y in yrange) && (x in xrange))
 	v :: DT = get(sga.data, (x,y), sga.nodatavalue)
-	if (v != sga.nodatavalue) data[(x-first(yrange)+1,y-first(yrange)+1)]=sga[x,y] end
+	if (v != sga.nodatavalue) data[(x-first(xrange)+1,y-first(yrange)+1)]=sga[x,y] end
       end
     end
   end
-  x, y = first(yrange) - 1, first(xrange) - 1
+  x, y = first(xrange) - 1, first(yrange) - 1
   t = sga.f(SVector(x, y))
   l = sga.f.linear * SMatrix{2,2}([step(yrange) 0; 0 step(xrange)])
   SparseGeoArray{DT,IT}(data, sga.nodatavalue, AffineMap(l, t), sga.crs, sga.metadata, convert(IT,size(xrange,1)), convert(IT,size(yrange,1)), sga.projref, sga.circular)
@@ -102,14 +91,16 @@ function Base.getindex(sga :: SparseGeoArray{DT, IT}, indices :: Tuple{IT,IT}) :
   get(sga.data, (indices[1],indices[2]), sga.nodatavalue)
 end
 
-function Base.setindex!(sga :: SparseGeoArray{DT, IT}, v :: DT, indices::Vararg{Integer,2}) where {DT <: Real, IT <: Integer} 
+function Base.setindex!(sga :: SparseGeoArray{DT, IT}, v :: DT, indices::Vararg{IT,2}) where {DT <: Real, IT <: Integer} 
   if ((indices[1]<=0) || (indices[1]>sga.xsize) || (indices[2]<=0) || (indices[2]>sga.ysize))
     error("BoundsError: attempt to access $(sga.xsize)×$(sga.ysize) SparseGeoArray{$DT,$IT} at index [$(indices[1]), $(indices[2])]")
   end
   sga.data[(indices[1],indices[2])] = v
 end
 
-Base.setindex!(sga :: SparseGeoArray{DT, IT}, v, indices::Vararg{Integer,2}) where {DT <: Real, IT <: Integer} = setindex!(sga, convert, indices)
+Base.setindex!(sga :: SparseGeoArray{DT, IT}, v::DT, indices::Tuple{IT,IT})      where {DT <: Real, IT <: Integer} = setindex!(sga, v, indices[1], indices[2])
+Base.setindex!(sga :: SparseGeoArray{DT, IT}, v, indices::Vararg{Integer,2})      where {DT <: Real, IT <: Integer} = setindex!(sga, convert(DT,v), convert(IT,indices[1]), convert(IT,indices[2]))
+Base.setindex!(sga :: SparseGeoArray{DT, IT}, v, indices::Tuple{Integer,Integer}) where {DT <: Real, IT <: Integer} = setindex!(sga, convert(DT,v), convert(IT,indices[1]), convert(IT,indices[2]))
 
 
 function Base.show(io::IO, sga::SparseGeoArray)
@@ -118,6 +109,43 @@ function Base.show(io::IO, sga::SparseGeoArray)
   println(io, "$(join(size(sga), "x")) SparseGeoRaster implemented as $(typeof(sga.data)) with $(wkt)")
   println(io, "projref: $(sga.projref)")
   print(io, "aft: $(sga.f); nodatavalue: $(sga.nodatavalue); stored values: $(length(sga.data))")
+end
+
+
+function crop!(sga::SparseGeoArray{DT, IT}, bbox::NamedTuple{(:min_x, :min_y, :max_x, :max_y)}) where {DT <: Real, IT <: Integer}
+  for (coordinates, d) in sga.data
+    if ((coordinates[1]<bbox.min_x) || (coordinates[1]>bbox.max_x) || (coordinates[2]<bbox.min_y) || (coordinates[2]>bbox.max_y))
+      delete!(sga.data, coordinates)
+    end
+  end
+
+  data :: Dict{Tuple{IT,IT}, DT} = Dict{Tuple{IT,IT}, DT}()
+  for (coordinates, d) in sga.data
+    data[(coordinates[1]-bbox.min_x+1,coordinates[2]-bbox.min_y+1)] = d
+    delete!(sga.data, coordinates)
+  end
+  sga.data = data
+
+  t = sga.f(SVector(bbox.min_x-1, bbox.min_y-1))
+  l = sga.f.linear * SMatrix{2,2}([1 0; 0 1])
+  sga.xsize=bbox.max_x-bbox.min_x+1
+  sga.ysize=bbox.max_y-bbox.min_y+1
+  sga.f = AffineMap(l, t)
+end 
+
+
+function crop!(sga::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
+  max_x = 1
+  min_x = sga.xsize
+  max_y = 1
+  min_y = sga.ysize
+  for (coordinates, elevation) in sga.data
+    if (coordinates[1]<min_x) min_x=coordinates[1] end
+    if (coordinates[1]>max_x) max_x=coordinates[1] end
+    if (coordinates[2]<min_y) min_y=coordinates[2] end
+    if (coordinates[2]>max_y) max_y=coordinates[2] end
+  end
+  crop!(sga,(min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y))
 end
 
 
@@ -192,48 +220,3 @@ function area(sga :: SparseGeoArray, i :: I, j :: I) where {I <: Integer}
 end
 
 
-#=
-    inline double Area(size_type x1, size_type x2, size_type y1, size_type y2, float unit_factor=1) const { 
-    if (x1 > x2) { std::swap(x1,x2); }
-    if (y1 > y2) { std::swap(y1,y2); }
-
-    if (!cartesian) {
-        double lambda_diff_rad = fabs(cellRightLon(x2) - cellLeftLon(x1)) * pi_f / 180;
-        double sin_phi1 = sin(cellUpperLat(y1) * pi_f / 180);
-        double sin_phi2 = sin(cellLowerLat(y2) * pi_f / 180);
-        double rr = earth_radius_km * earth_radius_km;
-        return rr * lambda_diff_rad * fabs(sin_phi2 - sin_phi1) * unit_factor;
-    } else {
-        return (fabs(cellRightX(x2)-cellLeftX(x1)) * fabs(cellLowerY(y2)-cellUpperY(y1))) * unit_factor;
-    }
-    }
-
-    inline double Distance(size_type x1, size_type y1, size_type x2, size_type y2) const {
-    double lat1 = cellCenterLat(y1);
-    double lat2 = cellCenterLat(y2);
-    double lon1 = cellCenterLon(x1);
-    double lon2 = cellCenterLon(x2);
-
-    return (!cartesian) ? DistanceLonLat(lon1, lat1, lon2, lat2) : DistanceLonLat(x1, y1, x2, y2);
-    }
-
-    inline double DistanceLonLat(double lon1, double lat1, double lon2, double lat2) const {
-    // actually shortest distance - taking into account the border 0/360
-    // implements the haversine formula
-
-    if (!cartesian) {
-        double diff_lat_radians = (lat2-lat1) * pi_f / 180;
-        double diff_lon_radians = (fabs(lon1-lon2) > (fabs((lon1-lon2)-360))) ? ((lon2-lon1)-360) * pi_f / 180 : (lon2-lon1) * pi_f / 180;
-        double sin_diff_lat = sin(diff_lat_radians / 2);
-        double sin_diff_lon = sin(diff_lon_radians / 2);
-
-        double a = pow(sin_diff_lat, 2) + pow(sin_diff_lon, 2) * cos(lat1 * pi_f / 180) * cos(lat2 * pi_f / 180);
-        double c = 2 * atan2(sqrt(a), sqrt(1-a));
-        double dist = earth_radius_km * c;
-
-        return dist;
-    } else {
-        return sqrt(((lat2 - lat1) * (lat2 - lat1)) + ((lon2 - lon1) * (lon2 - lon1))); 
-    }
-    }
-=#

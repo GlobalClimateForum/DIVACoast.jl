@@ -35,13 +35,13 @@ end
 """Set geotransform of `SparseGeoArray` by specifying a bounding box.
 Note that this only can result in a non-rotated or skewed `GeoArray`."""
 function bbox!(sga::SparseGeoArray, bbox::NamedTuple{(:min_x, :min_y, :max_x, :max_y)})
-    ga.f = bbox_to_affine(size(ga)[1:2], bbox)
-    ga
+    sga.f = bbox_to_affine(size(sga)[1:2], bbox)
+    sga
 end
 
-crs(sga::SparseGeoArray) = ga.crs
-affine(sga::SparseGeoArray) = ga.f
-metadata(sga::SparseGeoArray) = ga.metadata
+crs(sga::SparseGeoArray) = sga.crs
+affine(sga::SparseGeoArray) = sga.f
+metadata(sga::SparseGeoArray) = sga.metadata
 
 function nh4(sga :: SparseGeoArray{DT, IT}, x :: Integer, y :: Integer) :: Array{Tuple{IT,IT}} where {DT <: Real, IT <: Integer}
   ret :: Array{Tuple{IT,IT}, 1} = []
