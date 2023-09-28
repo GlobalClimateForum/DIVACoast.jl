@@ -1,0 +1,23 @@
+include("./dev/jdiva_lib.jl")
+using .jdiva
+
+sgas = Dict{Int32, SparseGeoArray{Float32,Int32}}()
+readGEOTiffDataCategorised(sgas, "./testdata/UKIRL/UKIRL_merit_coastplain_elecz_12m.tif", "./testdata/UKIRL/UKIRL_merit_osm_gadm1_coastal_masked_filled.tif", 1, 1)
+
+using CSV
+using DataFrames
+
+df = DataFrame(CSV.File("./testdata/osm_gadm1.csv"))
+df = rename(df, 1 => :ID)
+names = Dict(df.ID .=> df.name)
+
+for (k,name) in names
+  names[k] = replace(name, " " => "_")
+end
+
+for (name,sga) in sgas 
+  filename = "UKIRL_merit_coastplain_elecz_12m_gadm_$(name)_$(names[name]).tif"
+  println(filename)
+  crop!(sga)
+  saveGEOTiffDataComplete(sga,filename)
+end
