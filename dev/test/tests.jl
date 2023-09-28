@@ -2,80 +2,49 @@
 include("../jdiva_lib.jl")
 using .jdiva
 using Test
+using StructArrays
+
 
 # Creates a random Hypsometric Profile
 function initHypsometricProfile(profileType, returnSettings = false)
 
-  if profileType == "fixedClassic"
     elevation = [i for i in 1:100]
-    area  = [1 for i in 1:99]
-    pushfirst!(area, 0)
-  
-    coastPop = [rand(20:40) for p in 1:30]
-    terraPop = [rand(10:30) for p in 1:50]
-    mountPop = [rand(1:10) for p in 1:19]
-    population = vcat(coastPop, terraPop, mountPop)
-    pushfirst!(population, 0)
-  
-    coastAst = [rand(80:100) for a in 1:30]
-    terraAst = [rand(50:80) for a in 1:50]
-    mountAst = [rand(20:100) for a in 1:19]
-    asset = vcat(coastAst, terraAst, mountAst)
-    pushfirst!(asset, 0)
+    area  = vcat([0], [1 for i in 1:99])
+    
+    population = vcat([0],[rand(20:40) for p in 1:30], [rand(10:30) for p in 1:50], [rand(1:10) for p in 1:19])
+    asset = vcat([0], [rand(80:100) for a in 1:30], [rand(50:80) for a in 1:50], [rand(20:100) for a in 1:19])
 
-    profile = HypsometricProfileFixedClassical(1, elevation, area, population, asset)
+    populationD = vcat([0], [rand(10:20) for p in 1:30], [rand(10:30) for p in 1:50],[rand(1:10) for p in 1:19])
+    assetD      = vcat([0], [rand(60:100) for a in 1:30], [rand(50:80) for a in 1:50], [rand(20:100) for a in 1:19])
+
+    width = Float32(1.0)
+    elevation = convert(Array{Float32,1}, elevation)
+    area = convert(Array{Float32,1}, area)
+
+    s_exp = StructArray{NamedTuple{(:pop, :assets0), NTuple{2, Float32}}}(
+      (pop = convert(Array{Float32, 1}, population), assets0 = convert(Array{Float32,1}, asset)))
+
+    d_exp = StructArray{NamedTuple{(:pop2, :assets1), NTuple{2, Float32}}}(
+      (pop2 = convert(Array{Float32, 1}, populationD), assets1 = convert(Array{Float32,1}, assetD)))
+
+
     settings = [1,elevation, area,population,asset]
 
-  elseif profileType == "fixedStrArray"
+    if profileType == "fixedClassic"
+      profile = HypsometricProfileFixedClassical(width, elevation, area, asset, population)
+    elseif profileType == "fixedStrArr"
+      profile = HypsometricProfileFixedStrarray(width, elevation, area, s_exp, d_exp)
+    elseif profileType == "fixedArr"
+      profile = HypsometricProfileFixed(width,elevation, area, s_exp, d_exp)
+    elseif profileType == "flex"
+      profile = HypsometricProfileFlex(width, elevation, area, s_exp, d_exp)
+    end
 
-    elevation = [i for i in 1:100]
-    area  = [1 for i in 1:99]
-    pushfirst!(area, 0)
-  
-    coastPop = [rand(20:40) for p in 1:30]
-    terraPop = [rand(10:30) for p in 1:50]
-    mountPop = [rand(1:10) for p in 1:19]
-    population = vcat(coastPop, terraPop, mountPop)
-    pushfirst!(population, 0)
-  
-    coastAst = [rand(80:100) for a in 1:30]
-    terraAst = [rand(50:80) for a in 1:50]
-    mountAst = [rand(20:100) for a in 1:19]
-    asset = vcat(coastAst, terraAst, mountAst)
-    pushfirst!(asset, 0)
-
-    profile = HypsometricProfileFixedStrarray(1, elevation, area, population, asset)
-    settings = [1,elevation, area,population,asset]
-
-  elseif profileType == "flex"
-
-    elevation = sort([rand(1:100) for i in 1:100])
-    area = [1 for i in 1:99]
-    pushfirst!(area, 0)
-
-    coastPop = [rand(20:40) for p in 1:30]
-    terraPop = [rand(10:30) for p in 1:50]
-    mountPop = [rand(1:10) for p in 1:19]
-    population = [vcat(coastPop, terraPop, mountPop)]
-    pushfirst!(population, 0)
-
-    coastAst = [rand(80:100) for a in 1:30]
-    terraAst = [rand(50:80) for a in 1:50]
-    mountAst = [rand(20:100) for a in 1:19]
-    asset = [vcat(coastAst, terraAst, mountAst)]
-
-    pushfirst!(asset, 0)
-
-    profile = HypsometricProfileFlex(1.0, elevation, area, population, asset)
-    settings = [1,elevation, area,population,asset]
-  
-  end
-
-  if returnSettings
-    return((profile, settings))
-  else
-    return(profile)
-  end
+    if returnSettings
+      return((profile, settings))
+    else
+      return(profile)
+    end
 
 end
 
@@ -83,7 +52,6 @@ function runTests(profile)
 
   hpTest, hpSettings  = initHypsometricProfile(profile, true)
 
-  @testset "DIVA Library Tests" begin
     @testset "Hypsometric Profile - $profile" begin
   
       @testset "attributes" begin
@@ -137,22 +105,14 @@ function runTests(profile)
     end
 end
 
-end
 
 
-for profile in ["fixedClassic", "fixedStrArray", "flex"]
 
-  profileInitialized = false
 
-  try 
-    hpTest, hpSettings = initHypsometricProfile(profile, true)
-    profileInitialized = true
-  catch 
-    println("Could not initialize profile")
-  end
+for profile in ["fixedClassic", "fixedStrArr", "flex"]
 
-  if profileInitialized
-    runTests(profile)
-  end 
+  println("Test Hypsometric Profile: $profile")
+
+  runTests(profile)
 
 end
