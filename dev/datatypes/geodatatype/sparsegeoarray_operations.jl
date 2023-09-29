@@ -5,7 +5,8 @@
 # (thus union does not commute, we can have union(x,y)!=union(y,x)
 # take into account different dimensions (coordinates, sizes adf transformation), we can reject sga's with different projections
 function union(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
-
+# 1. same proj. same res.?
+# 2. get x and y extent 
 end
 
 # as before, but instead of constructing a new sga store the result in place in sga1 and delete all values from sga2 after they have been processed (one by one)
