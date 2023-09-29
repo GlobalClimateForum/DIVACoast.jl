@@ -1,4 +1,4 @@
-import GeoFormatTypes as GFT
+#import GeoFormatTypes as GFT
 using GDAL
 using CoordinateTransformations
 using StaticArrays
@@ -17,13 +17,18 @@ Base.@kwdef mutable struct SparseGeoArray{DT <: Real, IT <: Integer}  # <: Abstr
   circular :: Bool = false
 end
 
+
 SparseGeoArray{DT,IT}() where {DT <: Real, IT <: Integer} = SparseGeoArray{DT,IT}(Dict{Tuple{IT,IT},DT}(), convert(DT,-Inf), geotransform_to_affine(SVector(0.0, 1.0, 0.0, 0.0, 0.0, 1.0)), GFT.WellKnownText(GFT.CRS(), ""), Dict{String, Any}(), convert(IT,0), convert(IT,0), "", false)
 
-function SparseGeoArray{DT,IT}(filename :: String, band :: Integer = 1) :: SparseGeoArray{DT,IT} where {DT <: Real, IT <: Integer}
+function SparseGeoArray{DT,IT}(filename :: String, band :: Integer = 1) where {DT <: Real, IT <: Integer} 
   sga = SparseGeoArray{DT,IT}()
   readGEOTiffDataComplete(sga,filename,band,1)
   sga
 end
+
+#SparseGeoArrayFromFile(filename, band)
+#function SparseGeoArrayFromFile(filename :: String, band :: Integer = 1) :: (SparseGeoArray{DT,IT} where {DT <: Real, IT <: Integer})
+#end
 
 # Behave like an Array
 Base.size(sga::SparseGeoArray) = (sga.xsize,sga.ysize)
@@ -163,11 +168,11 @@ struct Center <: AbstractStrategy
 end
 struct UpperLeft <: AbstractStrategy
     offset :: SVector{2}
-    UpperLeft() = new(SVector{2}(1.0,0.0))
+    UpperLeft() = new(SVector{2}(0.0,0.0))
 end
 struct UpperRight <: AbstractStrategy
     offset :: SVector{2}
-    UpperRight() = new(SVector{2}(1.0,1.0))
+    UpperRight() = new(SVector{2}(1.0,0.0))
 end
 struct LowerLeft <: AbstractStrategy
     offset :: SVector{2}
@@ -175,7 +180,7 @@ struct LowerLeft <: AbstractStrategy
 end
 struct LowerRight <: AbstractStrategy
     offset :: SVector{2}
-    LowerRight() = new(SVector{2}(0.0,0.0))
+    LowerRight() = new(SVector{2}(1.0,1.0))
 end
 
 """
@@ -187,7 +192,7 @@ Retrieve coordinates of the cell index by `p`.
 See `indices` for the inverse function.
 """
 function coords(sga::SparseGeoArray, p::SVector{2,<:Integer}, strategy::AbstractStrategy)
-    SVector{2}(sga.f(p .- strategy.offset))
+    SVector{2}(sga.f(p .- (1,1) .+ strategy.offset))
 end
 coords(sga::SparseGeoArray, p::Vector{<:Integer}, strategy::AbstractStrategy=Center()) = coords(sga, SVector{2}(p), strategy)
 coords(sga::SparseGeoArray, p::Tuple{<:Integer,<:Integer}, strategy::AbstractStrategy=Center()) = coords(sga, SVector{2}(p), strategy)
@@ -200,7 +205,7 @@ Retrieve logical indices of the cell represented by coordinates `p`.
 See `coords` for the inverse function.
 """
 function indices(sga :: SparseGeoArray{DT, IT}, p::SVector{2,<:Real}) :: Tuple{IT,IT} where {DT <: Real, IT <: Integer} 
-    Tuple(round.(Int, inv(sga.f)(p)))
+    Tuple(floor.(Int, inv(sga.f)(p)) .+ (1,1))
 end
 indices(sga::SparseGeoArray, p::AbstractVector{<:Real}) = indices(sga, SVector{2}(p))
 indices(sga::SparseGeoArray, p::Tuple{<:Real,<:Real}) = indices(sga, SVector{2}(p))

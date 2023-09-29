@@ -2,11 +2,12 @@ import GeoFormatTypes as GFT
 
 include("sparsegeoarray.jl")
 include("sparsegeoarray_operations.jl")
+include("sparsegeoarray_utils.jl")
 include("crs.jl")
 include("io.jl")
 include("geoutils.jl")
 
-export SparseGeoArray
+export SparseGeoArray, SparseGeoArrayFromFile
 export readGEOTiffDataComplete, saveGEOTiffDataComplete
 export readGEOTiffDataCategorised
 export nh4, nh8

@@ -50,6 +50,7 @@ function saveGEOTiffDataComplete(sgr :: SparseGeoArray{DT, IT}, filename :: Stri
   band = GDAL.gdalgetrasterband(dataset, 1)
 
   GDAL.gdalsetrasternodatavalue(band,sgr.nodatavalue)
+  GDAL.gdalsetprojection(dataset, sgr.projref)
   GDAL.gdalsetgeotransform(dataset, affine_to_geotransform(sgr.f))
 
   r_tiles = sgr.ysize ÷ row_chunk_size
