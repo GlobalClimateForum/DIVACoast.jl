@@ -26,9 +26,6 @@ function SparseGeoArray{DT,IT}(filename :: String, band :: Integer = 1) where {D
   sga
 end
 
-#SparseGeoArrayFromFile(filename, band)
-#function SparseGeoArrayFromFile(filename :: String, band :: Integer = 1) :: (SparseGeoArray{DT,IT} where {DT <: Real, IT <: Integer})
-#end
 
 # Behave like an Array
 Base.size(sga::SparseGeoArray) = (sga.xsize,sga.ysize)
@@ -40,6 +37,12 @@ Base.length(sga::SparseGeoArray) = length(sga.data)
 Base.parent(sga::SparseGeoArray) = Any
 Base.eltype(::Type{SparseGeoArray{DT,IT}}) where {DT,IT} = DT
 Base.show(io::IO, ::MIME"text/plain", sga::SparseGeoArray) = show(io, sga)
+
+function Base.size(sga::SparseGeoArray, i :: Integer) 
+ if i==1 return sga.xsize end
+ if i==2 return sga.ysize end
+ return 1
+end
 
 function Base.convert(::Type{SparseGeoArray{DT,IT}}, sga :: SparseGeoArray) where {DT, IT} 
   data = convert(Dict{Tuple{IT,IT}, DT}, sga.data)
@@ -213,8 +216,8 @@ indices(sga::SparseGeoArray, i :: R, j :: R, strategy::AbstractStrategy=Center()
 
 
 function area(sga :: SparseGeoArray, i :: I, j :: I) where {I <: Integer} 
-  ul = coords(sgr,i,j,UpperLeft)
-  lr = coords(sgr,i,j,LowerRight)
+  ul = coords(sga,i,j,UpperLeft())
+  lr = coords(sga,i,j,LowerRight())
   lambda_diff_rad = (lr[1] - ul[1]) * pi / 180
 
   sin_phi1 = sin(ul[2] * pi / 180)
@@ -224,4 +227,5 @@ function area(sga :: SparseGeoArray, i :: I, j :: I) where {I <: Integer}
   return rr * lambda_diff_rad * abs(sin_phi2 - sin_phi1)
 end
 
-
+area(sga :: SparseGeoArray, p::Tuple{<:Integer,<:Integer}) = area(sga, p[1], p[2])
+area(sga :: SparseGeoArray, p::Tuple{I,I}) where {I <: Integer} = area(sga, p[1], p[2])

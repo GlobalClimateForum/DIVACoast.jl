@@ -12,8 +12,6 @@ function readGEOTiffDataComplete(sgr :: SparseGeoArray{DT, IT}, filename :: Stri
   p = 0
 
   for r in 1:(r_tiles) 
-#    println("read $((r-1)*row_chunk_size) - $((r*row_chunk_size)-1)") 
-#    println("GDAL.gdalrasterio($band,GDAL.GF_Read,0,$((r-1)*row_chunk_size),$(sgr.xsize),$row_chunk_size,scanline,$(sgr.xsize),$row_chunk_size,GDAL.GDT_Float16,0,0)") 
     GDAL.gdalrasterio(band,GDAL.GF_Read,0,(r-1)*row_chunk_size,sgr.xsize,row_chunk_size,scanline,sgr.xsize,row_chunk_size,GDAL.GDT_Float32,0,0)
     private_insertData(sgr, scanline, row_chunk_size, (r-1)*row_chunk_size)
     if (((r*row_chunk_size)*100 ÷ sgr.ysize) ÷ 10)>p
@@ -23,12 +21,8 @@ function readGEOTiffDataComplete(sgr :: SparseGeoArray{DT, IT}, filename :: Stri
   end
   
   if (remaining_r != 0) 
-#    println("remaining")
-#    println("GDAL.gdalrasterio($band,GDAL.GF_Read,0,$((r_tiles)*row_chunk_size-1),$(sgr.xsize),$remaining_r,scanline,$(sgr.xsize),$remaining_r,GDAL.GDT_Float32,0,0)") 
     GDAL.gdalrasterio(band,GDAL.GF_Read,0,(r_tiles)*row_chunk_size-1,sgr.xsize,remaining_r,scanline,sgr.xsize,remaining_r,GDAL.GDT_Float32,0,0)
-#    println("insert data $(remaining_r) $((r_tiles)*row_chunk_size-1)")
     private_insertData(sgr, scanline, remaining_r, (r_tiles)*row_chunk_size-1)
-#    print("100")
   end
   println()
   GDAL.gdalclose(dataset)

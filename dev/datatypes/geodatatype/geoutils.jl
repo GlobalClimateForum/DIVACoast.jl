@@ -43,6 +43,29 @@ crs(sga::SparseGeoArray) = sga.crs
 affine(sga::SparseGeoArray) = sga.f
 metadata(sga::SparseGeoArray) = sga.metadata
 
+
+"""
+    nh4(sga :: SparseGeoArray{DT, IT}, x :: Integer, y :: Integer) :: Array{Tuple{IT,IT}}
+    nh4(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Integer,Integer}) :: Array{Tuple{IT,IT}}
+
+Compute the 4-Neighbourhood of the grid cell `x`,`y` in the SparseGeoArray `sga` and return as Array of pairs. Takes into account the boundaries of the SparseGeoArray.
+
+# Examples
+```julia-repl
+julia> nh4(sga, 1, 1)
+2-element Vector{Tuple{Int32, Int32}}:
+ (2, 1)
+ (1, 2)
+
+julia> nh4(sga, 2, 4)
+4-element Vector{Tuple{Int32, Int32}}:
+ (1, 4)
+ (3, 4)
+ (2, 3)
+ (2, 5)
+
+```
+"""
 function nh4(sga :: SparseGeoArray{DT, IT}, x :: Integer, y :: Integer) :: Array{Tuple{IT,IT}} where {DT <: Real, IT <: Integer}
   ret :: Array{Tuple{IT,IT}, 1} = []
   if ((x<1) || (x>sga.xsize)) return ret end
@@ -57,6 +80,7 @@ end
 function nh4(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Integer,Integer}) :: Array{Tuple{IT,IT}} where {DT <: Real, IT <: Integer}
   return nh4(g, p[1], p[2])
 end
+
 
 function nh8(sga :: SparseGeoArray{DT, IT}, x :: Integer, y :: Integer) :: Array{Tuple{IT,IT}} where {DT <: Real, IT <: Integer}
   ret :: Array{Tuple{IT,IT}, 1} = []

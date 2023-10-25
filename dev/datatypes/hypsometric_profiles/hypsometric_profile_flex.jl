@@ -12,7 +12,7 @@ mutable struct HypsometricProfileFlex
   cummulativeDynamicSymbols  
   logger     :: ExtendedLogger
 
-  # Constructor
+  # Constructors
   function HypsometricProfileFlex(w::Float32, elevations::Vector{Float32}, area::Vector{Float32}, s_exposure :: StructArray{T1}, d_exposure :: StructArray{T2}, logger :: ExtendedLogger = ExtendedLogger()) where {T1,T2}
     if (length(elevations)!=length(area))  logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))") end
     if (length(elevations)!=size(s_exposure,1)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))") end
@@ -27,8 +27,24 @@ mutable struct HypsometricProfileFlex
     s_exposure_arrays = private_convert_strarray_to_array(s_exposure)
     d_exposure_arrays = private_convert_strarray_to_array(d_exposure)
 
-    new(w, elevations, cumsum(area), cumsum(s_exposure_arrays,dims=1), cumsum(s_exposure_arrays,dims=1), keys(fieldarrays(s_exposure)), keys(fieldarrays(d_exposure)), logger)
+    new(w, elevations, cumsum(area), cumsum(s_exposure_arrays,dims=1), cumsum(d_exposure_arrays,dims=1), keys(fieldarrays(s_exposure)), keys(fieldarrays(d_exposure)), logger)
   end
+ 
+ function HypsometricProfileFlex(w::Float32, elevations::Vector{Float32}, area::Vector{Float32}, s_exposure :: Array{Float32,2}, d_exposure :: Array{Float32,2}, logger :: ExtendedLogger = ExtendedLogger())
+    # String(nameof(var"#self#"))
+    if (length(elevations)!=length(area))  logg(logger,Logging.Error,@__FILE__,"","\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))") end
+    if (length(elevations)!=size(s_exposure,1)) logg(logger,Logging.Error,@__FILE__,"","\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))") end
+    if (length(elevations)!=size(d_exposure,1))  logg(logger,Logging.Error,@__FILE__,"","\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))") end
+    if (length(elevations) < 2)  logg(logger,Logging.Error,@__FILE__,"","\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed") end
+    if (!issorted(elevations)) logg(logger,Logging.Error,@__FILE__,"","\n elevations is not sorted: $elevations") end
+
+    if (area[1] != 0) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n area[1] should be zero, but its not: $area") end
+    #if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $s_exposure") end
+    #if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $d_exposure") end
+
+    new(w, elevations, cumsum(area), cumsum(s_exposure,dims=1), cumsum(d_exposure,dims=1), ntuple(i ->  Symbol("dexposure_name_$i"), size(s_exposure, 2)), ntuple(i ->  Symbol("dexposure_name_$i"), size(s_exposure, 2)), logger)
+  end
+
 end
 
 
