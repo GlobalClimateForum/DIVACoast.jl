@@ -4,15 +4,67 @@
 # if a grid cell is present in both but with different values the value of sga1 should be used
 # (thus union does not commute, we can have union(x,y)!=union(y,x)
 # take into account different dimensions (coordinates, sizes adf transformation), we can reject sga's with different projections
-function union(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
-# 1. same proj. same res.?
-# 2. get x and y extent 
+
+function getExtent(sga)
+    if typeof(sga) <: AbstractArray
+        sga = [sga]
+    #sga = list of Sparse Geo Arrays
+    sgaIndexExt = sga -> [(1,1), (size(sga)[1],1), (size(sga)[1], size(sga)[2]), (1, size(sga)[2])]
+    sgaCoordExt = sga -> [coords(sga, corner) for corner in sgaIndexExt(sga)]
+    unionExtent = reduce(vcat, [sgaCoordExt(s) for s in sga])
+    xSorted = sort(unionExtent, by = first)
+    ySorted = sort(unionExtent, by = last)
+    return(
+        uppL = (xSorted[1][1], ySorted[end][2]),
+        uppR = (xSorted[end][1], ySorted[end][2]),
+        lwrL = (xSorted[1][1], ySorted[1][2]),
+        lwrR = (xSorted[end][1], ySorted[1][2])
+    )
+end
+
+function sga_union(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
+
+    union = clearData(deepcopy(sga1))
+    unionExtent = getExtent([sga1, sga2])
+    xOffset = sga -> (indices(sga, unionExtent.uppL)[1] - 1) *-1
+    yOffset = sga -> (indices(sga, unionExtent.uppL)[2] - 1) *-1
+    mapCoordinates = (sga, x, y) -> (x + xOffset(sga), y + yOffset(sga))
+    
+    unionSize = (maximum([xOffset(sga) + size(sga)[1] for sga in [sga1, sga2]]),
+    maximum([yOffset(sga) + size(sga)[2] for sga in [sga1, sga2]])) # not required but might be useful later
+
+    function translateValues(sga, union)
+        for ((x,y), value) in sga.data
+            (unionX, unionY) = mapCoordinates(sga, x, y)
+            union[unionX, unionY] = value
+        end
+        return(union)
+    end
+
+    union = translateValues(sga1, union)
+    union = translateValues(sga2, union)
+
+    return(union)
 end
 
 # as before, but instead of constructing a new sga store the result in place in sga1 and delete all values from sga2 after they have been processed (one by one)
-function union!(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
 
+function sga_union!()
+    print("test")
 end
 
+function intersect(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
+    
+    extent = [getExtent(sga) for sga in [sga1, sga2]]
 
+    left =  sort([ext.uppL for ext in extent], by = first)
+    right = sort([ext.uppR for ext in extent], by = first)
+
+    println("left: $left, right: $right")
+end
+
+#function sga_union!(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
+
+#end
 # if bored: intersect, diff, sym_diff in the same way
+end
