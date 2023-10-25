@@ -157,9 +157,14 @@ function crop!(sga::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
 end
 
 
-clearData(sgr) = empty!(sgr.data)
-function reset(sgr :: SparseGeoArray{DT,IT}) where {DT <: Real, IT <: Integer} 
-  sgr = SparseGeoArray{DT,IT}()  
+function clearData(sga::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
+  empty!(sga.data)
+  sga
+end
+
+
+function reset(sga :: SparseGeoArray{DT,IT}) where {DT <: Real, IT <: Integer} 
+  sga = SparseGeoArray{DT,IT}()  
 end
 
 
