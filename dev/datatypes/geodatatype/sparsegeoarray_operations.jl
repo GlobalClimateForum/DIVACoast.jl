@@ -28,8 +28,18 @@ function sga_union(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) :
 
     union = clearData(deepcopy(sga1))
     unionExtent = getExtent([sga1, sga2])
-    xOffset = sga -> (indices(sga, unionExtent.uppL)[1] - 1) *-1
-    yOffset = sga -> (indices(sga, unionExtent.uppL)[2] - 1) *-1
+    xOffset = sga -> (indices(sga, unionExtent.uppL)[1] - 1) * -1
+    yOffset = sga -> (indices(sga, unionExtent.uppL)[2] - 1) * -1
+
+    println(sga1.f.translation)
+    println(sga2.f.translation)
+
+    t = SVector(0.0,0.0)
+    l = union.f.linear * SMatrix{2,2}([1 0; 0 1])
+    # union.xsize = ...
+    # union.ysize = ...
+    union.f = AffineMap(l, t)
+
     mapCoordinates = (sga, x, y) -> (x + xOffset(sga), y + yOffset(sga))
     
     unionSize = (maximum([xOffset(sga) + size(sga)[1] for sga in [sga1, sga2]]),
@@ -46,7 +56,7 @@ function sga_union(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) :
     union = translateValues(sga1, union)
     union = translateValues(sga2, union)
 
-    return(union)
+    return union
 end
 
 # as before, but instead of constructing a new sga store the result in place in sga1 and delete all values from sga2 after they have been processed (one by one)
