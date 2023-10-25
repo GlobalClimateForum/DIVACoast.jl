@@ -6,13 +6,10 @@
 # take into account different dimensions (coordinates, sizes adf transformation), we can reject sga's with different projections
 
 function getExtent(sga)
-    
-   
-    if typeof(sga) <: AbstractArray
+
+    if !(typeof(sga) <: AbstractArray)
         sga = [sga]
     end
-
-    
 
     sgaIndexExt = sga -> [(1,1), (size(sga)[1],1), (size(sga)[1], size(sga)[2]), (1, size(sga)[2])]
     sgaCoordExt = sga -> [coords(sga, corner) for corner in sgaIndexExt(sga)]
