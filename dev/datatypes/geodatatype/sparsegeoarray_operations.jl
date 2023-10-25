@@ -6,9 +6,14 @@
 # take into account different dimensions (coordinates, sizes adf transformation), we can reject sga's with different projections
 
 function getExtent(sga)
+    
+   
     if typeof(sga) <: AbstractArray
         sga = [sga]
-    #sga = list of Sparse Geo Arrays
+    end
+
+    
+
     sgaIndexExt = sga -> [(1,1), (size(sga)[1],1), (size(sga)[1], size(sga)[2]), (1, size(sga)[2])]
     sgaCoordExt = sga -> [coords(sga, corner) for corner in sgaIndexExt(sga)]
     unionExtent = reduce(vcat, [sgaCoordExt(s) for s in sga])
@@ -53,18 +58,24 @@ function sga_union!()
     print("test")
 end
 
-function intersect(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
-    
-    extent = [getExtent(sga) for sga in [sga1, sga2]]
 
-    left =  sort([ext.uppL for ext in extent], by = first)
-    right = sort([ext.uppR for ext in extent], by = first)
+function sga_intersect(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
+    
+    upperLeft -> sga -> getExtent(sga).uppL
+    lowerRight -> sga -> getExtent(sga).lwrR 
+
+    left = sort((upperLeft(sga1), upperLeft(sga2)), by = first) 
+    right = sort((lowerRight(sga1), lowerRight(sga2)), by = first)
+    bottom = sort((lowerRight(sga1), lowerRight(sga2)), by = last)
+
+
 
     println("left: $left, right: $right")
 end
+
 
 #function sga_union!(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
 
 #end
 # if bored: intersect, diff, sym_diff in the same way
-end
+#end
