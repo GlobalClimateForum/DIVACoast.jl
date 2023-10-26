@@ -11,5 +11,5 @@ export SparseGeoArray, SparseGeoArrayFromFile
 export readGEOTiffDataComplete, saveGEOTiffDataComplete
 export readGEOTiffDataCategorised
 export nh4, nh8
-export sga_union, sga_union!, sga_intersect
+export sga_union, sga_union!, sga_intersect,sga_multiUnion
 export coords, indices, AbstractStrategy, Center, UpperLeft, UpperRight, LowerLeft, LowerRight, crop!, area
