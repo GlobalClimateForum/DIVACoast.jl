@@ -97,3 +97,37 @@ end
 function nh8(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Integer,Integer}) :: Array{Tuple{IT,IT}} where {DT <: Real, IT <: Integer}
   return nh8(sga, p[1], p[2])
 end
+
+
+"""
+    distance(lon1 :: R, lat1 :: R, lon2 :: R, lat2 :: R) :: R where {R <: Real}
+    distance(p1 :: SVector{2,R}, p2 :: SVector{2,R}) :: R where {R <: Real}
+    distance(p1 :: AbstractVector{R}, p2 :: AbstractVector{R}) :: R where {R <: Real} 
+    distance(p1 :: Tuple{R,R}, p2 :: Tuple{R,R}) where {R <: Real} :: R where {R <: Real}
+
+Compute the distance (in km) between two points given by lon1,lat1 and lon2,lat2 resp. p1 and p2. Uses the Haversine formula.
+
+# Examples
+```julia-repl
+julia> ...
+
+```
+"""
+function distance(lon1 :: R, lat1 :: R, lon2 :: R, lat2 :: R) :: R where {R <: Real} 
+  diff_lat_radians = abs((lat2-lat1) * pi / 180)
+  diff_lon_radians = (abs(lon1-lon2) > (abs((lon1-lon2)-360))) ? abs((lon2-lon1)-360) * pi / 180 : abs(lon2-lon1) * pi / 180
+
+  sin_diff_lat = sin(diff_lat_radians / 2)
+  sin_diff_lon = sin(diff_lon_radians / 2)
+  a = sin_diff_lat^2 + sin_diff_lon^2 * cos(lat1 * pi / 180) * cos(lat2 * pi / 180)
+
+  c = 2 * atan(sqrt(a), sqrt(1-a))
+#  c = 2 * asin(sqrt(a))
+  return earth_radius_km * c
+end
+
+distance(p1 :: SVector{2,<:Real}, p2 :: SVector{2,<:Real}) = distance(p1[1],p1[2],p2[1],p2[2])
+distance(p1 :: AbstractVector{<:Real}, p2 :: AbstractVector{<:Real}) = distance(p1[1],p1[2],p2[1],p2[2])
+distance(p1 :: Tuple{R,R}, p2 :: Tuple{R,R}) where {R <: Real} = distance(p1[1],p1[2],p2[1],p2[2])
+
+
