@@ -76,7 +76,7 @@ function sga_union!()
     print("not implememted yet.")
 end
 
-function sga_intersect(sgaArray::Array{SparseGeoArray{DT, IT}}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
+function sga_intersect(sgaArray::Array{SparseGeoArray{DT, IT}}) :: Array{SparseGeoArray{DT, IT}} where {DT <: Real, IT <: Integer}
     
     ul = [coords(sga, [1,1], UpperLeft()) for sga in sgaArray]
     lr = [coords(sga, size(sga), UpperLeft()) for sga in sgaArray]
@@ -94,7 +94,7 @@ function sga_intersect(sgaArray::Array{SparseGeoArray{DT, IT}}) :: SparseGeoArra
     
     result = [sga[xOffset(sga,1):xOffset(sga,2), yOffset(sga, 1):yOffset(sga, 2)] for sga in sgaArray]
 
-    return result[1]
+    return result
 end
 
 #function sga_union!(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
