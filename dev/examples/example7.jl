@@ -16,7 +16,7 @@ union = SparseGeoArray{Float32, Int32}("/home/honsel/Projects/testdata/Copernicu
 #saveGEOTiffDataComplete(union2,exportFile2)
 
 exportFile3 = "/home/honsel/Projects/testdata/intersect.tif"
-intersect = sga_intersect(union, sga3)
+intersect = sga_intersect([union, sga3])
 saveGEOTiffDataComplete(intersect ,exportFile3)
 
 
