@@ -234,3 +234,6 @@ end
 
 area(sga :: SparseGeoArray, p::Tuple{<:Integer,<:Integer}) = area(sga, p[1], p[2])
 area(sga :: SparseGeoArray, p::Tuple{I,I}) where {I <: Integer} = area(sga, p[1], p[2])
+
+pixelsizex(sga :: SparseGeoArray) = sga.f.linear[1,1]
+pixelsizey(sga :: SparseGeoArray) = sga.f.linear[2,2]
