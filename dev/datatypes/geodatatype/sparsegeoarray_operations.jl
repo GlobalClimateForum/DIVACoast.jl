@@ -6,11 +6,9 @@
 # take into account different dimensions (coordinates, sizes adf transformation), we can reject sga's with different projections
 
 function getExtent(sga)
-
     if !(typeof(sga) <: AbstractArray)
         sga = [sga]
     end
-
     sgaIndexExt = sga -> [(1,1),(size(sga)[1],1), (size(sga)[1], size(sga)[2]), (1, size(sga)[2])]
     sgaCoordExt = sga -> [coords(sga, corner, UpperLeft()) for corner in sgaIndexExt(sga)]
     unionExtent = reduce(vcat, [sgaCoordExt(s) for s in sga])
@@ -22,6 +20,16 @@ function getExtent(sga)
         lwrL = (xSorted[1][1], ySorted[1][2]),
         lwrR = (xSorted[end][1], ySorted[1][2])
     )
+end
+
+function emptySGAfromSGA(orgSGA, extentNew)
+    newSGA = clearData(deepcopy(orgSGA))
+    t = SVector(extentNew[1][1], extentNew[1][2])
+    l = newSGA.f.linear * SMatrix{2,2}([1 0; 0 1])
+    newSGA.xsize = round(abs(extentNew[1][1] - extentNew[2][1]) / abs(pixelsizex(orgSGA)), digits = 0)
+    newSGA.ysize = round(abs(extentNew[1][2] - extentNew[2][2]) / abs(pixelsizey(orgSGA)), digits = 0) 
+    newSGA.f = AffineMap(l, t)
+    return(newSGA)
 end
 
 # function to get the amount of pixel overlapping in x- and y-direction
@@ -97,27 +105,34 @@ function sga_multiUnion(sgaArray::Array{})
     return union
 end
 
-
-
 # as before, but instead of constructing a new sga store the result in place in sga1 and delete all values from sga2 after they have been processed (one by one)
-
 function sga_union!()
     print("not implememted yet.")
 end
 
 function sga_intersect(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
     
-    upperLeft -> sga -> getExtent(sga).uppL
-    lowerRight -> sga -> getExtent(sga).lwrR 
+    sgas = [sga1, sga2]
 
-    left = sort((upperLeft(sga1), upperLeft(sga2)), by = first) 
-    right = sort((lowerRight(sga1), lowerRight(sga2)), by = first)
-    bottom = sort((lowerRight(sga1), lowerRight(sga2)), by = last)
+    ul = [coords(sga, [1,1], UpperLeft()) for sga in sgas]
+    lr = [coords(sga, size(sga), UpperLeft()) for sga in sgas]
 
+    maximumby = (arr, index) -> maximum(a -> a[index], arr)
+    minimumby = (arr, index) -> minimum(a -> a[index], arr) 
+    
+    intersectExtent = [(maximumby(ul, 1), minimumby(ul,2)),
+                       (minimumby(lr, 1), maximumby(lr,2))]
 
+    #intersect = emptySGAfromSGA(sgas[1], intersectExtent)
 
-    println("left: $left, right: $right")
+    xOffset = (sga, cornerIndex) -> abs((indices(sga, intersectExtent[cornerIndex])[1])) 
+    yOffset = (sga, cornerIndex) -> abs((indices(sga, intersectExtent[cornerIndex])[2]))
+    
+    result = [sga[xOffset(sga,1):xOffset(sga,2), yOffset(sga, 1):yOffset(sga, 2)] for sga in sgas]
+
+    return result[1]
 end
+
 
 
 #function sga_union!(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
