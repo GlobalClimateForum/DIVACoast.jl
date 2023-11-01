@@ -38,41 +38,7 @@ function getOverlapIndices(sga1, sga2)
     return((sga1.xsize - overlapIndices[1], sga1.ysize - overlapIndices[2]))
 end
 
-function sga_union(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
-
-    # Calculate Union properties
-    unionExtent = getExtent([sga1, sga2])
-    xOffset = sga -> ((indices(sga, unionExtent.uppL)[1]) *-1) + 1
-    yOffset = sga -> ((indices(sga, unionExtent.uppL)[2]) *-1) + 1
-    unionSize = (maximum([xOffset(sga) + size(sga)[1] + 1 for sga in [sga1, sga2]]),
-    maximum([yOffset(sga) + size(sga)[2] + 1 for sga in [sga1, sga2]]))
-
-    # Create Union Object
-    union = clearData(deepcopy(sga1))
-    t = SVector(unionExtent.uppL[1], unionExtent.uppL[2])
-    l = union.f.linear * SMatrix{2,2}([1 0; 0 1])
-    union.xsize = unionSize[1]
-    union.ysize = unionSize[2]
-    union.f = AffineMap(l, t)
-
-    #translate values from sga1 and sga2 to Union SGA
-    mapCoordinates = (sga, x, y) -> (x + xOffset(sga) , y + yOffset(sga))
-    
-    function translateValues(sga, union)
-        for ((x,y), value) in sga.data
-            (unionX, unionY) = mapCoordinates(sga, x, y)
-            union[unionX, unionY] = value
-        end
-        return(union)
-    end
-
-    union = translateValues(sga1, union)
-    union = translateValues(sga2, union)
-    # return resulting union
-    return union
-end
-
-function sga_multiUnion(sgaArray::Array{})
+function sga_union(sgaArray::Array{SparseGeoArray{DT, IT}}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
     
     unionExtent = getExtent(sgaArray)
     xOffset = sga -> ((indices(sga, unionExtent.uppL)[1]) *-1) + 1
@@ -110,12 +76,10 @@ function sga_union!()
     print("not implememted yet.")
 end
 
-function sga_intersect(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
+function sga_intersect(sgaArray::Array{SparseGeoArray{DT, IT}}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
     
-    sgas = [sga1, sga2]
-
-    ul = [coords(sga, [1,1], UpperLeft()) for sga in sgas]
-    lr = [coords(sga, size(sga), UpperLeft()) for sga in sgas]
+    ul = [coords(sga, [1,1], UpperLeft()) for sga in sgaArray]
+    lr = [coords(sga, size(sga), UpperLeft()) for sga in sgaArray]
 
     maximumby = (arr, index) -> maximum(a -> a[index], arr)
     minimumby = (arr, index) -> minimum(a -> a[index], arr) 
@@ -123,17 +87,15 @@ function sga_intersect(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT
     intersectExtent = [(maximumby(ul, 1), minimumby(ul,2)),
                        (minimumby(lr, 1), maximumby(lr,2))]
 
-    #intersect = emptySGAfromSGA(sgas[1], intersectExtent)
+    #intersect = emptySGAfromSGA(sgaArray[1], intersectExtent)
 
     xOffset = (sga, cornerIndex) -> abs((indices(sga, intersectExtent[cornerIndex])[1])) 
     yOffset = (sga, cornerIndex) -> abs((indices(sga, intersectExtent[cornerIndex])[2]))
     
-    result = [sga[xOffset(sga,1):xOffset(sga,2), yOffset(sga, 1):yOffset(sga, 2)] for sga in sgas]
+    result = [sga[xOffset(sga,1):xOffset(sga,2), yOffset(sga, 1):yOffset(sga, 2)] for sga in sgaArray]
 
     return result[1]
 end
-
-
 
 #function sga_union!(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
 
