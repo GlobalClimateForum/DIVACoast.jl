@@ -4,6 +4,15 @@
 # if a grid cell is present in both but with different values the value of sga1 should be used
 # (thus union does not commute, we can have union(x,y)!=union(y,x)
 # take into account different dimensions (coordinates, sizes adf transformation), we can reject sga's with different projections
+function emptySGAfromSGA(orgSGA, extentNew)
+    newSGA = clearData(deepcopy(orgSGA))
+    t = SVector(extentNew.uppL[1], extentNew.uppL[2])
+    l = newSGA.f.linear * SMatrix{2,2}([1 0; 0 1])
+    newSGA.xsize = round(abs(extentNew.uppL[1] - extentNew.uppR[1]) / abs(pixelsizex(orgSGA)), digits = 0)
+    newSGA.ysize = round(abs(extentNew.uppL[2] - extentNew.lwrL[2]) / abs(pixelsizey(orgSGA)), digits = 0) 
+    newSGA.f = AffineMap(l, t)
+    return(newSGA)
+end
 
 function getExtent(sga)
     if !(typeof(sga) <: AbstractArray)
@@ -20,22 +29,6 @@ function getExtent(sga)
         lwrL = (xSorted[1][1], ySorted[1][2]),
         lwrR = (xSorted[end][1], ySorted[1][2])
     )
-end
-
-function emptySGAfromSGA(orgSGA, extentNew)
-    newSGA = clearData(deepcopy(orgSGA))
-    t = SVector(extentNew[1][1], extentNew[1][2])
-    l = newSGA.f.linear * SMatrix{2,2}([1 0; 0 1])
-    newSGA.xsize = round(abs(extentNew[1][1] - extentNew[2][1]) / abs(pixelsizex(orgSGA)), digits = 0)
-    newSGA.ysize = round(abs(extentNew[1][2] - extentNew[2][2]) / abs(pixelsizey(orgSGA)), digits = 0) 
-    newSGA.f = AffineMap(l, t)
-    return(newSGA)
-end
-
-# function to get the amount of pixel overlapping in x- and y-direction
-function getOverlapIndices(sga1, sga2)
-    overlapIndices = indices(sga1, getExtent(sga2).uppL)
-    return((sga1.xsize - overlapIndices[1], sga1.ysize - overlapIndices[2]))
 end
 
 function sga_union(sgaArray::Array{SparseGeoArray{DT, IT}}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
@@ -64,7 +57,7 @@ function sga_union(sgaArray::Array{SparseGeoArray{DT, IT}}) :: SparseGeoArray{DT
         return(union)
     end
 
-    for sga in sgaArray
+    for sga in reverse(sgaArray) # if duplicate values, values of first array are set
         union = translateValues(sga, union)
     end
 
@@ -76,29 +69,56 @@ function sga_union!()
     print("not implememted yet.")
 end
 
-function sga_intersect(sgaArray::Array{SparseGeoArray{DT, IT}}) :: Array{SparseGeoArray{DT, IT}} where {DT <: Real, IT <: Integer}
-    
+
+function getOverlapExtent(sgaArray)
+    maximumby = (arr, index) -> maximum(a -> a[index], arr)
+    minimumby = (arr, index) -> minimum(a -> a[index], arr)
     ul = [coords(sga, [1,1], UpperLeft()) for sga in sgaArray]
     lr = [coords(sga, size(sga), UpperLeft()) for sga in sgaArray]
-
     maximumby = (arr, index) -> maximum(a -> a[index], arr)
-    minimumby = (arr, index) -> minimum(a -> a[index], arr) 
-    
-    intersectExtent = [(maximumby(ul, 1), minimumby(ul,2)),
-                       (minimumby(lr, 1), maximumby(lr,2))]
-
-    #intersect = emptySGAfromSGA(sgaArray[1], intersectExtent)
-
-    xOffset = (sga, cornerIndex) -> abs((indices(sga, intersectExtent[cornerIndex])[1])) 
-    yOffset = (sga, cornerIndex) -> abs((indices(sga, intersectExtent[cornerIndex])[2]))
-    
-    result = [sga[xOffset(sga,1):xOffset(sga,2), yOffset(sga, 1):yOffset(sga, 2)] for sga in sgaArray]
-
-    return result
+    minimumby = (arr, index) -> minimum(a -> a[index], arr)
+    return(
+        uppL = (maximumby(ul, 1), minimumby(ul,2)),
+        uppR = (minimumby(lr, 1), minimumby(ul,2)),
+        lwrL = (maximumby(ul, 1), maximumby(lr,2)),
+        lwrR = (minimumby(lr, 1), maximumby(lr,2))
+    )
 end
 
+function sga_intersect(sgaArray::Array{SparseGeoArray{DT, IT}}) :: Array{SparseGeoArray{DT, IT}} where {DT <: Real, IT <: Integer}
+    
+    intersectExtent = getOverlapExtent(sgaArray)
+    xOffset = sga -> abs((indices(sga, intersectExtent.uppL)[1])) 
+    yOffset = sga -> abs((indices(sga, intersectExtent.uppL)[2]))
+    mapCoordinates =  (sga, x, y) -> (x +  xOffset(sga), y + yOffset(sga))
+
+    function translateValues(sga)
+
+        newSGA = emptySGAfromSGA(sga, intersectExtent)
+
+        for x in 1:newSGA.xsize
+            for y in 1:newSGA.ysize
+                (sgaX, sgaY) = mapCoordinates(sga, x, y)
+                newSGA[x,y] = sga[sgaX, sgaY]
+            end
+        end
+
+        return newSGA
+    end
+
+    return [translateValues(sga) for sga in sgaArray]
+end
+
+
+function sga_diff(sgaArray::Array{SparseGeoArray{DT, IT}}):: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
+
+    #diff = overlap - intersect
+    overlapExtent = getExtent(sgaArray)
+
+
+end
 #function sga_union!(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
 
 #end
-# if bored: intersect, diff, sym_diff in the same way
+# if bored:diff, sym_diff in the same way
 #end
