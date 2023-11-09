@@ -2,28 +2,28 @@ include("./dev/jdiva_lib.jl")
 using .jdiva
 
 # read an geotiff file into sga
-sga = SparseGeoArray{Float32,Int32}("../testdata/UKIRL/UKIRL_merit_coastplain_elecz_12m.tif")
+sga = SparseGeoArray{Float32,Int32}("./testdata/UKIRL/UKIRL_merit_coastplain_elecz_12m.tif")
 
 # read an file into ga
-using GeoArrays
-ga = GeoArrays.read("../testdata/UKIRL/UKIRL_merit_coastplain_elecz_12m.tif")
-varinfo(r"ga")
+#using GeoArrays
+#ga = GeoArrays.read("./testdata/UKIRL/UKIRL_merit_coastplain_elecz_12m.tif")
+#varinfo(r"ga")
 
 # sga is much smaller
 varinfo(r"sga")
 
 # read an file into sgb
-sgb = SparseGeoArray{Float64,Int64}("../testdata/UKIRL/UKIRL_merit_coastplain_elecz_12m.tif")
+sgb = SparseGeoArray{Float64,Int64}("./testdata/UKIRL/UKIRL_merit_coastplain_elecz_12m.tif")
 varinfo(r"sgb")
 
 # do not be too ambtious!
-sgb = SparseGeoArray{Float16,Int16}("../testdata/UKIRL/UKIRL_merit_coastplain_elecz_12m.tif")
+sgb = SparseGeoArray{Float16,Int16}("./testdata/UKIRL/UKIRL_merit_coastplain_elecz_12m.tif")
 varinfo(r"sgb")
 
 # empty SparseGeoArray can be constructed ...
 sgb = SparseGeoArray{Float32,Int32}()
 # ... and fill per explicit read
-readGEOTiffDataComplete(sgb,"../testdata/UKIRL/UKIRL_merit_coastplain_elecz_12m.tif")
+readGEOTiffDataComplete(sgb,"./testdata/UKIRL/UKIRL_merit_coastplain_elecz_12m.tif")
 
 # sizes as in usual Arrays
 size(sga)

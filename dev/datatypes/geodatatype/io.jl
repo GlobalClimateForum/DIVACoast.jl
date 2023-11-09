@@ -175,25 +175,3 @@ function readGEOTiffDataCategorised(sgrs :: Dict{CT, SparseGeoArray{DT, IT}}, fi
 end
 
 
-#
-#    void readGEOTiffDataComplete(std::string filename, int raster_band, Logger _log);
-#    void readGEOTiffDataComplete(std::string filename, size_type tiles_x, size_type tiles_y, int raster_band, Logger _log);
-#    void readGEOTiffDataPartial(std::string filename, size_type x_low, size_type x_high, size_type y_low, size_type y_high, int raster_band, Logger _log, bool do_log=true);
-#
-#    template<typename F> void readGEOTiffDataCompleteFiltered(std::string filename, size_type tiles_x, size_type tiles_y, int raster_band, F const& f, Logger _log);
-#    template<typename F> void readGEOTiffDataCompleteFilteredByArea(std::string filename, size_type tiles_x, size_type tiles_y, int raster_band, F const& f, Logger _log);
-#    template<typename F> void readGEOTiffDataPartialFiltered(std::string filename, size_type x_low, size_type x_high, size_type y_low, size_type y_high, int raster_band, F const& f, Logger _log);
-#
-#    void readCSVHeader      (std::string filename, Logger _log);
-#    void readCSVDataComplete(std::string filename, Logger _log);
-#    // Filtered?
-#
-#    void readCSVDataPartial (std::string filename, size_type x_low, size_type x_high, size_type y_low, size_type y_high, Logger _log, bool do_log=true);
-#
-#    void saveGEOTiff(std::string filename, std::string format);
-#    void saveGEOTiff(std::string filename, std::string format, size_type tiles_x, size_type tiles_y);
-#    void saveInExistingGEOTiff(std::string filename, std::string format, size_type tiles_x, size_type tiles_y);
-#    void saveCSV(std::string filename, bool lonlat=false);
-#
-#
-
