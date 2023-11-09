@@ -15,9 +15,18 @@ union = SparseGeoArray{Float32, Int32}("/home/honsel/Projects/testdata/Copernicu
 #exportFile2 = "/home/honsel/Projects/testdata/Copernicus_union2.tif"
 #saveGEOTiffDataComplete(union2,exportFile2)
 
-exportFile3 = "/home/honsel/Projects/testdata/intersect.tif"
-intersect = sga_intersect([union, sga3])
-saveGEOTiffDataComplete(intersect ,exportFile3)
+#exportFile3 = "/home/honsel/Projects/testdata/intersect.tif"
+#intersect = sga_intersect([union, sga3])
+#saveGEOTiffDataComplete(intersect ,exportFile3)
+
+raster1 = SparseGeoArray{Float32, Int32}("../../UKIRL_merit_coastplain_elecz_12m_gadm_1080_England.tif")
+raster2 = SparseGeoArray{Float32, Int32}("/home/honsel/Projects/testdata/mask.tif")
+
+intersection = sga_intersect([raster1, raster2])
+exportDir = filename -> "/home/honsel/Projects/testdata/$filename"
+
+saveGEOTiffDataComplete(intersection[1] ,exportDir("england.tif"))
+saveGEOTiffDataComplete(intersection[2] ,exportDir("copernicus.tif"))
 
 
 
