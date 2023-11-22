@@ -12,6 +12,6 @@ export readGEOTiffDataComplete, saveGEOTiffDataComplete
 export readGEOTiffDataCategorised
 export nh4, nh8
 
-export sga_union, sga_union!, sga_intersect, sga_multiUnion
+export sga_union, sga_union!, sga_intersect, sga_multiUnion, sga_getWithin
 export coords, indices, AbstractStrategy, Center, UpperLeft, UpperRight, LowerLeft, LowerRight, crop!, area, distance
 

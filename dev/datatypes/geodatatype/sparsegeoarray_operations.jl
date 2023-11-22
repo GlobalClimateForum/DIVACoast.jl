@@ -122,3 +122,39 @@ end
 #end
 # if bored:diff, sym_diff in the same way
 #end
+
+# create a radial Kernel Mask with a defined radius
+function getRadialKernel(radius, pixelsizeX, pixelsizeY)
+    indexSpanX = convert(Int32, round(radius / pixelsizeX, RoundNearest))
+    indexSpanY = convert(Int32, round(radius / pixelsizeY, RoundNearest))
+    kernel = falses(indexSpanX + 1, indexSpanY + 1)
+    for x in 0:indexSpanX
+       for y in 0:indexSpanY
+           distance = sqrt(((x * pixelsizeX)^2) + ((y * pixelsizeY)^2))
+           if distance <= radius
+               kernel[x + 1, y + 1] = true
+           end
+       end
+   end
+   kernel = hcat([reverse(kernel, dims = (1,2)); reverse(kernel, dims = 2)], [reverse(kernel, dims = 1) ; kernel])
+   #display(kernel)
+   return(kernel)
+end
+
+
+# a function to get data within a defined radius
+function sga_getWithin(centerCoordinate::Tuple{Real, Real}, radius::Real, sgaArray::SparseGeoArray{DT, IT}, sumryFunction::Function) where {DT <: Real, IT <: Integer}
+    
+    
+    println("[RADIAL KERNEL] radius: $radius | pxXSize : $(pixelsizex(sgaArray)) | pxYSize : $(pixelsizey(sgaArray))")
+    kernel = getRadialKernel(radius, abs(pixelsizex(sgaArray)), abs(pixelsizey(sgaArray)))
+    centerIndexSGA = indices(sgaArray, centerCoordinate)
+    kernelSize = size(kernel)
+    xExtentSGACrop = (centerIndexSGA[1] - (kernelSize[1] / 2)) : (centerIndexSGA[1] + (kernelSize[1] / 2)) - 1
+    yExtentSGACrop = (centerIndexSGA[2] - (kernelSize[2] / 2)) : (centerIndexSGA[2] + (kernelSize[2] / 2)) - 1
+    cropSGA = sgaArray[xExtentSGACrop, yExtentSGACrop]
+    masked = sumryFunction(values(cropSGA.data) .*  vec(kernel))
+    return(masked)
+end
+
+
