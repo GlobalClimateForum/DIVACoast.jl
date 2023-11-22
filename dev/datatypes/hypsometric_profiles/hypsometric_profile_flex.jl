@@ -2,18 +2,18 @@ using StructArrays
 
 export HypsometricProfileFlex, exposure, sed, sed_above, sed_below, remove_below, add_above, add_between
 
-mutable struct HypsometricProfileFlex
-  width        :: Float32
-  elevation    :: Array{Float32}
-  cummulativeArea            :: Array{Float32}
-  cummulativeStaticExposure  :: Array{Float32,2}
-  cummulativeDynamicExposure :: Array{Float32,2}
+mutable struct HypsometricProfileFlex{DT <: Real}
+  width                      :: DT
+  elevation                  :: Array{DT}
+  cummulativeArea            :: Array{DT}
+  cummulativeStaticExposure  :: Array{DT,2}
+  cummulativeDynamicExposure :: Array{DT,2}
   cummulativeStaticSymbols   
   cummulativeDynamicSymbols  
-  logger     :: ExtendedLogger
+  logger                     :: ExtendedLogger
 
   # Constructors
-  function HypsometricProfileFlex(w::Float32, elevations::Vector{Float32}, area::Vector{Float32}, s_exposure :: StructArray{T1}, d_exposure :: StructArray{T2}, logger :: ExtendedLogger = ExtendedLogger()) where {T1,T2}
+  function HypsometricProfileFlex(w::DT, elevations::Vector{DT}, area::Vector{DT}, s_exposure :: StructArray{T1}, d_exposure :: StructArray{T2}, logger :: ExtendedLogger = ExtendedLogger()) where {T1,T2,DT <: Real}
     if (length(elevations)!=length(area))  logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))") end
     if (length(elevations)!=size(s_exposure,1)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))") end
     if (length(elevations)!=size(d_exposure,1))  logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))") end
@@ -27,10 +27,10 @@ mutable struct HypsometricProfileFlex
     s_exposure_arrays = private_convert_strarray_to_array(s_exposure)
     d_exposure_arrays = private_convert_strarray_to_array(d_exposure)
 
-    new(w, elevations, cumsum(area), cumsum(s_exposure_arrays,dims=1), cumsum(d_exposure_arrays,dims=1), keys(fieldarrays(s_exposure)), keys(fieldarrays(d_exposure)), logger)
+    new{DT}(w, elevations, cumsum(area), cumsum(s_exposure_arrays,dims=1), cumsum(d_exposure_arrays,dims=1), keys(fieldarrays(s_exposure)), keys(fieldarrays(d_exposure)), logger)
   end
  
- function HypsometricProfileFlex(w::Float32, elevations::Vector{Float32}, area::Vector{Float32}, s_exposure :: Array{Float32,2}, d_exposure :: Array{Float32,2}, logger :: ExtendedLogger = ExtendedLogger())
+ function HypsometricProfileFlex(w::DT, elevations::Vector{DT}, area::Vector{DT}, s_exposure :: Array{DT,2}, d_exposure :: Array{DT,2}, logger :: ExtendedLogger = ExtendedLogger()) where {DT <: Real}
     # String(nameof(var"#self#"))
     if (length(elevations)!=length(area))  logg(logger,Logging.Error,@__FILE__,"","\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))") end
     if (length(elevations)!=size(s_exposure,1)) logg(logger,Logging.Error,@__FILE__,"","\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))") end
@@ -42,7 +42,23 @@ mutable struct HypsometricProfileFlex
     #if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $s_exposure") end
     #if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $d_exposure") end
 
-    new(w, elevations, cumsum(area), cumsum(s_exposure,dims=1), cumsum(d_exposure,dims=1), ntuple(i ->  Symbol("dexposure_name_$i"), size(s_exposure, 2)), ntuple(i ->  Symbol("dexposure_name_$i"), size(s_exposure, 2)), logger)
+    new{DT}(w, elevations, cumsum(area), cumsum(s_exposure,dims=1), cumsum(d_exposure,dims=1), ntuple(i ->  Symbol("dexposure_name_$i"), size(s_exposure, 2)), ntuple(i ->  Symbol("dexposure_name_$i"), size(s_exposure, 2)), logger)
+  end
+
+
+ function HypsometricProfileFlex(w::DT, elevations::Vector{DT}, area::Vector{DT}, s_exposure :: Array{DT,2}, d_exposure :: Array{DT,2}, s_exposure_names :: Array{String}, d_exposure_names :: Array{String}, logger :: ExtendedLogger = ExtendedLogger()) where {DT <: Real}
+    # String(nameof(var"#self#"))
+    if (length(elevations)!=length(area))  logg(logger,Logging.Error,@__FILE__,"","\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))") end
+    if (length(elevations)!=size(s_exposure,1)) logg(logger,Logging.Error,@__FILE__,"","\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))") end
+    if (length(elevations)!=size(d_exposure,1))  logg(logger,Logging.Error,@__FILE__,"","\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))") end
+    if (length(elevations) < 2)  logg(logger,Logging.Error,@__FILE__,"","\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed") end
+    if (!issorted(elevations)) logg(logger,Logging.Error,@__FILE__,"","\n elevations is not sorted: $elevations") end
+
+    if (area[1] != 0) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n area[1] should be zero, but its not: $area") end
+    #if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $s_exposure") end
+    #if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $d_exposure") end
+
+    new{DT}(w, elevations, cumsum(area), cumsum(s_exposure,dims=1), cumsum(d_exposure,dims=1), Tuple(map(x -> Symbol(x),s_exposure)), Tuple(map(x -> Symbol(x),s_exposure)), logger)
   end
 
 end
@@ -55,7 +71,7 @@ function exposure(hspf :: HypsometricProfileFlex, e :: Real)
   else
     @inbounds if (ind == 1) return (hspf.cummulativeArea[ind], hspf.cummulativeStaticExposure[ind,:], hspf.cummulativeDynamicExposure[ind,:]) end
     @inbounds if (ind > size(hspf.elevation,1)) return (hspf.cummulativeArea[size(hspf.elevation,1)], hspf.cummulativeStaticExposure[size(hspf.elevation,1),:], hspf.cummulativeDynamicExposure[size(hspf.elevation,1),:]) end
-    @inbounds r = (Float32)(e-hspf.elevation[ind-1]) / (hspf.elevation[ind]-hspf.elevation[ind-1])
+    @inbounds r = (e-hspf.elevation[ind-1]) / (hspf.elevation[ind]-hspf.elevation[ind-1])
 
     @inbounds return ( hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1])*r),
                        hspf.cummulativeStaticExposure[ind-1, :] + ((hspf.cummulativeStaticExposure[ind, :] - hspf.cummulativeStaticExposure[ind-1, :])*r),
@@ -70,7 +86,7 @@ function exposure_named(hspf :: HypsometricProfileFlex, e :: Real)
 end
 
 
-function distance(hspf :: HypsometricProfileFlex, e :: Real) :: Float32
+function distance(hspf :: HypsometricProfileFlex, e :: Real) :: DT
   ind :: Int64 = searchsortedfirst(hspf.elevation, e)
 
   if (e in hspf.elevation) 
@@ -78,7 +94,7 @@ function distance(hspf :: HypsometricProfileFlex, e :: Real) :: Float32
   else 
     @inbounds if (ind == 1) return 0.0f0 end
     @inbounds if (ind >= size(hspf.elevation,1)) cos(asin(hspf.elevation[size(hspf.elevation,1)]/(hspf.cummulativeArea[size(hspf.elevation,1)]/hspf.width)))*(hspf.cummulativeArea[size(hspf.elevation,1)]/hspf.width) end
-    @inbounds r = (Float32)(e-hspf.elevation[ind-1]) / (hspf.elevation[ind]-hspf.elevation[ind-1])
+    @inbounds r = (DT)(e-hspf.elevation[ind-1]) / (hspf.elevation[ind]-hspf.elevation[ind-1])
 
     @inbounds return cos(asin(hspf.elevation[ind-1] + ((hspf.elevation[ind] - hspf.elevation[ind-1])*r)/(hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1])*r)/hspf.width)))*(hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1])*r)/hspf.width)
   end
@@ -97,12 +113,12 @@ end
 function sed(hspf :: HypsometricProfileFlex, factors) 
   if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) logg(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
-  fac_array :: Array{Float32} = private_match_factors(hspf, factors)
+  fac_array :: Array{DT} = private_match_factors(hspf, factors)
   sed(hspf, fac_array)
 end 
 
 
-function sed_above(hspf :: HypsometricProfileFlex, above :: Real, factors :: Array{T}) where {T <: Real}
+function sed_above(hspf :: HypsometricProfileFlex, above :: Real, factors :: Array{DT}) where {DT <: Real}
   if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) logg(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
   if (above < hspf.elevation[1]) 
@@ -130,7 +146,7 @@ end
 function sed_above(hspf :: HypsometricProfileFlex, above :: Real, factors)
   if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) logg(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
-  fac_array :: Array{Float32} = private_match_factors(hspf, factors)
+  fac_array :: Array{DT} = private_match_factors(hspf, factors)
   sed_above(hspf, above, fac_array)
 end 
 
@@ -169,12 +185,12 @@ end
 function sed_below(hspf :: HypsometricProfileFlex, below, factors)
   if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) logg(hspf.logger, Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
-  fac_array :: Array{Float32} = private_match_factors(hspf, factors)
+  fac_array :: Array{DT} = private_match_factors(hspf, factors)
   sed_below(hspf, below, fac_array)
 end 
 
 
-function remove_below(hspf :: HypsometricProfileFlex, below :: Real) :: Array{Float32}
+function remove_below(hspf :: HypsometricProfileFlex, below :: Real) :: Array{DT}
   if (below < hspf.elevation[1]) 
     return (hspf.cummulativeDynamicExposure[1,:])
   end
@@ -278,7 +294,7 @@ function damage(hspf :: HypsometricProfileFlex, wl :: Real, protection :: Real, 
   ind :: Int64 = searchsortedfirst(hspf.elevation, wl)
   @inbounds if (ind == 1) return (hspf.cummulativeArea[ind], hspf.cummulativeStaticExposure[ind,:], hspf.cummulativeDynamicExposure[ind,:]) end
 
-  @inbounds r = (Float32)(wl-hspf.elevation[ind-1]) / (hspf.elevation[ind]-hspf.elevation[ind-1])
+  @inbounds r = (DT)(wl-hspf.elevation[ind-1]) / (hspf.elevation[ind]-hspf.elevation[ind-1])
 
   for i in 1:(ind-1)
     dam = damage(hspf, i, i+1, protection, hdds)
@@ -300,21 +316,21 @@ function damage(hspf :: HypsometricProfileFlex, wl :: Real, i1 :: Int64, i2 :: I
 end 
 
 
-function private_convert_strarray_to_array(sarr :: StructArray{T1}) :: Array{Float32} where{T1} 
-  ret :: Array{Float32,2} = Array{Float32, 2}(undef, length(sarr), length(fieldarrays(sarr))) 
+function private_convert_strarray_to_array(sarr :: StructArray{T1}) :: Array{DT} where{T1} 
+  ret :: Array{DT,2} = Array{DT, 2}(undef, length(sarr), length(fieldarrays(sarr))) 
   for i in 1:size(ret,1)
     for j in 1:size(ret,2)
-      ret[i,j]=convert(Float32,fieldarrays(sarr)[j][i])
+      ret[i,j]=convert(DT,fieldarrays(sarr)[j][i])
     end 
   end
   return ret
 end
 
 
-function private_match_factors(hspf :: HypsometricProfileFlex, factors) :: Array{Float32} 
+function private_match_factors(hspf :: HypsometricProfileFlex, factors) :: Array{DT} 
   if (size(hspf.cummulativeDynamicExposure,2)!=length(factors)) logg(hspf.logger, Logging.Error,@__FILE__,"\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))") end
 
-  fac_array :: Array{Float32} = fill(1.0f0, size(hspf.cummulativeDynamicExposure,2))
+  fac_array :: Array{DT} = fill(1.0f0, size(hspf.cummulativeDynamicExposure,2))
 
   for k in keys(factors)
     for i in 1:length(hspf.cummulativeDynamicSymbols)
@@ -333,7 +349,7 @@ function private_insert_elevation_point(hspf :: HypsometricProfileFlex, el :: Re
   insert!(hspf.elevation,       ind, el)
   insert!(hspf.cummulativeArea, ind, ex[1])
   # probably not efficient
-  r :: Array{Float32,2} = hspf.cummulativeStaticExposure[ind:end,1:end]
+  r :: Array{DT,2} = hspf.cummulativeStaticExposure[ind:end,1:end]
   hspf.cummulativeStaticExposure = vcat(vcat(hspf.cummulativeStaticExposure[1:ind-1,1:end],ex[2]'),r)
 
   r = hspf.cummulativeDynamicExposure[ind:end,1:end]
@@ -370,7 +386,7 @@ function private_remove_line(hspf :: HypsometricProfileFlex, i)
 end
 
 
-function private_slope(hspf :: HypsometricProfileFlex, i :: Int64) :: Float32
+function private_slope(hspf :: HypsometricProfileFlex, i :: Int64) :: DT
   if (i<=1) return Inf end
   if (i>size(hspf.elevation,1)) return (hspf.elevation[size(hspf.elevation,1)]-hspf.elevation[size(hspf.elevation,1)-1]) * (hspf.width/hspf.cummulativeArea[size(hspf.elevation,1)]) end
   return (hspf.elevation[i]-hspf.elevation[i-1]) * (hspf.width/hspf.cummulativeArea[i])
