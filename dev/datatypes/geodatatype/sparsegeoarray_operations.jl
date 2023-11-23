@@ -137,7 +137,7 @@ function getRadialKernel(radius, pixelsizeX, pixelsizeY)
        end
    end
    kernel = hcat([reverse(kernel, dims = (1,2)); reverse(kernel, dims = 2)], [reverse(kernel, dims = 1) ; kernel])
-   #display(kernel)
+   display(kernel)
    return(kernel)
 end
 
