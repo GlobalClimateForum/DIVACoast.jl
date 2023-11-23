@@ -1,6 +1,8 @@
 dev/test/scratch.jl
 exercises/test.tif
 .vscode/settings.json
+./save/*
+.gitignore
 UKIRL_merit_coastplain_elecz_12m_gadm_1080_England.tif
 UKIRL_merit_coastplain_elecz_12m_gadm_1081_Northern_Ireland.tif
 UKIRL_merit_coastplain_elecz_12m_gadm_1082_Scotland.tif
