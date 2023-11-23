@@ -1,0 +1,5 @@
+include("./dev/jdiva_lib.jl")
+using .jdiva
+
+sga = SparseGeoArray{Float32,Int32}("./UKIRL_merit_coastplain_elecz_12m_gadm_1080_England.tif")
+sgb = SparseGeoArray{Float32,Int32}("./UKIRL_merit_coastplain_elecz_12m_gadm_1083_Wales.tif")
