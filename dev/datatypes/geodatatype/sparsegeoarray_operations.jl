@@ -165,31 +165,26 @@ end
 # a function to get data within a defined radius (given in KM)
 function sga_summarize_within(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, sumryFunction :: Function, valueTransformation) where {DT <: Real, IT <: Integer}
         
-    if (radius>=earth_circumference_km/2) return sumryFunction(collect(values(sga.data))) end
+  if (radius>=earth_circumference_km/2) return sumryFunction(collect(values(sga.data))) end
 
-    p_east = go_direction(p, radius, East())
-    p_west = go_direction(p, radius, West())
-    p_north = go_direction(p, radius, North())
-    p_south = go_direction(p, radius, South())
+  p_east = go_direction(p, radius, East())
+  p_west = go_direction(p, radius, West())
+  p_north = go_direction(p, radius, North())
+  p_south = go_direction(p, radius, South())
 
-    bb = bounding_boxes(sga, p_east[1],p_west[1],p_south[2],p_north[2])
+  bb = bounding_boxes(sga, p_east[1],p_west[1],p_south[2],p_north[2])
 
-    vals = Array{DT}(undef,0)
-    for b in bb
-      for b_x = b[1]:b[3]
-        for b_y = b[2]:b[4]
-          if (distance(Tuple(coords(sga::SparseGeoArray, (b_x, b_y), Center())), p) <= radius)
-            if sga[b_x,b_y]!=sga.nodatavalue push!(vals,valueTransformation(sga,b_x,b_y)) end
-          end
-        end
+  vals = Array{DT}(undef,0)
+  for b in bb
+    sgat = sga[b[1]:b[3],b[2]:b[4]]
+    for (indices,value) in sgat.data
+      if (distance(Tuple(coords(sgat, indices, Center())), p) <= radius) 
+        if ((sgat[indices[1],indices[2]]!=sgat.nodatavalue)) push!(vals,valueTransformation(sgat,indices[1],indices[2])) end
       end
     end
-    sumryFunction(vals)
+  end
+  sumryFunction(vals)
 end
 
 sga_summarize_within(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, sumryFunction :: Function) where {DT <: Real, IT <: Integer} = sga_summarize_within(sga, p, radius, sumryFunction, (s,x,y) -> s[x,y])
-
-
-
-
 
