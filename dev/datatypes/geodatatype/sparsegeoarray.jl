@@ -15,13 +15,15 @@ Base.@kwdef mutable struct SparseGeoArray{DT <: Real, IT <: Integer}  # <: Abstr
   ysize :: IT = 0
   projref :: String = ""
   circular :: Bool = false
+  filename :: String = ""
 end
 
 
-SparseGeoArray{DT,IT}() where {DT <: Real, IT <: Integer} = SparseGeoArray{DT,IT}(Dict{Tuple{IT,IT},DT}(), convert(DT,-Inf), geotransform_to_affine(SVector(0.0, 1.0, 0.0, 0.0, 0.0, 1.0)), GFT.WellKnownText(GFT.CRS(), ""), Dict{String, Any}(), convert(IT,0), convert(IT,0), "", false)
+SparseGeoArray{DT,IT}() where {DT <: Real, IT <: Integer} = SparseGeoArray{DT,IT}(Dict{Tuple{IT,IT},DT}(), convert(DT,-Inf), geotransform_to_affine(SVector(0.0, 1.0, 0.0, 0.0, 0.0, 1.0)), GFT.WellKnownText(GFT.CRS(), ""), Dict{String, Any}(), convert(IT,0), convert(IT,0), "", false, "")
 
 function SparseGeoArray{DT,IT}(filename :: String, band :: Integer = 1) where {DT <: Real, IT <: Integer} 
   sga = SparseGeoArray{DT,IT}()
+  sga.filename = filename
   readGEOTiffDataComplete(sga,filename,band,1)
   sga
 end
@@ -46,7 +48,7 @@ end
 
 function Base.convert(::Type{SparseGeoArray{DT,IT}}, sga :: SparseGeoArray) where {DT, IT} 
   data = convert(Dict{Tuple{IT,IT}, DT}, sga.data)
-  SparseGeoArray(data, convert(DT,sga.nodatavalue), sga.f, sga.crs, sga.metadata, convert(IT,sga.xsize), convert(IT,sga.ysize), sga.projref, sga.circular)
+  SparseGeoArray(data, convert(DT,sga.nodatavalue), sga.f, sga.crs, sga.metadata, convert(IT,sga.xsize), convert(IT,sga.ysize), sga.projref, sga.circular, sga.filename)
 end
 
 #find_ga(bc::Base.Broadcast.Broadcasted) = find_ga(bc.args)
@@ -61,7 +63,7 @@ end
 """
     getindex(sga::SparseGeoArray, i::AbstractRange, j::AbstractRange, k::Union{Colon,AbstractRange,Integer})
 
-Index a GeoArray with `AbstractRange`s to get a cropped GeoArray with the correct `AffineMap` set.
+Index a SparseGeoArray with `AbstractRange`s to get a cropped SparseGeoArray with the correct `AffineMap` set.
 
 # Examples
 ```julia-repl
@@ -71,18 +73,18 @@ julia> sga[2:3,2:3]
 """
 function Base.getindex(sga :: SparseGeoArray{DT, IT}, xrange::AbstractRange, yrange::AbstractRange) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer} 
   data :: Dict{Tuple{IT,IT}, DT} = Dict{Tuple{IT,IT}, DT}()
-  for y in 1:sga.ysize
-    for x in 1:sga.xsize
-      if ((y in yrange) && (x in xrange))
+  for y in yrange
+    for x in xrange
+#      if ((y in yrange) && (x in xrange))
 	v :: DT = get(sga.data, (x,y), sga.nodatavalue)
 	if (v != sga.nodatavalue) data[(x-first(xrange)+1,y-first(yrange)+1)]=sga[x,y] end
-      end
+#      end
     end
   end
   x, y = first(xrange) - 1, first(yrange) - 1
   t = sga.f(SVector(x, y))
   l = sga.f.linear * SMatrix{2,2}([step(yrange) 0; 0 step(xrange)])
-  SparseGeoArray{DT,IT}(data, sga.nodatavalue, AffineMap(l, t), sga.crs, sga.metadata, convert(IT,size(xrange,1)), convert(IT,size(yrange,1)), sga.projref, sga.circular)
+  SparseGeoArray{DT,IT}(data, sga.nodatavalue, AffineMap(l, t), sga.crs, sga.metadata, convert(IT,size(xrange,1)), convert(IT,size(yrange,1)), sga.projref, sga.circular, sga.filename)
 end
 
 function Base.getindex(sga :: SparseGeoArray{DT, IT}, indices::Vararg{Integer,2}) :: DT where {DT <: Real, IT <: Integer} 
@@ -157,7 +159,7 @@ function crop!(sga::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
 end
 
 
-function clearData(sga::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
+function clear_data(sga::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
   empty!(sga.data)
   sga
 end
@@ -235,5 +237,5 @@ end
 area(sga :: SparseGeoArray, p::Tuple{<:Integer,<:Integer}) = area(sga, p[1], p[2])
 area(sga :: SparseGeoArray, p::Tuple{I,I}) where {I <: Integer} = area(sga, p[1], p[2])
 
-pixelsizex(sga :: SparseGeoArray) = sga.f.linear[1,1]
-pixelsizey(sga :: SparseGeoArray) = sga.f.linear[2,2]
+pixelsize_x(sga :: SparseGeoArray) = sga.f.linear[1,1]
+pixelsize_y(sga :: SparseGeoArray) = sga.f.linear[2,2]

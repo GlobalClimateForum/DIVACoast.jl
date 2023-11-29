@@ -1,3 +1,5 @@
+
+
 function geotransform_to_affine(gt::SVector{6,<:AbstractFloat})
     # See https://lists.osgeo.org/pipermail/gdal-dev/2011-July/029449.html
     # for an explanation of the geotransform format
@@ -131,3 +133,67 @@ distance(p1 :: AbstractVector{<:Real}, p2 :: AbstractVector{<:Real}) = distance(
 distance(p1 :: Tuple{R,R}, p2 :: Tuple{R,R}) where {R <: Real} = distance(p1[1],p1[2],p2[1],p2[2])
 
 
+"""
+    go_direction(lon :: R, lat :: R, distance :: Real, direction :: AbstractDirection) :: Tuple{R,R} where {R <: Real}
+
+Compute the geographical coordinates of the point reached if we go distance km from (lon,lat) in direction. Takes into account circularity, but does not cross poles. direction can be East(), North(), West(), South()
+
+# Examples
+```julia-repl
+julia> go_direction(13.2240, 52.3057, 10, East())
+(13.370916039175427, 52.3057)
+julia> go_direction(13.2240, 52.3057, 10000, North())
+(13.224, 90.0)
+julia> go_direction(19.0045,0.0,40075,West())
+(19.004500000000007, 0.0)
+```
+"""
+function go_direction(lon :: R, lat :: R, distance :: Real, direction :: AbstractDirection) :: Tuple{R,R} where {R <: Real} 
+    s = SVector{2}(360*distance/(earth_circumference_km*cos(deg2rad(lat))), 360 * distance/earth_circumference_km)
+    delta = direction.step .* s
+    r = [(lon+delta[1]) % 360,(lat+delta[2])]
+    if r[1]<=-180 r[1]=r[1]+360 end
+    if r[1]>180   r[1]=r[1]-360 end
+    if r[2]<=-90  r[2]=convert(R,-90) end
+    if r[2]>90    r[2]=convert(R,90) end
+    return Tuple(r)
+end
+
+go_direction(p :: SVector{2,<:Real},      distance :: Real, direction :: AbstractDirection) =  go_direction(p[1], p[2], distance, direction)
+go_direction(p :: AbstractVector{<:Real}, distance :: Real, direction :: AbstractDirection) =  go_direction(p[1], p[2], distance, direction)
+go_direction(p :: Tuple{R,R}, distance :: Real, direction :: AbstractDirection) where {R <: Real} =  go_direction(p[1], p[2], distance, direction)
+
+
+"""
+    bounding_boxes(sga :: SparseGeoArray{DT, IT}, lon_east :: Real, lon_west :: Real, lat_south :: Real, lat_north :: Real) where {DT <: Real, IT <: Integer}
+
+Compute the bounding box(es) for the sparse geoarray sga and an area from lon_east to lon_west and lat_south and lat_north.
+
+# Examples
+```julia-repl
+julia> ...
+
+```
+"""
+function bounding_boxes(sga :: SparseGeoArray{DT, IT}, lon_east :: Real, lon_west :: Real, lat_south :: Real, lat_north :: Real) where {DT <: Real, IT <: Integer}
+  ret = Array{NTuple{4, IT}}(undef,0) 
+  if lon_west <= lon_east 
+    ul = indices(sga, (lon_west, lat_north))
+    ulx = if ul[1]<1 1 elseif ul[1]>size(sga,1) size(sga,1) else ul[1] end
+    uly = if ul[2]<1 1 elseif ul[2]>size(sga,2) size(sga,2) else ul[2] end
+    lr = indices(sga, (lon_east, lat_south))
+    lrx = if lr[1]<1 1 elseif lr[1]>size(sga,1) size(sga,1) else lr[1] end
+    lry = if lr[2]<1 1 elseif lr[2]>size(sga,2) size(sga,2) else lr[2] end
+    push!(ret,(ulx,uly,lrx,lry))
+  else
+    ul = indices(sga, (lon_west, lat_north))
+    ulx = if ul[1]<1 1 elseif ul[1]>size(sga,1) size(sga,1) else ul[1] end
+    uly = if ul[2]<1 1 elseif ul[2]>size(sga,2) size(sga,2) else ul[2] end
+    lr = indices(sga, (lon_east, lat_south))
+    lrx = if lr[1]<1 1 elseif lr[1]>size(sga,1) size(sga,1) else lr[1] end
+    lry = if lr[2]<1 1 elseif lr[2]>size(sga,2) size(sga,2) else lr[2] end
+    push!(ret,(1,uly,ulx,lry))
+    push!(ret,(lrx,uly,size(sga,1),lry))
+  end
+  return ret
+end

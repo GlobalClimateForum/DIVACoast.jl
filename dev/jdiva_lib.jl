@@ -2,10 +2,12 @@ module jdiva
 
 # constants
 const global earth_radius_km = 6371
+const global earth_circumference_km = 40075
 
 include("./logger/jdiva_logger.jl")
 include("./datatypes/geodatatype/SparseGeoArrays.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profiles.jl")
-include("./algorithms/conversion/SGRToHSP.jl")
+
 
 end
+

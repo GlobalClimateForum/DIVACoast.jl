@@ -117,6 +117,7 @@ function sga_diff(sgaArray::Array{SparseGeoArray{DT, IT}}):: SparseGeoArray{DT, 
 
 
 end
+
 #function sga_union!(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
 
 #end
@@ -137,24 +138,58 @@ function getRadialKernel(radius, pixelsizeX, pixelsizeY)
        end
    end
    kernel = hcat([reverse(kernel, dims = (1,2)); reverse(kernel, dims = 2)], [reverse(kernel, dims = 1) ; kernel])
-   display(kernel)
+   #display(kernel)
    return(kernel)
 end
 
 
-# a function to get data within a defined radius
-function sga_getWithin(centerCoordinate::Tuple{Real, Real}, radius::Real, sgaArray::SparseGeoArray{DT, IT}, sumryFunction::Function) where {DT <: Real, IT <: Integer}
-    
-    
-    println("[RADIAL KERNEL] radius: $radius | pxXSize : $(pixelsizex(sgaArray)) | pxYSize : $(pixelsizey(sgaArray))")
-    kernel = getRadialKernel(radius, abs(pixelsizex(sgaArray)), abs(pixelsizey(sgaArray)))
-    centerIndexSGA = indices(sgaArray, centerCoordinate)
-    kernelSize = size(kernel)
-    xExtentSGACrop = (centerIndexSGA[1] - (kernelSize[1] / 2)) : (centerIndexSGA[1] + (kernelSize[1] / 2)) - 1
-    yExtentSGACrop = (centerIndexSGA[2] - (kernelSize[2] / 2)) : (centerIndexSGA[2] + (kernelSize[2] / 2)) - 1
-    cropSGA = sgaArray[xExtentSGACrop, yExtentSGACrop]
-    masked = sumryFunction(values(cropSGA.data) .*  vec(kernel))
-    return(masked)
+# create a radial Kernel Mask with a defined radius
+function get_radial_kernel(sga :: SparseGeoArray{DT, IT}, radius :: Real, lon_min :: Real, lon_max :: Real, lat_max  :: Real, lat_min :: Real) where {DT <: Real, IT <: Integer}
+    indexSpanX = convert(Int32, round(radius / pixelsizeX, RoundNearest))
+    indexSpanY = convert(Int32, round(radius / pixelsizeY, RoundNearest))
+    kernel = falses(indexSpanX + 1, indexSpanY + 1)
+    for x in 0:indexSpanX
+       for y in 0:indexSpanY
+           distance = sqrt(((x * pixelsizeX)^2) + ((y * pixelsizeY)^2))
+           if distance <= radius
+               kernel[x + 1, y + 1] = true
+           end
+       end
+   end
+   kernel = hcat([reverse(kernel, dims = (1,2)); reverse(kernel, dims = 2)], [reverse(kernel, dims = 1) ; kernel])
+   #display(kernel)
+   return(kernel)
 end
+
+
+# a function to get data within a defined radius (given in KM)
+function sga_summarize_within(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, sumryFunction :: Function, valueTransformation) where {DT <: Real, IT <: Integer}
+        
+    if (radius>=earth_circumference_km/2) return sumryFunction(collect(values(sga.data))) end
+
+    p_east = go_direction(p, radius, East())
+    p_west = go_direction(p, radius, West())
+    p_north = go_direction(p, radius, North())
+    p_south = go_direction(p, radius, South())
+
+    bb = bounding_boxes(sga, p_east[1],p_west[1],p_south[2],p_north[2])
+
+    vals = Array{DT}(undef,0)
+    for b in bb
+      for b_x = b[1]:b[3]
+        for b_y = b[2]:b[4]
+          if (distance(Tuple(coords(sga::SparseGeoArray, (b_x, b_y), Center())), p) <= radius)
+            if sga[b_x,b_y]!=sga.nodatavalue push!(vals,valueTransformation(sga,b_x,b_y)) end
+          end
+        end
+      end
+    end
+    sumryFunction(vals)
+end
+
+sga_summarize_within(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, sumryFunction :: Function) where {DT <: Real, IT <: Integer} = sga_summarize_within(sga, p, radius, sumryFunction, (s,x,y) -> s[x,y])
+
+
+
 
 
