@@ -198,3 +198,35 @@ end
 
 sga_summarize_within(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, sumryFunction :: Function) where {DT <: Real, IT <: Integer} = sga_summarize_within(sga, p, radius, sumryFunction, (s,x,y) -> s[x,y])
 
+# for small datasets only
+function get_closest_value(sga, p)
+    i_x, i_y = indices(p)
+    value = valueTransformation(sga, indices[1], i_x, i_y)
+    if  value != sga.nodatavalue 
+        return(value)
+    else
+        closest_values = []
+        closest_distance = []
+        directions = [(-1, -1), (-1, 0),(-1, 1),(0, -1),(0, 1),(1, -1),(1, 0),(1, 1)]
+        i_distance = 1
+
+        while closest_values == []
+        
+            for (dx, dy) in directions
+
+                temp_x = i_x + (i_distance * dx)
+                temp_y = i_y + (i_distance * dy)
+                temp_value = valueTransformation(sga,temp_x,temp_y)
+
+                if temp_value != sga.nodatavalue
+                    val_dist = distance(Tuple(coords(sga::SparseGeoArray, (temp_x, temp_y), Center())), p)
+                    push!(closest_values, temp_value)
+                    push!(closest_distance, val_dist)
+                end
+            end
+
+            i_distance += 1
+        end
+        return(closest_values[argmin(closest_distance)])
+    end
+end
