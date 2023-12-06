@@ -24,7 +24,7 @@ SparseGeoArray{DT,IT}() where {DT <: Real, IT <: Integer} = SparseGeoArray{DT,IT
 function SparseGeoArray{DT,IT}(filename :: String, band :: Integer = 1) where {DT <: Real, IT <: Integer} 
   sga = SparseGeoArray{DT,IT}()
   sga.filename = filename
-  readGEOTiffDataComplete(sga,filename,band,1)
+  read_geotiff_data_complete!(sga,filename,band,1)
   sga
 end
 
@@ -156,14 +156,9 @@ function crop!(sga::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
   crop!(sga,(min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y))
 end
 
+clear_data!(sga) = empty!(sga.data)
 
-function clear_data(sga::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
-  empty!(sga.data)
-  sga
-end
-
-
-function reset(sga :: SparseGeoArray{DT,IT}) where {DT <: Real, IT <: Integer} 
+function reset!(sga :: SparseGeoArray{DT,IT}) where {DT <: Real, IT <: Integer} 
   sga = SparseGeoArray{DT,IT}()  
 end
 
@@ -237,3 +232,4 @@ area(sga :: SparseGeoArray, p::Tuple{I,I}) where {I <: Integer} = area(sga, p[1]
 
 pixelsize_x(sga :: SparseGeoArray) = sga.f.linear[1,1]
 pixelsize_y(sga :: SparseGeoArray) = sga.f.linear[2,2]
+

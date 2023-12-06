@@ -1,4 +1,4 @@
-function joinGEOTiffDataCategorised!(sgrs :: Dict{CT, SparseGeoArray{DT, IT}}, sgrs_ret :: Dict{CT2, SparseGeoArray{DT, IT}}, mapping :: Dict{CT, CT2}) where {CT <: Integer, CT2 <: Integer, DT <: Real, IT <: Integer}
+function join_geotiff_data_categorised!(sgrs :: Dict{CT, SparseGeoArray{DT, IT}}, sgrs_ret :: Dict{CT2, SparseGeoArray{DT, IT}}, mapping :: Dict{CT, CT2}) where {CT <: Integer, CT2 <: Integer, DT <: Real, IT <: Integer}
   for key in keys(sgrs)
     mk :: CT2 = mapping[key]
     if (haskey(mapping, key))

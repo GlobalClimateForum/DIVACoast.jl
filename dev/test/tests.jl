@@ -36,8 +36,8 @@ function initHypsometricProfile(profileType, returnSettings = false)
       profile = HypsometricProfileFixedStrarray(width, elevation, area, s_exp, d_exp)
     elseif profileType == "fixedArr"
       profile = HypsometricProfileFixed(width,elevation, area, s_exp, d_exp)
-    elseif profileType == "flex"
-      profile = HypsometricProfileFlex(width, elevation, area, s_exp, d_exp)
+    elseif profileType == ""
+      profile = HypsometricProfile(width, elevation, area, s_exp, d_exp)
     end
 
     if returnSettings
@@ -109,7 +109,7 @@ end
 
 
 
-for profile in ["fixedClassic", "fixedStrArr", "flex"]
+for profile in ["fixedClassic", "fixedStrArr", ""]
 
   println("Test Hypsometric Profile: $profile")
 

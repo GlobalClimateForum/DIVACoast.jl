@@ -7,7 +7,7 @@ const global earth_circumference_km = 40075
 include("./logger/jdiva_logger.jl")
 include("./datatypes/geodatatype/SparseGeoArrays.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profiles.jl")
-
+include("./algorithms/conversion/SGRToHSP.jl")
+include("./io/HSPs_nc.jl")
 
 end
-

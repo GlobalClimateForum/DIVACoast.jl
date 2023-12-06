@@ -111,15 +111,25 @@ end
 
 
 function sga_diff(sgaArray::Array{SparseGeoArray{DT, IT}}):: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
-
     #diff = overlap - intersect
     overlapExtent = getExtent(sgaArray)
-
-
 end
 
-#function sga_union!(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
 
+function sga_dimension_match(sga1 :: SparseGeoArray{DT, IT}, sga2 :: SparseGeoArray{DT, IT}) :: Bool where {DT <: Real, IT <: Integer}
+  return (size(sga1,1)==size(sga2,1)) && (size(sga1,2)==size(sga2,2)) && (pixelsize_x(sga1)==pixelsize_x(sga2)) && (pixelsize_y(sga1)==pixelsize_y(sga2)) && (sga1.f.translation==sga2.f.translation) 
+end
+
+
+function sga_dimension_match_log(sga1 :: SparseGeoArray{DT, IT}, sga2 :: SparseGeoArray{DT, IT}) :: Bool where {DT <: Real, IT <: Integer}
+  if ((size(sga1,1)!=size(sga2,1)) || (size(sga1,2)!=size(sga2,2))) error("DimensionError: $(sga1.filename) ($(size(sga1,1))×$(size(sga1,2))) and $(sga2.filename) ($(size(sga2,1))×$(size(sga2,2)))") end
+  if (sga1.projref != sga2.projref) error("ProjRefError: $(sga1.filename) ($(sga1.projref)) and $(sga2.filename) ($(sga2.projref))") end
+  if (sga1.f != sga2.f) error("GeoTransfomError: $(sga1.filename) ($(sga1.f)) and $(sga2.filename) ($(sga2.f))") end
+  return true
+end
+
+
+#function sga_union!(sga1::SparseGeoArray{DT, IT}, sga2::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
 #end
 # if bored:diff, sym_diff in the same way
 #end

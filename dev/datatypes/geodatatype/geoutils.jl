@@ -1,5 +1,3 @@
-
-
 function geotransform_to_affine(gt::SVector{6,<:AbstractFloat})
     # See https://lists.osgeo.org/pipermail/gdal-dev/2011-July/029449.html
     # for an explanation of the geotransform format

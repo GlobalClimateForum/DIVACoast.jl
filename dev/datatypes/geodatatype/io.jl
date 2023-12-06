@@ -1,6 +1,6 @@
-function read_geotiff_data_complete(sgr :: SparseGeoArray{DT, IT}, filename :: String, band :: Integer = 1, row_chunk_size :: Integer = 1) where {DT <: Real, IT <: Integer}
+function read_geotiff_data_complete!(sgr :: SparseGeoArray{DT, IT}, filename :: String, band :: Integer = 1, row_chunk_size :: Integer = 1) where {DT <: Real, IT <: Integer}
 
-  read_geotiff_header(sgr, filename, band)
+  read_geotiff_header!(sgr, filename, band)
   dataset = GDAL.gdalopen(filename, GDAL.GA_ReadOnly)
   band = GDAL.gdalgetrasterband(dataset, band)
   
@@ -13,7 +13,7 @@ function read_geotiff_data_complete(sgr :: SparseGeoArray{DT, IT}, filename :: S
 
   for r in 1:(r_tiles) 
     GDAL.gdalrasterio(band,GDAL.GF_Read,0,(r-1)*row_chunk_size,sgr.xsize,row_chunk_size,scanline,sgr.xsize,row_chunk_size,GDAL.GDT_Float32,0,0)
-    private_insert_data(sgr, scanline, 1, sgr.xsize, (r-1)*row_chunk_size+1, r*row_chunk_size)
+    private_insert_data!(sgr, scanline, 1, sgr.xsize, (r-1)*row_chunk_size+1, r*row_chunk_size)
     if (((r*row_chunk_size)*100 ÷ sgr.ysize) ÷ 10)>p
       p=(((r*row_chunk_size)*100 ÷ sgr.ysize) ÷ 10)
       print("$(p*10) ")
@@ -22,14 +22,14 @@ function read_geotiff_data_complete(sgr :: SparseGeoArray{DT, IT}, filename :: S
   
   if (remaining_r != 0) 
     GDAL.gdalrasterio(band,GDAL.GF_Read,0,(r_tiles)*row_chunk_size-1,sgr.xsize,remaining_r,scanline,sgr.xsize,remaining_r,GDAL.GDT_Float32,0,0)
-    private_insert_data(sgr, scanline, 1, sgr.xsize, (r_tiles)*row_chunk_size+1, (r_tiles)*row_chunk_size + 1 + remaining_r)
+    private_insert_data!(sgr, scanline, 1, sgr.xsize, (r_tiles)*row_chunk_size+1, (r_tiles)*row_chunk_size + 1 + remaining_r)
   end
   println()
   GDAL.gdalclose(dataset)
 end
 
 
-function read_geotiff_data_partial(sgr :: SparseGeoArray{DT, IT}, x_start :: Integer, x_end :: Integer, y_start :: Integer, y_end :: Integer, band :: Integer = 1; y_chunk_size :: Integer = 1) where {DT <: Real, IT <: Integer}
+function read_geotiff_data_partial!(sgr :: SparseGeoArray{DT, IT}, x_start :: Integer, x_end :: Integer, y_start :: Integer, y_end :: Integer, band :: Integer = 1; y_chunk_size :: Integer = 1) where {DT <: Real, IT <: Integer}
 
   dataset = GDAL.gdalopen(sgr.filename, GDAL.GA_ReadOnly)
   band = GDAL.gdalgetrasterband(dataset, band)
@@ -48,22 +48,22 @@ function read_geotiff_data_partial(sgr :: SparseGeoArray{DT, IT}, x_start :: Int
 
   for r in 1:(r_tiles) 
     GDAL.gdalrasterio(band,GDAL.GF_Read,x_start-1,(r-1)*y_chunk_size+(y_start-1),(x_end - x_start + 1),y_chunk_size,scanline,(x_end - x_start + 1),y_chunk_size,GDAL.GDT_Float32,0,0)
-    private_insert_data(sgr, scanline, x_start, x_end, (r-1)*y_chunk_size+y_start, (r-1)*y_chunk_size+y_start+y_chunk_size-1)
+    private_insert_data!(sgr, scanline, x_start, x_end, (r-1)*y_chunk_size+y_start, (r-1)*y_chunk_size+y_start+y_chunk_size-1)
   end
   
   if (remaining_r != 0) 
 #    println("GDAL.gdalrasterio(band,GDAL.GF_Read,$(x_start-1),$((r_tiles)*y_chunk_size+y_start),$(x_end - x_start + 1),$y_chunk_size,scanline,$(x_end - x_start + 1),$remaining_r,GDAL.GDT_Float32,0,0)")
     GDAL.gdalrasterio(band,GDAL.GF_Read,x_start-1,(r_tiles)*y_chunk_size+y_start,(x_end - x_start + 1),remaining_r,scanline,(x_end - x_start + 1),remaining_r,GDAL.GDT_Float32,0,0)
-    private_insert_data(sgr, scanline, x_start, x_end, (r_tiles)*y_chunk_size+y_start+1, y_end)
+    private_insert_data!(sgr, scanline, x_start, x_end, (r_tiles)*y_chunk_size+y_start+1, y_end)
   end
   GDAL.gdalclose(dataset)
 end
 
 
-function partial_read_around(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, y_chunk_size=1, f=identity) where {DT <: Real, IT <: Integer}
+function partial_read_around!(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, y_chunk_size=1, f=identity) where {DT <: Real, IT <: Integer}
         
   if (radius>=earth_circumference_km/2) 
-    read_geotiff_data_complete(sga,sga.filename)
+    read_geotiff_data_complete!(sga,sga.filename)
   else
     sgat= SparseGeoArray{DT,IT}(Dict{Tuple{IT,IT},DT}(), sga.nodatavalue, sga.f, sga.crs, sga.metadata, sga.xsize, sga.ysize, sga.projref, sga.circular, sga.filename)
 
@@ -75,7 +75,7 @@ function partial_read_around(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Rea
     bb = bounding_boxes(sga, p_east[1],p_west[1],p_south[2],p_north[2])
 
     for b in bb
-      read_geotiff_data_partial(sgat, b[1], b[3], b[2], b[4], y_chunk_size = y_chunk_size)
+      read_geotiff_data_partial!(sgat, b[1], b[3], b[2], b[4], y_chunk_size = y_chunk_size)
       for (indices,value) in sgat.data
         if (distance(Tuple(coords(sga::SparseGeoArray, indices, Center())), p) <= radius) 
           if ((sga[indices[1],indices[2]]==sga.nodatavalue)) sga[indices[1],indices[2]]=f(value) end
@@ -115,7 +115,7 @@ function save_geotiff_data_complete(sgr :: SparseGeoArray{DT, IT}, filename :: S
   for r in 1:(r_tiles) 
 #    println("write $((r-1)*y_chunk_size) - $((r*y_chunk_size)-1)") 
 #    println("GDAL.gdalrasterio($band,GDAL.GF_Write,0,$((r-1)*y_chunk_size),$(sgr.xsize),$y_chunk_size,scanline,$(sgr.xsize),$y_chunk_size,GDAL.GDT_Float16,0,0)") 
-    private_getData(sgr, scanline, y_chunk_size, (r-1)*y_chunk_size)
+    private_get_data(sgr, scanline, y_chunk_size, (r-1)*y_chunk_size)
     GDAL.gdalrasterio(band,GDAL.GF_Write,0,(r-1)*y_chunk_size,sgr.xsize,y_chunk_size,scanline,sgr.xsize,y_chunk_size,GDAL.GDT_Float32,0,0)
     if (((r*y_chunk_size)*100 ÷ sgr.ysize) ÷ 10)>p
       p=(((r*y_chunk_size)*100 ÷ sgr.ysize) ÷ 10)
@@ -124,7 +124,7 @@ function save_geotiff_data_complete(sgr :: SparseGeoArray{DT, IT}, filename :: S
   end
 
   if (remaining_r != 0) 
-    private_getData(sgr, scanline, remaining_r, (r_tiles)*y_chunk_size-1)
+    private_get_data(sgr, scanline, remaining_r, (r_tiles)*y_chunk_size-1)
     GDAL.gdalrasterio(band,GDAL.GF_Write,0,(r_tiles)*y_chunk_size-1,sgr.xsize,remaining_r,scanline,sgr.xsize,remaining_r,GDAL.GDT_Float32,0,0)
     print("100")
   end
@@ -133,7 +133,7 @@ function save_geotiff_data_complete(sgr :: SparseGeoArray{DT, IT}, filename :: S
 end
 
 
-function read_geotiff_header(sgr :: SparseGeoArray{DT, IT}, filename :: String, band :: Integer = 1) where {DT <: Real, IT <: Integer}
+function read_geotiff_header!(sgr :: SparseGeoArray{DT, IT}, filename :: String, band :: Integer = 1) where {DT <: Real, IT <: Integer}
   dataset = GDAL.gdalopen(filename, GDAL.GA_ReadOnly)
   sgr.filename = filename
 
@@ -153,7 +153,7 @@ function read_geotiff_header(sgr :: SparseGeoArray{DT, IT}, filename :: String, 
 end
 
 
-function private_insert_data(sgr :: SparseGeoArray{DT, IT}, data :: Vector{Float32}, ysize :: Integer, r_offset :: Integer) where {DT <: Real, IT <: Integer}
+function private_insert_data!(sgr :: SparseGeoArray{DT, IT}, data :: Vector{Float32}, ysize :: Integer, r_offset :: Integer) where {DT <: Real, IT <: Integer}
   for j in 1:sgr.xsize
     for i in 1:ysize
       val = data[((i-1)*sgr.xsize + (j-1))+1]
@@ -163,7 +163,7 @@ function private_insert_data(sgr :: SparseGeoArray{DT, IT}, data :: Vector{Float
 end
 
 
-function private_insert_data(sgr :: SparseGeoArray{DT, IT}, data :: Vector{Float32}, x_start :: Integer, x_end :: Integer, y_start :: Integer, y_end :: Integer) where {DT <: Real, IT <: Integer}
+function private_insert_data!(sgr :: SparseGeoArray{DT, IT}, data :: Vector{Float32}, x_start :: Integer, x_end :: Integer, y_start :: Integer, y_end :: Integer) where {DT <: Real, IT <: Integer}
   xs = (x_end-x_start+1)
   for y in y_start:y_end
     for x in x_start:x_end
@@ -174,7 +174,7 @@ function private_insert_data(sgr :: SparseGeoArray{DT, IT}, data :: Vector{Float
 end
 
 
-function private_getData(sgr :: SparseGeoArray{DT, IT}, data :: Vector{Float32}, ysize :: Integer, r_offset :: Integer) where {DT <: Real, IT <: Integer}
+function private_get_data(sgr :: SparseGeoArray{DT, IT}, data :: Vector{Float32}, ysize :: Integer, r_offset :: Integer) where {DT <: Real, IT <: Integer}
   for j in 1:sgr.xsize
     for i in 1:ysize
       data[((i-1)*sgr.xsize + (j-1))+1] = sgr[j,i+r_offset]
@@ -183,14 +183,14 @@ function private_getData(sgr :: SparseGeoArray{DT, IT}, data :: Vector{Float32},
 end
 
 
-function private_insertCategorisedData(sgrs :: Dict{CT,SparseGeoArray{DT, IT}}, sgr_data :: SparseGeoArray{DT, IT}, sgr_categories :: SparseGeoArray{DT, IT}, data :: Vector{DT}, categories :: Vector{DT}, ysize :: Integer, r_offset :: Integer) where {CT <: Integer ,DT <: Real, IT <: Integer}
+function private_insert_categorised_data!(sgrs :: Dict{CT,SparseGeoArray{DT, IT}}, sgr_data :: SparseGeoArray{DT, IT}, sgr_categories :: SparseGeoArray{DT, IT}, data :: Vector{DT}, categories :: Vector{DT}, ysize :: Integer, r_offset :: Integer) where {CT <: Integer ,DT <: Real, IT <: Integer}
   for j in 1:sgr_data.xsize
     for i in 1:ysize
       val = data[((i-1)*sgr_data.xsize + (j-1))+1]
       cat = convert(CT,categories[((i-1)*sgr_data.xsize + (j-1))+1])
       if val!=sgr_data.nodatavalue && cat!=sgr_categories.nodatavalue 
         if !haskey(sgrs, cat)
-          sgr_t = SparseGeoArray{DT,IT}(Dict{Tuple{IT,IT},DT}(), sgr_data.nodatavalue, sgr_data.f, sgr_data.crs, sgr_data.metadata, sgr_data.xsize, sgr_data.ysize, sgr_data.projref, sgr_data.circular)
+          sgr_t = SparseGeoArray{DT,IT}(Dict{Tuple{IT,IT},DT}(), sgr_data.nodatavalue, sgr_data.f, sgr_data.crs, sgr_data.metadata, sgr_data.xsize, sgr_data.ysize, sgr_data.projref, sgr_data.circular, sgr_data.filename)
           sgrs[cat] = sgr_t
         end
         sgrs[cat][(j,i+r_offset)]=val
@@ -200,14 +200,14 @@ function private_insertCategorisedData(sgrs :: Dict{CT,SparseGeoArray{DT, IT}}, 
 end
 
 
-function readGEOTiffDataCategorised(sgrs :: Dict{CT, SparseGeoArray{DT, IT}}, filename_data :: String, filename_categories :: String, band :: Integer = 1, row_chunk_size :: Integer = 1) where {CT <: Integer, DT <: Real, IT <: Integer}
+function read_geotiff_data_categorised!(sgrs :: Dict{CT, SparseGeoArray{DT, IT}}, filename_data :: String, filename_categories :: String, band :: Integer = 1, row_chunk_size :: Integer = 1) where {CT <: Integer, DT <: Real, IT <: Integer}
   sga_data = SparseGeoArray{DT,IT}()
-  read_geotiff_header(sga_data, filename_data, band)
+  read_geotiff_header!(sga_data, filename_data, band)
   dataset_data = GDAL.gdalopen(filename_data, GDAL.GA_ReadOnly)
   band_data = GDAL.gdalgetrasterband(dataset_data, band)
 
   sga_categories = SparseGeoArray{DT,IT}()
-  private_readGEOTiffHeader(sga_categories, filename_categories, band)
+  read_geotiff_header!(sga_categories, filename_categories, band)
   dataset_categories = GDAL.gdalopen(filename_categories, GDAL.GA_ReadOnly)
   band_categories = GDAL.gdalgetrasterband(dataset_categories, band)
 
@@ -227,7 +227,7 @@ function readGEOTiffDataCategorised(sgrs :: Dict{CT, SparseGeoArray{DT, IT}}, fi
     GDAL.gdalrasterio(band_data,GDAL.GF_Read,0,(r-1)*row_chunk_size,sga_data.xsize,row_chunk_size,scanline_data,sga_data.xsize,row_chunk_size,GDAL.GDT_Float32,0,0)
     GDAL.gdalrasterio(band_categories,GDAL.GF_Read,0,(r-1)*row_chunk_size,sga_data.xsize,row_chunk_size,scanline_categories,sga_data.xsize,row_chunk_size,GDAL.GDT_Float32,0,0)
 
-    private_insertCategorisedData(sgrs, sga_data, sga_categories, scanline_data, scanline_categories, row_chunk_size, (r-1)*row_chunk_size)
+    private_insert_categorised_data!(sgrs, sga_data, sga_categories, scanline_data, scanline_categories, row_chunk_size, (r-1)*row_chunk_size)
     if (((r*row_chunk_size)*100 ÷ sga_data.ysize) ÷ 10)>p
       p=(((r*row_chunk_size)*100 ÷ sga_data.ysize) ÷ 10)
       print("$(p*10) ")
@@ -237,7 +237,7 @@ function readGEOTiffDataCategorised(sgrs :: Dict{CT, SparseGeoArray{DT, IT}}, fi
   if (remaining_r != 0) 
     GDAL.gdalrasterio(band_data,GDAL.GF_Read,0,(r_tiles)*row_chunk_size-1,sga_data.xsize,remaining_r,scanline_data,sga_data.xsize,remaining_r,GDAL.GDT_Float32,0,0)
     GDAL.gdalrasterio(band_categories,GDAL.GF_Read,0,(r_tiles)*row_chunk_size-1,sga_data.xsize,remaining_r,scanline_categories,sga_data.xsize,remaining_r,GDAL.GDT_Float32,0,0)
-    private_insertCategorisedData(sgrs, sga_data, sga_categories, scanline_data, scanline_categories,  remaining_r, (r_tiles)*row_chunk_size-1)
+    private_insert_categorised_data!(sgrs, sga_data, sga_categories, scanline_data, scanline_categories,  remaining_r, (r_tiles)*row_chunk_size-1)
   end
   println()
   GDAL.gdalclose(dataset_data)
