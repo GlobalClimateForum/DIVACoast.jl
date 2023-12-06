@@ -18,14 +18,14 @@ function attachData(df, filename, columnname_prefix, f = (s,x,y) -> s[x,y])
   df[!, :colname75] .= 0.0
 
   datafile = SparseGeoArray{Float32, Int32}()
-  read_geotiff_header(datafile,filename)
+  read_geotiff_header!(datafile,filename)
 
   print("reading " * columnname_prefix * " data: processing row")
   for (i,row) in enumerate(eachrow( df ))
     print("\e[2K") # clear whole line
     print("\e[1G") # move cursor to column 1
     print("reading " * columnname_prefix * " data: processing row $i of $(size(df,1))")
-    partial_read_around(datafile, (row.Longitude, row.Latitude), 75)
+    partial_read_around!(datafile, (row.Longitude, row.Latitude), 75)
   end
   println()
 
@@ -48,14 +48,16 @@ function attachData(df, filename, columnname_prefix, f = (s,x,y) -> s[x,y])
   rename!(df,:colname75 => columnname_prefix * "_in_75_km_radius")
 end
 
-attachData(df, "../../../../../data/example_Global/tif/Global_ghs_pop_coastal_masked.tif", "population")
+data_path = "../../../../../data"
+
+attachData(df, data_path * "/population/global_human_settlement_layer/GHS_POP_E2020_GLOBE_R2023A_4326_3ss_V1_0_resampled.tif", "population")
 CSV.write("study_sites_population.csv",df)
-attachData(df, "../../../../../data/global_saltmarshes/WCMC027_Saltmarsh_v6_1/01_Data/WCMC027_Saltmarshes_Py_v6_1.tif", "saltmarsh", (s,x,y) -> area(s,x,y))
+attachData(df, data_path * "/global_saltmarshes/WCMC027_Saltmarsh_v6_1/01_Data/WCMC027_Saltmarshes_Py_v6_1.tif", "saltmarsh", (s,x,y) -> area(s,x,y))
 CSV.write("study_sites_population_saltmarshes.csv",df)
-attachData(df, "../../../../../data/global_mangroves/gmw_v3_2020/tif/gmw_v3_2020.tif", "mangrove", (s,x,y) -> area(s,x,y))
+attachData(df, data_path * "/global_mangroves/gmw_v3_2020/tif/gmw_v3_2020.tif", "mangrove", (s,x,y) -> area(s,x,y))
 CSV.write("study_sites_population_saltmarshes_mangroves.csv",df)
-attachData(df, "../../../../../data/global_tidal_flats/tif/tidalflats.tif", "tidalflat", (s,x,y) -> area(s,x,y))
+attachData(df, data_path * "/global_tidal_flats/tif/tidalflats.tif", "tidalflat", (s,x,y) -> area(s,x,y))
 CSV.write("study_sites_population_saltmarshes_mangroves_tidalflats.csv",df)
-attachData(df, "../../../../../data/example_Global/tif/WCMC008_CoralReef2018_Py_v4_1.tif", "coralreef", (s,x,y) -> area(s,x,y))
+attachData(df, data_path * "/global_coral_reefs/14_001_WCMC008_CoralReefs2018_v4_1/01_Data/WCMC008_CoralReef2018_Py_v4_1.tif", "coralreef", (s,x,y) -> area(s,x,y))
 CSV.write("study_sites_population_saltmarshes_mangroves_tidalflats_coralreefs.csv",df)
 
