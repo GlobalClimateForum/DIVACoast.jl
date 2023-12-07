@@ -234,10 +234,11 @@ function get_closest_value(sga, p)
                 elseif temp_x < 1
                     temp_x = size(sga)[1]
                 end
+
                 if temp_y > size(sga)[2]
-                    temp_y = 1
-                elseif temp_y < 1
                     temp_y = size(sga)[2]
+                elseif temp_y < 1
+                    temp_y = 1
                 end
                 
                 # get value
