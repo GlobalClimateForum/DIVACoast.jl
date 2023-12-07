@@ -62,7 +62,17 @@ end
 #attachData(df, data_path * "/global_coral_reefs/14_001_WCMC008_CoralReefs2018_v4_1/01_Data/WCMC008_CoralReef2018_Py_v4_1.tif", "coralreef", (s,x,y) -> area(s,x,y))
 #CSV.write("study_sites_population_saltmarshes_mangroves_tidalflats_coralreefs.csv",df)
 
-sga_GDP_capita = SparseGeoArray{Float32, Int32}("/home/honsel/Projects/sebastianoData/GDP_per_capita_PPP_2015_v2.tif")
+# Get GDP data
+data = subdir -> string("/home/honsel/Projects/sebastianoData/data/" , subdir)
+
+sga_GDP = SparseGeoArray{Float32, Int32}(data("GDP2015.tif"))
+sga_GDP_capita = SparseGeoArray{Float32, Int32}(data("GDP_per_capita_PPP_2015_v2.tif"))
+
+df[!, :GDP_2015] .= sga_GDP.nodatavalue
+df[!, :GDP_per_capita_2015] .= sga_GDP_capita.nodatavalue
+
 for (i,row) in enumerate(eachrow(df))
-  println(get_closest_value(sga_GDP_capita, (row.Longitude, row.Latitude))
+  row.GDP_2015 = get_closest_value(sga_GDP, (row.Longitude, row.Latitude))
+  row.GDP_per_capita_2015 = get_closest_value(sga_GDP_capita, (row.Longitude, row.Latitude))
 end
+CSV.write("gdp.csv",df)
