@@ -1,4 +1,5 @@
 
+using Statistics
 # union : union of all values in sga1 and sga2 in a new sga
 # result contains all data that is in sga1 OR sga2
 # if a grid cell is present in both but with different values the value of sga1 should be used
@@ -198,35 +199,65 @@ end
 
 sga_summarize_within(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, sumryFunction :: Function) where {DT <: Real, IT <: Integer} = sga_summarize_within(sga, p, radius, sumryFunction, (s,x,y) -> s[x,y])
 
+# Function to get the mean of all minimum values according to sort_list in value_list
+function minumum_mean(sort_list, value_list)
+    min_indices = findall(x -> x == minimum(sort_list), sort_list)
+    values = value_list[min_indices]
+    return(mean(values))
+end
+
 # for small datasets only
 function get_closest_value(sga, p)
-    i_x, i_y = indices(p)
-    value = valueTransformation(sga, indices[1], i_x, i_y)
+    
+    i_x, i_y = indices(sga, p)
+    value = sga[i_x, i_y]
+
     if  value != sga.nodatavalue 
         return(value)
+
     else
+
         closest_values = []
         closest_distance = []
         directions = [(-1, -1), (-1, 0),(-1, 1),(0, -1),(0, 1),(1, -1),(1, 0),(1, 1)]
         i_distance = 1
 
-        while closest_values == []
-        
+        while closest_values == []    
+            # Go in all 8 directions
             for (dx, dy) in directions
-
                 temp_x = i_x + (i_distance * dx)
                 temp_y = i_y + (i_distance * dy)
-                temp_value = valueTransformation(sga,temp_x,temp_y)
+                
+                #stay within the bounds of sga
+                if temp_x > size(sga)[1]
+                    temp_x = 1
+                elseif temp_x < 1
+                    temp_x = size(sga)[1]
+                end
+                if temp_y > size(sga)[2]
+                    temp_y = 1
+                elseif temp_y < 1
+                    temp_y = size(sga)[2]
+                end
+                
+                # get value
+                temp_value = sga[temp_x, temp_y]
 
+                # check if value is defined
                 if temp_value != sga.nodatavalue
                     val_dist = distance(Tuple(coords(sga::SparseGeoArray, (temp_x, temp_y), Center())), p)
                     push!(closest_values, temp_value)
                     push!(closest_distance, val_dist)
                 end
             end
-
             i_distance += 1
         end
-        return(closest_values[argmin(closest_distance)])
+
+        if length(closest_distance) >  1
+            return(minumum_mean(closest_distance, closest_values))
+        else
+            return(closest_values[1])
+        end
+
     end
 end
