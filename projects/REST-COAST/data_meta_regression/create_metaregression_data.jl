@@ -49,30 +49,25 @@ function attachData(df, filename, columnname_prefix, f = (s,x,y) -> s[x,y])
   rename!(df,:colname75 => columnname_prefix * "_in_75_km_radius")
 end
 
-#data_path = "../../../../../data"
 
-#attachData(df, data_path * "/population/global_human_settlement_layer/GHS_POP_E2020_GLOBE_R2023A_4326_3ss_V1_0_resampled.tif", "population")
-#CSV.write("study_sites_population.csv",df)
-#attachData(df, data_path * "/global_saltmarshes/WCMC027_Saltmarsh_v6_1/01_Data/WCMC027_Saltmarshes_Py_v6_1.tif", "saltmarsh", (s,x,y) -> area(s,x,y))
-#CSV.write("study_sites_population_saltmarshes.csv",df)
-#attachData(df, data_path * "/global_mangroves/gmw_v3_2020/tif/gmw_v3_2020.tif", "mangrove", (s,x,y) -> area(s,x,y))
-#CSV.write("study_sites_population_saltmarshes_mangroves.csv",df)
-#attachData(df, data_path * "/global_tidal_flats/tif/tidalflats.tif", "tidalflat", (s,x,y) -> area(s,x,y))
-#CSV.write("study_sites_population_saltmarshes_mangroves_tidalflats.csv",df)
-#attachData(df, data_path * "/global_coral_reefs/14_001_WCMC008_CoralReefs2018_v4_1/01_Data/WCMC008_CoralReef2018_Py_v4_1.tif", "coralreef", (s,x,y) -> area(s,x,y))
-#CSV.write("study_sites_population_saltmarshes_mangroves_tidalflats_coralreefs.csv",df)
 
-# Get GDP data
-data = subdir -> string("/home/honsel/Projects/sebastianoData/data/" , subdir)
+data_path = "../../../../../data"
+file_path(filename) = data_path * filename
 
-sga_GDP = SparseGeoArray{Float32, Int32}(data("GDP2015.tif"))
-sga_GDP_capita = SparseGeoArray{Float32, Int32}(data("GDP_per_capita_PPP_2015_v2.tif"))
+attachData(df, file_path("/population/global_human_settlement_layer/GHS_POP_E2020_GLOBE_R2023A_4326_3ss_V1_0_resampled.tif"), "population")
+CSV.write("study_sites_population.csv",df)
+attachData(df, file_path("/global_saltmarshes/WCMC027_Saltmarsh_v6_1/01_Data/WCMC027_Saltmarshes_Py_v6_1.tif"), "saltmarsh", (s,x,y) -> area(s,x,y))
+CSV.write("study_sites_population_saltmarshes.csv",df)
+attachData(df, file_path("/global_mangroves/gmw_v3_2020/tif/gmw_v3_2020.tif"), "mangrove", (s,x,y) -> area(s,x,y))
+CSV.write("study_sites_population_saltmarshes_mangroves.csv",df)
+attachData(df, file_path("/global_tidal_flats/tif/tidalflats_resampled.tif"), "tidalflat", (s,x,y) -> area(s,x,y))
+CSV.write("study_sites_population_saltmarshes_mangroves_tidalflats.csv",df)
+attachData(df, file_path("/global_coral_reefs/14_001_WCMC008_CoralReefs2018_v4_1/01_Data/WCMC008_CoralReef2018_Py_v4_1.tif"), "coralreef", (s,x,y) -> area(s,x,y))
+CSV.write("study_sites_population_saltmarshes_mangroves_tidalflats_coralreefs.csv",df)
 
-df[!, :GDP_2015] .= sga_GDP.nodatavalue
+sga_GDP_capita = SparseGeoArray{Float32, Int32}(file_path("/gdp/GDP_per_capita_PPP_2015_v2.tif"))
 df[!, :GDP_per_capita_2015] .= sga_GDP_capita.nodatavalue
-
 for (i,row) in enumerate(eachrow(df))
-  row.GDP_2015 = get_closest_value(sga_GDP, (row.Longitude, row.Latitude))
   row.GDP_per_capita_2015 = get_closest_value(sga_GDP_capita, (row.Longitude, row.Latitude))
 end
-CSV.write("gdp.csv",df)
+CSV.write("study_sites_metaregression_data",df)

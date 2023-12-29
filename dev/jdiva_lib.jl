@@ -8,6 +8,7 @@ include("./logger/jdiva_logger.jl")
 include("./datatypes/geodatatype/SparseGeoArrays.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profiles.jl")
 include("./algorithms/conversion/SGRToHSP.jl")
-include("./io/HSPs_nc.jl")
+include("./io/nc/HSPs_nc_load.jl")
+include("./io/nc/HSPs_nc_save.jl")
 
 end
