@@ -30,12 +30,11 @@ function save_hsps_nc(data :: Dict{Int32, HypsometricProfile{Float32}}, filename
    
   ids = keys(data)
   ids_data = Float32[x for x in ids]
-  
-  ds_new = Dataset(filename,"c")
-
   elevation_data = copy(elevations)
   pushfirst!(elevation_data,min_elevation)
 
+  ds_new = Dataset(filename,"c")
+  
   defDim(ds_new,"ids",size(ids_data,1))
   defDim(ds_new,"elevations",size(elevation_data,1))
 
@@ -43,9 +42,11 @@ function save_hsps_nc(data :: Dict{Int32, HypsometricProfile{Float32}}, filename
   nv[:] = ids_data
   nv = defVar(ds_new,"elevations",Float32,("elevations",), attrib = OrderedDict("units" => "m", "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value)))
   nv[:] = elevation_data
-  #nv[1] = min_elevation
-  #nv[2:size(elevations,1)] = elevations
  
+  nv = defVar(ds_new,"width",Float32,("ids",), attrib = OrderedDict("units" => "km", "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value)))
+  width_data = map(hpsf -> hpsf.width, values(data))
+  nv[:] = width_data
+
   exp_data = Array{Float32}(undef, size(ids_data,1), size(elevations,1)+1)
   nv = defVar(ds_new,"area",Float32,("ids","elevations"), attrib = OrderedDict("units" => "km^2", "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value),"dynamic" => "false"))
 

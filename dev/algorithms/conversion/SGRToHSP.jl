@@ -156,9 +156,9 @@ function to_hypsometric_profile(e :: Array{DT}, a :: Array{DT}, st_exp :: Array{
 end
 
 function to_hypsometric_profiles(
-  category_file_name :: String, elevation_file_name :: String, exposure_static_file_names :: Array{String}, 
-  exposure_static_names::Array{String}, exposure_dynamic_file_names :: Array{String}, 
-  exposure_dynamic_names::Array{String}, 
+  category_file_name :: String, elevation_file_name :: String, 
+  exposure_static_file_names :: Array{String}, exposure_static_names::Array{String}, exposure_static_units::Array{String}, 
+  exposure_dynamic_file_names :: Array{String}, exposure_dynamic_names::Array{String}, exposure_dynamic_units::Array{String},
   w::Float32, min_elevation::Float32, max_elevation::Float32, elevation_incr::Real) 
 
   category_data = SparseGeoArray{Float32, Int32}()
