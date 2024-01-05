@@ -38,8 +38,10 @@ function load_hsps_nc(::Type{IT}, ::Type{DT}, filename::String)::Dict{IT,Hypsome
   hpsf_data :: Dict{IT,HypsometricProfile{DT}} = Dict()
   static_exp = Array{NCDatasets.CFVariable}(undef, 0)
   static_exp_names = Array{String}(undef, 0)
+  static_exp_units = Array{String}(undef, 0)
   dynamic_exp = Array{NCDatasets.CFVariable}(undef, 0)
   dynamic_exp_names = Array{String}(undef, 0)
+  dynamic_exp_units = Array{String}(undef, 0)
 
   for (varname, var) in ds
     #    # all variables
@@ -48,10 +50,12 @@ function load_hsps_nc(::Type{IT}, ::Type{DT}, filename::String)::Dict{IT,Hypsome
       if haskey(var.attrib, "static") && lowercase(var.attrib["static"]) == "true"
         push!(static_exp,var)
         push!(static_exp_names,varname)
+        if haskey(var.attrib, "unit") push!(static_exp_units,var.attrib["unit"]) else push!(static_exp_units,"") end
       end
       if haskey(var.attrib, "dynamic") && lowercase(var.attrib["dynamic"]) == "true"
         push!(dynamic_exp,var)
         push!(dynamic_exp_names,varname)
+        if haskey(var.attrib, "unit") push!(dynamic_exp_units,var.attrib["unit"]) else push!(dynamic_exp_units,"") end
       end
     end
   end
@@ -66,7 +70,7 @@ function load_hsps_nc(::Type{IT}, ::Type{DT}, filename::String)::Dict{IT,Hypsome
     for j in 1:size(dynamic_exp,1)
       d_exposure[:,j] = convert(Array{DT},dynamic_exp[j][i,:])
     end
-    hpsf = HypsometricProfile(width[i], el, area, s_exposure, d_exposure, static_exp_names, dynamic_exp_names) 
+    hpsf = HypsometricProfile(width[i], el, area, s_exposure, static_exp_names, static_exp_units, d_exposure, dynamic_exp_names, dynamic_exp_units) 
     hpsf_data[ids[i]] = hpsf
   end
 

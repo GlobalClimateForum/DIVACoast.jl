@@ -55,16 +55,16 @@ function save_hsps_nc(data :: Dict{Int32, HypsometricProfile{Float32}}, filename
   end
   nv[:] = exp_data
 
-  for (index, se) in enumerate(string.(first(data)[2].cummulativeStaticSymbols))
-    nv = defVar(ds_new,se,Float32,("ids","elevations"), attrib = OrderedDict("units" => "unknown", "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value),"_FillValue" => Float32(my_missing_value),"dynamic" => "false"))  
+  for (index, se) in enumerate(string.(first(data)[2].staticExposureSymbols))
+    nv = defVar(ds_new,se,Float32,("ids","elevations"), attrib = OrderedDict("units" => first(data)[2].staticExposureUnits[index], "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value),"_FillValue" => Float32(my_missing_value),"dynamic" => "false"))  
     for i in 1:size(ids_data,1)
       exp_data[i,:]=get_exposures(data[convert(Int32, ids_data[i])],elevations,2,index)
     end
     nv[:] = exp_data
   end
 
-  for (index, de) in enumerate(string.(first(data)[2].cummulativeDynamicSymbols))
-    nv = defVar(ds_new,de,Float32,("ids","elevations"), attrib = OrderedDict("units" => "unknown", "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value),"_FillValue" => Float32(my_missing_value),"dynamic" => "true"))  
+  for (index, de) in enumerate(string.(first(data)[2].dynamicExposureSymbols))
+    nv = defVar(ds_new,de,Float32,("ids","elevations"), attrib = OrderedDict("units" => first(data)[2].dynamicExposureUnits[index], "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value),"_FillValue" => Float32(my_missing_value),"dynamic" => "true"))  
     for i in 1:size(ids_data,1)
       exp_data[i,:]=get_exposures(data[convert(Int32, ids_data[i])],elevations,3,index)
     end

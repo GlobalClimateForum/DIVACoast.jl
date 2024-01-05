@@ -4,9 +4,13 @@ using StructArrays
 
 using .jdiva
 
-hp = HypsometricProfileFixed(1.0f0, [-1f0, 0f0, 1f0, 2f0, 3f0, 4f0, 5f0], [0f0, 1f0, 1f0, 2f0, 3f0, 2f0, 1f0], 
-StructArray{NamedTuple{(:area_lu1, :area_lu2, :area_lu3, :area_lu4), NTuple{4, Float32}}}((area_lu1=[0f0,1f0,1f0,1f0,2f0,2f0,2f0],area_lu2=[0f0,0f0,0f0,0f0,0f0,0f0,0f0],area_lu3=[0f0,10f0,10f0,10f0,20f0,20f0,10f0],area_lu4=[0f0,6f0,5f0,4f0,3f0,2f0,1f0])),
-StructArray{NamedTuple{(:pop, :assets0, :assets1, :assets2), NTuple{4, Float32}}}((pop=[0f0,1f0,1f0,1f0,2f0,2f0,2f0],assets0=[0f0,0f0,0f0,0f0,0f0,0f0,0f0],assets1=[0f0,10f0,10f0,10f0,20f0,20f0,10f0],assets2=[0f0,6f0,5f0,4f0,3f0,2f0,1f0])))
+
+
+hp = HypsometricProfile(1.0f0, [-1f0, 0f0, 1f0, 2f0, 3f0, 4f0, 5f0], [0f0, 1f0, 1f0, 2f0, 3f0, 2f0, 1f0], 
+[0f0 0f0 0f0 0f0; 1f0 0f0 10f0 6f0; 1f0 0f0 10f0 5f0; 2f0 0f0 20f0 4f0; 2f0 0f0 20f0 3f0; 2f0 0f0 20f0 2f0; 1f0 0f0 10f0 1f0;],
+["area_lu1","area_lu2","area_lu3","area_lu4"], ["km^2","km^2","km^2","km^2"],
+[0f0 0f0 0f0; 1000f0 10f0 6f0; 1000f0 10f0 5f0; 2000f0 20f0 4f0; 2000f0 20f0 3f0; 2000f0 20f0 2f0; 1000f0 10f0 1f0;],
+["pop","assets1","assets2"], ["","EUR","USD"])
 
 println("orig:")
 println(hp)
@@ -24,8 +28,8 @@ println("7.0 $(exposure_named(hp,7.0f0))")
 println("4.9 $(exposure_named(hp,4.9))")
 
 println()
-println("sed(hp,[0.9,1.2,0.75,0.2]):")
-sed(hp,[0.9,1.2,0.75,0.2])
+println("sed(hp,[0.9,1.2,0.75]):")
+sed(hp,[0.9,1.2,0.75])
 
 println(" -2 $(exposure_named(hp,-2.0f0))")
 println("2.0 $(exposure_named(hp,2.0f0))")
@@ -34,8 +38,8 @@ println("7.0 $(exposure_named(hp,7.0f0))")
 println("4.9 $(exposure_named(hp,4.9))")
 
 println()
-println("sed(hp,(pop = 0.9, assets1=4/3, assets2=5, assets0=1.2)):")
-sed(hp,(pop = 0.9, assets1=4/3, assets2=5, assets0=1.2))
+println("sed(hp,(pop = 0.9, assets1=4/3, assets2=5)):")
+sed(hp,(pop = 0.9, assets1=4/3, assets2=5))
 
 println(" -2 $(exposure_named(hp,-2.0f0))")
 println("2.0 $(exposure_named(hp,2.0f0))")
@@ -45,8 +49,8 @@ println("4.9 $(exposure_named(hp,4.9))")
 
 
 println()
-println("sed_above(hp,2.5,[0.9,1.2,0.75,0.2]:")
-sed_above(hp,2.5,[0.9,1.2,0.75,0.2])
+println("sed_above(hp,2.5,[0.9,1.2,0.75]:")
+sed_above(hp,2.5,[0.9,1.2,0.75])
 
 println(" -2 $(exposure_named(hp,-2.0f0))")
 println("2.0 $(exposure_named(hp,2.0f0))")
@@ -55,8 +59,8 @@ println("7.0 $(exposure_named(hp,7.0f0))")
 println("4.9 $(exposure_named(hp,4.9))")
 
 println()
-println("sed_below(hp,3.5,(assets1=0.5, assets2=10, assets0=1.0, pop = 0.9)):")
-sed_below(hp,3.5,(assets1=0.5, assets2=10, assets0=1.0, pop = 0.9))
+println("sed_below(hp,3.5,(assets1=0.5, assets2=10, assets0=1.0)):")
+sed_below(hp,3.5,(assets1=0.5, assets2=10, pop=1.0))
 
 println(" -2 $(exposure_named(hp,-2.0f0))")
 println("2.0 $(exposure_named(hp,2.0f0))")
@@ -88,8 +92,8 @@ println("4.9 $(exposure_named(hp,4.9))")
 
 
 println()
-println("add_above(hp,0,[100,0,10,50])")
-add_above(hp,0,[100,0,10,50])
+println("add_above(hp,0,[100,0,10])")
+add_above(hp,0,[100,0,10])
 
 println(" -2 $(exposure_named(hp,-2.0f0))")
 println("2.0 $(exposure_named(hp,2.0f0))")
@@ -98,8 +102,8 @@ println("7.0 $(exposure_named(hp,7.0f0))")
 println("4.9 $(exposure_named(hp,4.9))")
 
 println()
-println("add_between(hp,2,3,[100,0,10,50])")
-add_between(hp,2,3,[100,0,10,50])
+println("add_between(hp,2,3,[100,0,10])")
+add_between(hp,2,3,[100,0,10])
 
 println(" -2 $(exposure_named(hp,-2.0f0))")
 println("2.0 $(exposure_named(hp,2.0f0))")
