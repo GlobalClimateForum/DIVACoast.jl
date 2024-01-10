@@ -1,5 +1,6 @@
 dev/test/scratch.jl
 exercises/test.tif
+docs/build/
 .vscode/settings.json
 ./save/*
 .gitignore
