@@ -1,5 +1,6 @@
 function add_static_exposure!(hspf::HypsometricProfile, elevation::Array{DT}, s_exposure::Array{DT}, s_exposure_name::String, s_exposure_units::String) where {DT<:Real}
-  # resample hspf.elevation to elevation and vice versa
+  # resample hspf.elevation to elevation 
+  resample!(hspf, elevation) 
 
   if (length(hspf.elevation) != size(s_exposure, 1))
     logg(hspf.logger, Logging.Error, @__FILE__, "", "\n length(hspf.elevation) != size(s_exposure,1) as length($(hspf.elevation)) != size($s_exposure,1) as $(length(hspf.elevation)) != $(size(s_exposure,1))")
@@ -12,11 +13,15 @@ function add_static_exposure!(hspf::HypsometricProfile, elevation::Array{DT}, s_
   hspf.staticExposureSymbols = (hspf.staticExposureSymbols...,Symbol(s_exposure_name))
   push!(hspf.staticExposureUnits, s_exposure_units)
   hspf.cummulativeStaticExposure = hcat(hspf.cummulativeStaticExposure, cumsum(s_exposure))
+
+  compress!(hspf)
 end
 
 function add_dynamic_exposure!(hspf::HypsometricProfile, elevation::Array{DT}, d_exposure::Array{DT}, d_exposure_name::String, d_exposure_units::String) where {DT<:Real}
+  resample!(hspf, elevation) 
+
   if (length(hspf.elevation) != size(d_exposure, 1))
-    logg(hspf.ogger, Logging.Error, @__FILE__, "", "\n length(hspf.elevation) != size(d_exposure,1) as length($(hspf.elevation)) != size($d_exposure,1) as $(length(hspf.elevations)) != $(size(d_exposure,1))")
+    logg(hspf.logger, Logging.Error, @__FILE__, "", "\n length(hspf.elevation) != size(d_exposure,1) as length($(hspf.elevation)) != size($d_exposure,1) as $(length(hspf.elevation)) != $(size(d_exposure,1))")
   end
 
   if (values(d_exposure[1]) != 0)
@@ -26,6 +31,8 @@ function add_dynamic_exposure!(hspf::HypsometricProfile, elevation::Array{DT}, d
   hspf.dynamicExposureSymbols = (hspf.dynamicExposureSymbols...,Symbol(d_exposure_name))
   push!(hspf.dynamicExposureUnits, d_exposure_units)
   hspf.cummulativeDynamicExposure = hcat(hspf.cummulativeDynamicExposure, cumsum(d_exposure))
+
+  compress!(hspf)
 end
 
 function remove_static_exposure!(hspf::HypsometricProfile, ind :: Integer)

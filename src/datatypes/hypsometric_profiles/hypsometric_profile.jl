@@ -158,3 +158,56 @@ function private_slope(hspf::HypsometricProfile, i::Int64)::DT
   return (hspf.elevation[i] - hspf.elevation[i-1]) * (hspf.width / hspf.cummulativeArea[i])
 end
 
+function resample!(hspf::HypsometricProfile{DT}, elevation :: Array{DT}) where {DT <: Real}
+  if (hspf.elevation[1]!=elevation[1])
+    logg(hspf.logger, Logging.Error, @__FILE__, "", "\n min elevation can not be changed in resampling: $(hspf.elevation[1]) != $(elevation[1])")
+  end
+
+  can = Array{DT}(undef, size(elevation,1))
+  csen::Array{DT,2} = Array{DT, 2}(undef, size(elevation,1), size(hspf.cummulativeStaticExposure,2))
+  cden::Array{DT,2} = Array{DT, 2}(undef, size(elevation,1), size(hspf.cummulativeDynamicExposure,2))
+
+  for i in 1:size(elevation,1)
+    t_exposure=exposure(hspf,elevation[i])
+    can[i]=t_exposure[1]
+    csen[i,:]=t_exposure[2]
+    cden[i,:]=t_exposure[3]
+  end
+
+  hspf.elevation = copy(elevation)
+  hspf.cummulativeArea = can
+  hspf.cummulativeStaticExposure = csen
+  hspf.cummulativeDynamicExposure = cden
+end
+
+
+function compress!(hspf::HypsometricProfile)
+  i = 3
+  while i <= size(hspf.elevation, 1)-1
+    if private_colinear_lines(hspf, i - 1, i, i + 1)
+      private_remove_line(hspf, i)
+    else 
+      i=i+1
+    end
+  end
+end
+
+
+function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, i3::Int64)::Bool
+  ex1 = exposure(hspf, hspf.elevation[i1])
+  ex2 = exposure(hspf, hspf.elevation[i2])
+  ex3 = exposure(hspf, hspf.elevation[i3])
+  r = (hspf.elevation[i2] - hspf.elevation[i1]) / (hspf.elevation[i3] - hspf.elevation[i1])
+  return isapprox(ex2[1], ex1[1] + r * (ex2[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex2[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex2[3] - ex1[3]))
+end
+
+
+function private_remove_line(hspf::HypsometricProfile, i)
+  # probably not efficient
+  deleteat!(hspf.elevation,i)
+  deleteat!(hspf.cummulativeArea,i)
+  newarray = hspf.cummulativeStaticExposure[1:end.!=(i), :]
+  hspf.cummulativeStaticExposure = newarray
+  newarray = hspf.cummulativeDynamicExposure[1:end.!=(i), :]
+  hspf.cummulativeDynamicExposure = newarray
+end

@@ -131,7 +131,7 @@ function remove_below(hspf::HypsometricProfile{DT}, below::Real) :: Array{DT}  w
     end
   end
 
-  private_clean_up(hspf)
+  compress!(hspf)
 
   return removed
 end
@@ -163,7 +163,7 @@ function add_above(hspf::HypsometricProfile, above::Real, values::Array{T}) wher
     end
   end
 
-  private_clean_up(hspf)
+  compress!(hspf)
 end
 
 
@@ -194,7 +194,7 @@ function add_between(hspf::HypsometricProfile, above::Real, below::Real, values:
     end
   end
 
-  private_clean_up(hspf)
+  compress!(hspf)
 end
 
 
@@ -229,33 +229,3 @@ function private_insert_elevation_point(hspf::HypsometricProfile{DT}, el::Real, 
   hspf.cummulativeDynamicExposure = vcat(vcat(hspf.cummulativeDynamicExposure[1:ind-1, 1:end], ex[3]'), r)
 end
 
-
-function private_clean_up(hspf::HypsometricProfile)
-  for i in 3:size(hspf.cummulativeDynamicExposure, 1)-1
-    if private_colinear_lines(hspf, i - 1, i, i + 1)
-      private_remove_line(hpsf, i)
-    end
-  end
-end
-
-
-function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, i3::Int64)::Bool
-  ex1 = exposure(hspf, hspf.elevation[i1])
-  ex2 = exposure(hspf, hspf.elevation[i2])
-  ex3 = exposure(hspf, hspf.elevation[i3])
-  r = (hspf.elevation[i2] - hspf.elevation[i1]) / (hspf.elevation[i3] - hspf.elevation[i1])
-  return isapprox(ex2[1], ex1[1] + r * (ex2[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex2[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex2[3] - ex1[3]))
-end
-
-
-function private_remove_line(hspf::HypsometricProfile, i)
-  # probably not efficient
-  newarray = hspf.elevation[1:end.!=(i), :]
-  hpsf.elevation = newarray
-  newarray = hspf.cummulativeArea[1:end.!=(i), :]
-  hpsf.cummulativeArea = newarray
-  newarray = hspf.cummulativeStaticExposure[1:end.!=(i), :]
-  hspf.cummulativeStaticExposure = newarray
-  newarray = hspf.cummulativeDynamicExposure[1:end.!=(i), :]
-  hspf.cummulativeDynamicExposure = newarray
-end
