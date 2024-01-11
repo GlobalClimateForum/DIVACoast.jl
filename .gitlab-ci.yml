@@ -1,8 +1,8 @@
 pages:
  script:
  - mkdir .public
- - cp -r * .public
- - mv .docs/build public
+ - cp -r docs/build* .public
+ - mv .public public
  artifacts:
     paths:
     - public
