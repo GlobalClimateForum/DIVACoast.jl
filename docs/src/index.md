@@ -4,7 +4,7 @@
 ## GeoUtils
 
 ### Geospatial analysis
-**tools to run geopspatial analysis**
+*tools to run geopspatial analysis*
 
 ```@docs
 Main.jdiva.nh4
