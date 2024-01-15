@@ -82,7 +82,7 @@ end
 
 
 # special case ddf = d/(d+hdd)
-function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, i2::Integer, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {IT<:Integer,DT<:Real}
+function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, i2::Integer, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
   # internal function for partial damage calculation
   # attention: only works for i1 < i2 and hspf.elevation[i2] <= wl -- this is not checked 
   sl = slope(hspf, i2)
@@ -102,7 +102,7 @@ function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, i2::I
   return partial_damage(hspf, sl, hspf.elevation[i1], hspf.elevation[i2], wl, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy, hdd_area, hdds_static, hdds_dynamic)
 end
 
-function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {IT<:Integer,DT<:Real}
+function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
   sl = slope(hspf, i1 + 1)
 
   exp_wl = exposure(hspf, wl)
@@ -125,7 +125,7 @@ end
 function partial_damage(hspf::HypsometricProfile{DT}, sl::DT, wl_low::DT, wl_high::DT, wl::DT,
   Δ_area::DT, Δ_exp_st::Array{DT}, Δ_exp_dy::Array{DT},
   ρ_area::DT, ρ_exp_st::Array{DT}, ρ_exp_dy::Array{DT},
-  hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {IT<:Integer,DT<:Real}
+  hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
 
   Δ_elevation1 = wl - wl_high
   Δ_elevation2 = wl - wl_low
@@ -147,7 +147,7 @@ end
 
 
 # General case
-function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, i2::Integer, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {IT<:Integer,DT<:Real}
+function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, i2::Integer, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real}
   # internal function for partial damage calculation
   # attention: only works for i1 < i2 and hspf.elevation[i2] <= wl -- this is not checked 
   sl = slope(hspf, i2)
@@ -167,7 +167,7 @@ function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, i2::I
   return partial_damage(hspf, sl, hspf.elevation[i1], hspf.elevation[i2], wl, ρ_area, ρ_exp_st, ρ_exp_dy, ddf_area, ddfs_static, ddfs_dynamic)
 end
 
-function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {IT<:Integer,DT<:Real}
+function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real}
   sl = slope(hspf, i1 + 1)
 
   exp_wl = exposure(hspf, wl)
@@ -189,11 +189,11 @@ end
 @inline
 function partial_damage(hspf::HypsometricProfile{DT}, sl::DT, wl_low::DT, wl_high::DT, wl::DT,
   ρ_area::DT, ρ_exp_st::Array{DT}, ρ_exp_dy::Array{DT},
-  ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {IT<:Integer,DT<:Real}
+  ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real}
 
   factor_area = quadgk(x -> ddf_area(wl - x), wl_low, wl_high)[1]
-  factor_static = map(f -> (quadgk(x -> f(wl - x), wl_low, wl_high))[1], ddfs_static)
-  factor_dynamic = map(f -> (quadgk(x -> f(wl - x), wl_low, wl_high))[1], ddfs_dynamic)
+  factor_static = size(hspf.cummulativeStaticExposure)[2] >= 1 ? map(f -> (quadgk(x -> f(wl - x), wl_low, wl_high))[1], ddfs_static) : Vector{DT}()
+  factor_dynamic = size(hspf.cummulativeDynamicExposure)[2] >= 1 ? map(f -> (quadgk(x -> f(wl - x), wl_low, wl_high))[1], ddfs_dynamic) : Vector{DT}()
 
   return (factor_area * ρ_area / sl, factor_static .* ρ_exp_st / sl, factor_dynamic .* ρ_exp_dy / sl)
 end

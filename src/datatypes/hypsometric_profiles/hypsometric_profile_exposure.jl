@@ -26,7 +26,6 @@ function exposure(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
   end
 end
 
-
 function exposure_named(hspf::HypsometricProfile, e::Real)
   ex = exposure(hspf, e)
   @inbounds return (ex[1], NamedTuple{hspf.staticExposureSymbols}(ex[2]), NamedTuple{hspf.dynamicExposureSymbols}(ex[3]))

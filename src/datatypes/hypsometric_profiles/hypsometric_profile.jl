@@ -114,6 +114,29 @@ mutable struct HypsometricProfile{DT<:Real}
 
     new{DT}(w, elevations, cumsum(area), cumsum(s_exposure, dims=1), Tuple(map(x -> Symbol(x), s_exposure_names)), s_exposure_units, cumsum(d_exposure, dims=1), Tuple(map(x -> Symbol(x), d_exposure_names)), d_exposure_units, logger)
   end
+
+end
+
+function HypsometricProfile(w::DT, elevations::Vector{DT}, area::Vector{DT},
+  s_exposure::Vector{Any}, s_exposure_names::Vector{Any}, s_exposure_units::Vector{Any},
+  d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String},
+  logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
+  if s_exposure == []
+    return HypsometricProfile(w, elevations, area, Matrix{Float32}(undef, 0, 0), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units, logger)
+  else
+    return HypsometricProfile(w, elevations, area, convert(Array{DT,2}, s_exposure), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units, logger)
+  end
+end
+
+function HypsometricProfile(w::DT, elevations::Vector{DT}, area::Vector{DT},
+  s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
+  d_exposure::Vector{Any}, d_exposure_names::Vector{Any}, d_exposure_units::Vector{Any},
+  logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
+  if d_exposure == []
+    return HypsometricProfile(w, elevations, area, s_exposure, s_exposure_names, s_exposure_units, Matrix{Float32}(undef, 0, 0), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
+  else
+    return HypsometricProfile(w, elevations, area, s_exposure, s_exposure_names, s_exposure_units, convert(Array{DT,2}, d_exposure), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
+  end
 end
 
 include("hypsometric_profile_exposure.jl")
@@ -139,7 +162,7 @@ function distance(hspf::HypsometricProfile, e::Real)::DT
   end
 end
 
-function private_convert_strarray_to_array(sarr::StructArray{T1})::Array{DT} where {T1,DT}
+function private_convert_strarray_to_array(::Type{DT}, sarr::StructArray{T1})::Array{DT} where {DT,T1}
   ret::Array{DT,2} = Array{DT,2}(undef, length(sarr), length(fieldarrays(sarr)))
   for i in 1:size(ret, 1)
     for j in 1:size(ret, 2)
@@ -149,30 +172,30 @@ function private_convert_strarray_to_array(sarr::StructArray{T1})::Array{DT} whe
   return ret
 end
 
-function slope(hspf::HypsometricProfile{DT}, i::Int) where {DT <: Real}
+function slope(hspf::HypsometricProfile{DT}, i::Int) where {DT<:Real}
   if (i <= 1)
     return Inf
   end
   if (i > size(hspf.elevation, 1))
-    return (hspf.width / (hspf.cummulativeArea[size(hspf.elevation, 1)]-hspf.cummulativeArea[size(hspf.elevation, 1)-1])) * (hspf.elevation[size(hspf.elevation, 1)] - hspf.elevation[size(hspf.elevation, 1)-1]) * convert(DT,0.001)
+    return (hspf.width / (hspf.cummulativeArea[size(hspf.elevation, 1)] - hspf.cummulativeArea[size(hspf.elevation, 1)-1])) * (hspf.elevation[size(hspf.elevation, 1)] - hspf.elevation[size(hspf.elevation, 1)-1]) * convert(DT, 0.001)
   end
-  return  (hspf.width / (hspf.cummulativeArea[i]-hspf.cummulativeArea[i-1])) * (hspf.elevation[i] - hspf.elevation[i-1]) * convert(DT,0.001)
+  return (hspf.width / (hspf.cummulativeArea[i] - hspf.cummulativeArea[i-1])) * (hspf.elevation[i] - hspf.elevation[i-1]) * convert(DT, 0.001)
 end
 
-function resample!(hspf::HypsometricProfile{DT}, elevation :: Array{DT}) where {DT <: Real}
-  if (hspf.elevation[1]!=elevation[1])
+function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT<:Real}
+  if (hspf.elevation[1] != elevation[1])
     logg(hspf.logger, Logging.Error, @__FILE__, "", "\n min elevation can not be changed in resampling: $(hspf.elevation[1]) != $(elevation[1])")
   end
 
-  can = Array{DT}(undef, size(elevation,1))
-  csen::Array{DT,2} = Array{DT, 2}(undef, size(elevation,1), size(hspf.cummulativeStaticExposure,2))
-  cden::Array{DT,2} = Array{DT, 2}(undef, size(elevation,1), size(hspf.cummulativeDynamicExposure,2))
+  can = Array{DT}(undef, size(elevation, 1))
+  csen::Array{DT,2} = Array{DT,2}(undef, size(elevation, 1), size(hspf.cummulativeStaticExposure, 2))
+  cden::Array{DT,2} = Array{DT,2}(undef, size(elevation, 1), size(hspf.cummulativeDynamicExposure, 2))
 
-  for i in 1:size(elevation,1)
-    t_exposure=exposure(hspf,elevation[i])
-    can[i]=t_exposure[1]
-    csen[i,:]=t_exposure[2]
-    cden[i,:]=t_exposure[3]
+  for i in 1:size(elevation, 1)
+    t_exposure = exposure(hspf, elevation[i])
+    can[i] = t_exposure[1]
+    csen[i, :] = t_exposure[2]
+    cden[i, :] = t_exposure[3]
   end
 
   hspf.elevation = copy(elevation)
@@ -184,11 +207,11 @@ end
 
 function compress!(hspf::HypsometricProfile)
   i = 3
-  while i <= size(hspf.elevation, 1)-1
+  while i <= size(hspf.elevation, 1) - 1
     if private_colinear_lines(hspf, i - 1, i, i + 1)
       private_remove_line(hspf, i)
-    else 
-      i=i+1
+    else
+      i = i + 1
     end
   end
 end
@@ -205,8 +228,8 @@ end
 
 function private_remove_line(hspf::HypsometricProfile, i)
   # probably not efficient
-  deleteat!(hspf.elevation,i)
-  deleteat!(hspf.cummulativeArea,i)
+  deleteat!(hspf.elevation, i)
+  deleteat!(hspf.cummulativeArea, i)
   newarray = hspf.cummulativeStaticExposure[1:end.!=(i), :]
   hspf.cummulativeStaticExposure = newarray
   newarray = hspf.cummulativeDynamicExposure[1:end.!=(i), :]
