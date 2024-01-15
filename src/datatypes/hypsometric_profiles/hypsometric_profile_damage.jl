@@ -16,9 +16,7 @@ using QuadGK
 #  for i in 1:(ind-1)
 #    dam = damage(hspf, i, i + 1, protection, hdds)
 #  end
-
 #end
-
 
 function damage(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
   dam = exposure(hspf, first(hspf.elevation))
