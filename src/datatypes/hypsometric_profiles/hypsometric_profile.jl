@@ -3,7 +3,8 @@ using StructArrays
 export HypsometricProfile,
   exposure, exposure_named,
   sed, sed_above, sed_below, remove_below, remove_below_named, add_above, add_between,
-  add_static_exposure!, add_dynamic_exposure!, remove_static_exposure!, remove_dynamic_exposure!
+  add_static_exposure!, add_dynamic_exposure!, remove_static_exposure!, remove_dynamic_exposure!,
+  damage
 
 mutable struct HypsometricProfile{DT<:Real}
   width::DT
@@ -148,14 +149,14 @@ function private_convert_strarray_to_array(sarr::StructArray{T1})::Array{DT} whe
   return ret
 end
 
-function private_slope(hspf::HypsometricProfile, i::Int64)::DT
+function slope(hspf::HypsometricProfile{DT}, i::Int) where {DT <: Real}
   if (i <= 1)
     return Inf
   end
   if (i > size(hspf.elevation, 1))
-    return (hspf.elevation[size(hspf.elevation, 1)] - hspf.elevation[size(hspf.elevation, 1)-1]) * (hspf.width / hspf.cummulativeArea[size(hspf.elevation, 1)])
+    return (hspf.width / (hspf.cummulativeArea[size(hspf.elevation, 1)]-hspf.cummulativeArea[size(hspf.elevation, 1)-1])) * (hspf.elevation[size(hspf.elevation, 1)] - hspf.elevation[size(hspf.elevation, 1)-1]) * convert(DT,0.001)
   end
-  return (hspf.elevation[i] - hspf.elevation[i-1]) * (hspf.width / hspf.cummulativeArea[i])
+  return  (hspf.width / (hspf.cummulativeArea[i]-hspf.cummulativeArea[i-1])) * (hspf.elevation[i] - hspf.elevation[i-1]) * convert(DT,0.001)
 end
 
 function resample!(hspf::HypsometricProfile{DT}, elevation :: Array{DT}) where {DT <: Real}

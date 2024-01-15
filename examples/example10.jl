@@ -1,4 +1,4 @@
-include("../jdiva_lib.jl")
+include("../src/jdiva_lib.jl")
 using .jdiva
 
 hp = HypsometricProfile(1.0f0, [-1f0, 0f0, 1f0, 2f0, 3f0, 4f0, 5f0], [0f0, 1f0, 1f0, 2f0, 3f0, 2f0, 1f0], 
@@ -10,8 +10,8 @@ hp = HypsometricProfile(1.0f0, [-1f0, 0f0, 1f0, 2f0, 3f0, 4f0, 5f0], [0f0, 1f0, 
 println("orig:")
 println(hp)
 
-add_static_exposure!(hp, [0f0, 0f0, -1f0, -2f0, -3f0, -4f0, -5f0], "test", "cubicles")
-add_dynamic_exposure!(hp, [0f0, 1.1f0, 1.1f0, 1.1f0, -1.1f0, 1.1f0, 2.2f0], "money", "DM")
+add_static_exposure!(hp, hp.elevation, [0f0, 0f0, -1f0, -2f0, -3f0, -4f0, -5f0], "test", "cubicles")
+add_dynamic_exposure!(hp, hp.elevation, [0f0, 1.1f0, 1.1f0, 1.1f0, -1.1f0, 1.1f0, 2.2f0], "money", "DM")
 
 println("modified:")
 println(hp)
