@@ -27,7 +27,6 @@ function initHypsometricProfile(profileType, returnSettings = false)
     d_exp = StructArray{NamedTuple{(:pop2, :assets1), NTuple{2, Float32}}}(
       (pop2 = convert(Array{Float32, 1}, populationD), assets1 = convert(Array{Float32,1}, assetD)))
 
-
     settings = [1,elevation, area,population,asset]
 
     if profileType == "fixedClassic"
@@ -104,9 +103,6 @@ function runTests(profile)
       end
     end
 end
-
-
-
 
 
 for profile in ["fixedClassic", "fixedStrArr", ""]
