@@ -1,12 +1,13 @@
 
 using Statistics
+
 # union : union of all values in sga1 and sga2 in a new sga
 # result contains all data that is in sga1 OR sga2
 # if a grid cell is present in both but with different values the value of sga1 should be used
 # (thus union does not commute, we can have union(x,y)!=union(y,x)
 # take into account different dimensions (coordinates, sizes adf transformation), we can reject sga's with different projections
 function emptySGAfromSGA(orgSGA, extentNew)
-    newSGA = clearData(deepcopy(orgSGA))
+    newSGA = clear_data!(deepcopy(orgSGA))
     t = SVector(extentNew.uppL[1], extentNew.uppL[2])
     l = newSGA.f.linear * SMatrix{2,2}([1 0; 0 1])
     newSGA.xsize = round(abs(extentNew.uppL[1] - extentNew.uppR[1]) / abs(pixelsizex(orgSGA)), digits = 0)
@@ -41,7 +42,8 @@ function sga_union(sgaArray::Array{SparseGeoArray{DT, IT}}) :: SparseGeoArray{DT
     maximum([yOffset(sga) + size(sga)[2] + 1 for sga in sgaArray]))
 
     # Create Union Object
-    union = clearData(deepcopy(sgaArray[1]))
+    union = deepcopy(sgaArray[1])
+    clear_data!(union)
     t = SVector(unionExtent.uppL[1], unionExtent.uppL[2])
     l = union.f.linear * SMatrix{2,2}([1 0; 0 1])
     union.xsize = unionSize[1]
