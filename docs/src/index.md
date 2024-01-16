@@ -1,7 +1,20 @@
 # jdiva
 >provided by: [Global Climate Forum](https://globalclimateforum.org)
 
+jdiva is a julia library for economic modelling of coastal sea-level rise impacts and adaptation. It provides a complete tool chain from geodatatypes to datatypes that allow different approaches of coasplain modelling to
+algorithms that compute flood impacts, erosion and wetland change. 
+
 ## GeoUtils
+
+## SparseGeoArray
+*lightweight data structure to store geodata*
+
+```@docs
+Main.jdiva.SparseGeoArray
+Base.getindex
+Main.jdiva.coords
+Main.jdiva.indices 
+```
 
 ### Geospatial analysis
 *tools to run geopspatial analysis*
@@ -22,16 +35,6 @@ Main.jdiva.epsg!
 Main.jdiva.proj2wkt 
 Main.jdiva.epsg2wkt 
 Main.jdiva.str2wkt
-```
-
-## SparseGeoArray
-*lightweight data structure to store geodata*
-
-```@docs
-Main.jdiva.SparseGeoArray
-Base.getindex
-Main.jdiva.coords
-Main.jdiva.indices 
 ```
 
 ## netCDF
