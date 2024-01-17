@@ -1,2 +1,12 @@
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CoordinateTransformations = "150eb455-5306-5404-9cee-2592286d6298"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Formatting = "59287772-0a20-5a39-b81b-1366585eb4c0"
+GDAL = "add2ef01-049f-52c4-9ee2-e494f65e021a"
+GeoFormatTypes = "68eda718-8dee-11e9-39e7-89f7f65f511f"
+NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
+QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
