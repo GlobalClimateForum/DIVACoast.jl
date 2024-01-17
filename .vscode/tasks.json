@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "julia",
+			"command": "julia2",
+			"problemMatcher": [],
+			"label": "Julia: Run demoscript5"
+		}
+	]
+}

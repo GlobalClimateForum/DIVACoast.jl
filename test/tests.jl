@@ -1,12 +1,12 @@
 # Just a scratch pad.
-include("../jdiva_lib.jl")
+include("../src/jdiva_lib.jl")
 using .jdiva
 using Test
 using StructArrays
 
 
 # Creates a random Hypsometric Profile
-function initHypsometricProfile(profileType, returnSettings = false)
+function initHypsometricProfile(returnSettings = false)
 
     elevation = [i for i in 1:100]
     area  = vcat([0], [1 for i in 1:99])
@@ -21,23 +21,9 @@ function initHypsometricProfile(profileType, returnSettings = false)
     elevation = convert(Array{Float32,1}, elevation)
     area = convert(Array{Float32,1}, area)
 
-    s_exp = StructArray{NamedTuple{(:pop, :assets0), NTuple{2, Float32}}}(
-      (pop = convert(Array{Float32, 1}, population), assets0 = convert(Array{Float32,1}, asset)))
+    settings = [1, elevation, area, population, asset]
 
-    d_exp = StructArray{NamedTuple{(:pop2, :assets1), NTuple{2, Float32}}}(
-      (pop2 = convert(Array{Float32, 1}, populationD), assets1 = convert(Array{Float32,1}, assetD)))
-
-    settings = [1,elevation, area,population,asset]
-
-    if profileType == "fixedClassic"
-      profile = HypsometricProfileFixedClassical(width, elevation, area, asset, population)
-    elseif profileType == "fixedStrArr"
-      profile = HypsometricProfileFixedStrarray(width, elevation, area, s_exp, d_exp)
-    elseif profileType == "fixedArr"
-      profile = HypsometricProfileFixed(width,elevation, area, s_exp, d_exp)
-    elseif profileType == ""
-      profile = HypsometricProfile(width, elevation, area, s_exp, d_exp)
-    end
+    profile = HypsometricProfile(width, elevation, area, asset, population)
 
     if returnSettings
       return((profile, settings))
@@ -47,11 +33,11 @@ function initHypsometricProfile(profileType, returnSettings = false)
 
 end
 
-function runTests(profile)
+function runTests()
 
-  hpTest, hpSettings  = initHypsometricProfile(profile, true)
+  hpTest, hpSettings  = initHypsometricProfile(true)
 
-    @testset "Hypsometric Profile - $profile" begin
+    @testset "Hypsometric Profile" begin
   
       @testset "attributes" begin
         @test hpTest.maxElevation == maximum(hpTest.elevation)
@@ -109,6 +95,6 @@ for profile in ["fixedClassic", "fixedStrArr", ""]
 
   println("Test Hypsometric Profile: $profile")
 
-  runTests(profile)
+  runTests()
 
 end
