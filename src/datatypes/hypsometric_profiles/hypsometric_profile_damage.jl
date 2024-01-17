@@ -11,17 +11,18 @@ function damage(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_static:
       return (dam_area, dam_static, dam_dynamic)
     else
       if (hspf.elevation[ind+1] <= wl)
-#        println("case 1 $(hspf.elevation[ind+1]) $wl")
+        #        println("case 1 $(hspf.elevation[ind+1]) $wl")
         dam_t = partial_damage(hspf, wl, ind, ind + 1, hdd_area, hdds_static, hdds_dynamic)
-#        println(dam_t)
         dam_area = dam_area + dam_t[1]
         dam_static = dam_static + dam_t[2]
         dam_dynamic = dam_dynamic + dam_t[3]
       else
-        dam_t = partial_damage(hspf, wl, ind, hdd_area, hdds_static, hdds_dynamic)
-        dam_area = dam_area + dam_t[1]
-        dam_static = dam_static + dam_t[2]
-        dam_dynamic = dam_dynamic + dam_t[3]
+        if (hspf.elevation[ind] > wl)
+          dam_t = partial_damage(hspf, wl, ind, hdd_area, hdds_static, hdds_dynamic)
+          dam_area = dam_area + dam_t[1]
+          dam_static = dam_static + dam_t[2]
+          dam_dynamic = dam_dynamic + dam_t[3]
+        end
       end
     end
   end
@@ -49,10 +50,12 @@ function damage(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_s
         dam_static = dam_static + dam_t[2]
         dam_dynamic = dam_dynamic + dam_t[3]
       else
-        dam_t = partial_damage(hspf, wl, ind, ddf_area, ddfs_static, ddfs_dynamic)
-        dam_area = dam_area + dam_t[1]
-        dam_static = dam_static + dam_t[2]
-        dam_dynamic = dam_dynamic + dam_t[3]
+        if (hspf.elevation[ind] > wl)
+          dam_t = partial_damage(hspf, wl, ind, ddf_area, ddfs_static, ddfs_dynamic)
+          dam_area = dam_area + dam_t[1]
+          dam_static = dam_static + dam_t[2]
+          dam_dynamic = dam_dynamic + dam_t[3]
+        end
       end
     end
   end
@@ -69,7 +72,7 @@ function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, i2::I
 
   Δ_area = (hspf.cummulativeArea[i2] - hspf.cummulativeArea[i1])
   if Δ_area == 0
-    return (0, zeros(size(hspf.staticExposureSymbols, 1)), zeros(size(hspf.dynamicExposureSymbols, 1)))
+    return (convert(DT, 0), zeros(DT, size(hspf.staticExposureSymbols, 1)), zeros(DT, size(hspf.dynamicExposureSymbols, 1)))
   end
 
   Δ_exp_st = size(hspf.cummulativeStaticExposure)[2] >= 1 ? hspf.cummulativeStaticExposure[i2, :] - hspf.cummulativeStaticExposure[i1, :] : Array{DT,2}(undef, 0, 0)
@@ -88,7 +91,7 @@ function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, hdd_a
   exp_wl = exposure(hspf, wl)
   Δ_area = exp_wl[1] - hspf.cummulativeArea[i1]
   if Δ_area == 0
-    return (0, zeros(size(hspf.staticExposureSymbols, 1)), zeros(size(hspf.dynamicExposureSymbols, 1)))
+    return (convert(DT, 0), zeros(DT, size(hspf.staticExposureSymbols, 1)), zeros(DT, size(hspf.dynamicExposureSymbols, 1)))
   end
 
   Δ_exp_st = size(hspf.cummulativeStaticExposure)[2] >= 1 ? exp_wl[2] - hspf.cummulativeStaticExposure[i1, :] : Array{DT,2}(undef, 0, 0)
@@ -98,6 +101,7 @@ function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, hdd_a
   ρ_exp_st = (Δ_exp_st / (Δ_area / hspf.width)) / 1000
   ρ_exp_dy = (Δ_exp_dy / (Δ_area / hspf.width)) / 1000
 
+  #println("  partial_damage(hspf, $sl, $(hspf.elevation[i1]), $wl, $wl, $Δ_area, $Δ_exp_st, $Δ_exp_dy, $ρ_area, $ρ_exp_st, $ρ_exp_dy, $hdd_area, $hdds_static, $hdds_dynamic)")
   return partial_damage(hspf, sl, hspf.elevation[i1], wl, wl, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy, hdd_area, hdds_static, hdds_dynamic)
 end
 
@@ -110,7 +114,7 @@ function partial_damage(hspf::HypsometricProfile{DT}, sl::DT, wl_low::DT, wl_hig
   Δ_elevation1 = wl - wl_high
   Δ_elevation2 = wl - wl_low
   Δ_elevation3 = wl_high - wl_low
-  factor_area = (hdd_area > 0) ? hdd_area * log((hdd_area  + Δ_elevation1)/ (hdd_area + Δ_elevation2)) + Δ_elevation3 : sl / ρ_area * Δ_area
+  factor_area = (hdd_area > 0) ? hdd_area * log((hdd_area + Δ_elevation1) / (hdd_area + Δ_elevation2)) + Δ_elevation3 : sl / ρ_area * Δ_area
   factor_static = map(h -> (h * log((h + Δ_elevation1) / (h + Δ_elevation2)) + Δ_elevation3), hdds_static)
   factor_dynamic = map(h -> (h * log((h + Δ_elevation1) / (h + Δ_elevation2)) + Δ_elevation3), hdds_dynamic)
 
