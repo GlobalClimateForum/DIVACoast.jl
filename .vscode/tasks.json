@@ -2,10 +2,21 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "activate_jdiva_env",
+			"type": "shell",
+			"command": "julia",
+			"args": ["-e", "import Pkg; Pkg.activate(\".\")"],
+			"group": {
+			  "kind": "build",
+			  "isDefault": true
+			}
+		}, 
+		{
 			"type": "julia",
 			"command": "julia2",
 			"problemMatcher": [],
-			"label": "Julia: Run demoscript5"
+			"label": "Julia: Run demoscript5",
+			
 		}
 	]
 }

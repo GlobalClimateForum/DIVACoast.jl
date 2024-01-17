@@ -8,10 +8,11 @@
             "type": "julia",
             "request": "launch",
             "name": "Run active Julia file",
-            "program": "{fileDirname}/${file}",
+            "program": "{$file}",
             "stopOnEntry": false,
-            "cwd": "${fileDirname}",
-            "juliaEnv": "${command:activeJuliaEnvironment}"
+            "cwd": "${fileDirnameBasename}",
+            "juliaEnv": "${command:activeJuliaEnvironment}",
+            "preLaunchTask": "activate_jdiva_env"
         }
     ]
 }
