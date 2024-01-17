@@ -1,23 +1,5 @@
 using QuadGK
 
-### Damage
-#function damage(hspf::HypsometricProfile, wl::Real, hdds_static::Array{T1}, hdds_dynamic::Array{T2}) where {T1,T2<:Real}
-#  if (wl <= protection)
-#    return (hspf.cummulativeArea[1], hspf.cummulativeStaticExposure[1, :], hspf.cummulativeDynamicExposure[1, :])
-#  end
-#
-#  ind::Int64 = searchsortedfirst(hspf.elevation, wl)
-#  @inbounds if (ind == 1)
-#    return (hspf.cummulativeArea[ind], hspf.cummulativeStaticExposure[ind, :], hspf.cummulativeDynamicExposure[ind, :])
-#  end
-
-#  @inbounds r = (DT)(wl - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
-#
-#  for i in 1:(ind-1)
-#    dam = damage(hspf, i, i + 1, protection, hdds)
-#  end
-#end
-
 function damage(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
   dam = exposure(hspf, first(hspf.elevation))
   dam_area = dam[1]
