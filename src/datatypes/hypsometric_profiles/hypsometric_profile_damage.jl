@@ -105,7 +105,7 @@ function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, hdd_a
   return partial_damage(hspf, sl, hspf.elevation[i1], wl, wl, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy, hdd_area, hdds_static, hdds_dynamic)
 end
 
-@inline
+# @inline
 function partial_damage(hspf::HypsometricProfile{DT}, sl::DT, wl_low::DT, wl_high::DT, wl::DT,
   Δ_area::DT, Δ_exp_st::Array{DT}, Δ_exp_dy::Array{DT},
   ρ_area::DT, ρ_exp_st::Array{DT}, ρ_exp_dy::Array{DT},
@@ -170,7 +170,7 @@ function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, ddf_a
   return partial_damage(hspf, sl, hspf.elevation[i1], wl, wl, ρ_area, ρ_exp_st, ρ_exp_dy, ddf_area, ddfs_static, ddfs_dynamic)
 end
 
-@inline
+# @inline
 function partial_damage(hspf::HypsometricProfile{DT}, sl::DT, wl_low::DT, wl_high::DT, wl::DT,
   ρ_area::DT, ρ_exp_st::Array{DT}, ρ_exp_dy::Array{DT},
   ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real}
