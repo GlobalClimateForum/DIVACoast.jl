@@ -20,33 +20,34 @@ mutable struct HypsometricProfile{DT<:Real}
 
   # Constructors
   function HypsometricProfile(w::DT, elevations::Array{DT}, area::Array{DT}, s_exposure::StructArray{T1},
-    s_exposure_units::Array{String}, d_exposure::StructArray{T2}, _exposure_units::Array{String},
-    logger::ExtendedLogger=ExtendedLogger()) where {T1,T2,DT<:Real}
-    if (length(elevations) != length(area))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))")
-    end
-    if (length(elevations) != size(s_exposure, 1))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))")
-    end
-    if (length(elevations) != size(d_exposure, 1))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))")
-    end
-    if (length(elevations) < 2)
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed")
-    end
-    if (!issorted(elevations))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n elevations is not sorted: $elevations")
-    end
+    s_exposure_units::Array{String}, d_exposure::StructArray{T2}, _exposure_units::Array{String}#,
+    #logger::ExtendedLogger=ExtendedLogger()
+    ) where {T1,T2,DT<:Real}
+    #if (length(elevations) != length(area))
+    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))")
+    #end
+    #if (length(elevations) != size(s_exposure, 1))
+    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))")
+    #end
+    #if (length(elevations) != size(d_exposure, 1))
+    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))")
+    #end
+    #if (length(elevations) < 2)
+    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed")
+    #end
+    #if (!issorted(elevations))
+    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n elevations is not sorted: $elevations")
+    #end
 
-    if (area[1] != 0)
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n area[1] should be zero, but its not: $area")
-    end
-    if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n d_exposure first column should be zero, but its not: $s_exposure")
-    end
-    if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n d_exposure first column should be zero, but its not: $d_exposure")
-    end
+    #if (area[1] != 0)
+    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n area[1] should be zero, but its not: $area")
+    #end
+    #if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...))
+    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n d_exposure first column should be zero, but its not: $s_exposure")
+    #end
+    #if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...))
+    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n d_exposure first column should be zero, but its not: $d_exposure")
+    #end
 
     s_exposure_arrays = private_convert_strarray_to_array{T1,DT}(s_exposure)
     d_exposure_arrays = private_convert_strarray_to_array{T1,DT}(d_exposure)

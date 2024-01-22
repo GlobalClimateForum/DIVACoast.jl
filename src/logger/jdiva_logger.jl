@@ -3,46 +3,60 @@ using Dates
 
 export ExtendedLogger, logg
 
-struct ExtendedLogger
-    mylogger
+mutable struct ExtendedLogger
+    mylogger::Base.CoreLogging.AbstractLogger
+    logfile::String
     io
-    starttime
+    starttime::DateTime
+
+    function ExtendedLogger(logfile::String="")
+        if logfile != ""
+            io = open(".jdiva_log", "w+")
+            y = new(SimpleLogger(io), logfile, io, now())
+            finalizer(y) do x
+                if (y.logfile != "")
+                    close(y.io)
+                end
+            end
+            return y
+        else
+			return new(NullLogger(), logfile, devnull, now())
+        end
+    end
+
 end
 
-function ExtendedLogger() 
-  io = open(".jdiva_log", "w+")
-  ExtendedLogger(SimpleLogger(io),io,now())
-end 
-
-function logg(logger,command,caller1,caller2,message)
-    if (command==Logging.Debug) 
-	with_logger(logger.mylogger) do
-	    @debug "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message
-	end
-	flush(logger.io)
+function logg(logger, command, caller1, caller2, message)
+    if (command == Logging.Debug && logger.logfile != "")
+        with_logger(logger.mylogger) do
+            @debug "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message
+        end
+        flush(logger.io)
     end
 
-    if (command==Logging.Info) 
-	with_logger(logger.mylogger) do
-	    @info "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message
-	end
-	flush(logger.io)
+    if (command == Logging.Info && logger.logfile != "")
+        with_logger(logger.mylogger) do
+            @info "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message
+        end
+        flush(logger.io)
     end
 
-    if (command==Logging.Warn) 
-	with_logger(logger.mylogger) do
-	    @warn "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 *  ": " * message
-	end
-	flush(logger.io)
+    if (command == Logging.Warn && logger.logfile != "")
+        with_logger(logger.mylogger) do
+            @warn "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message
+        end
+        flush(logger.io)
     end
 
-    if (command==Logging.Error) 
-	with_logger(logger.mylogger) do
-	    @error "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 *  ": " * message
-	    println("ERROR: $(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 *  ": " * message)
-	end
-	flush(logger.io)
-	exit() 
+    if (command == Logging.Error)
+        if logger.logfile != ""
+            with_logger(logger.mylogger) do
+                @error "\t$(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message
+            end
+            flush(logger.io)
+        end
+        println("ERROR: $(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message)
+        exit()
     end
 end
 
