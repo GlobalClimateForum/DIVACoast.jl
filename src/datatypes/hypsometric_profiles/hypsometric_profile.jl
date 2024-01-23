@@ -20,39 +20,38 @@ mutable struct HypsometricProfile{DT<:Real}
 
   # Constructors
   function HypsometricProfile(w::DT, elevations::Array{DT}, area::Array{DT}, s_exposure::StructArray{T1},
-    s_exposure_units::Array{String}, d_exposure::StructArray{T2}, _exposure_units::Array{String}#,
-    #logger::ExtendedLogger=ExtendedLogger()
-    ) where {T1,T2,DT<:Real}
-    #if (length(elevations) != length(area))
-    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))")
-    #end
-    #if (length(elevations) != size(s_exposure, 1))
-    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))")
-    #end
-    #if (length(elevations) != size(d_exposure, 1))
-    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))")
-    #end
-    #if (length(elevations) < 2)
-    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed")
-    #end
-    #if (!issorted(elevations))
-    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n elevations is not sorted: $elevations")
-    #end
+    s_exposure_units::Array{String}, d_exposure::StructArray{T2}, d_exposure_units::Array{String},
+    logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real,T1,T2}
+    if (length(elevations) != length(area))
+      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))")
+    end
+    if (length(elevations) != size(s_exposure, 1))
+      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))")
+    end
+    if (length(elevations) != size(d_exposure, 1))
+      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))")
+    end
+    if (length(elevations) < 2)
+      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed")
+    end
+    if (!issorted(elevations))
+      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n elevations is not sorted: $elevations")
+    end
+    
+    if (area[1] != 0)
+      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n area[1] should be zero, but its not: $area")
+    end
+    if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...))
+      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n d_exposure first column should be zero, but its not: $s_exposure")
+    end
+    if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...))
+      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n d_exposure first column should be zero, but its not: $d_exposure")
+    end
 
-    #if (area[1] != 0)
-    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n area[1] should be zero, but its not: $area")
-    #end
-    #if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...))
-    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n d_exposure first column should be zero, but its not: $s_exposure")
-    #end
-    #if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...))
-    #  logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n d_exposure first column should be zero, but its not: $d_exposure")
-    #end
-
-    s_exposure_arrays = private_convert_strarray_to_array{T1,DT}(s_exposure)
-    d_exposure_arrays = private_convert_strarray_to_array{T1,DT}(d_exposure)
-
-    new{DT}(w, elevations, cumsum(area), cumsum(s_exposure_arrays, dims=1), keys(fieldarrays(s_exposure)), s_exposure_units, cumsum(d_exposure_arrays, dims=1), keys(fieldarrays(d_exposure)), d_exposure_units, logger)
+    s_exposure_arrays = private_convert_strarray_to_array(DT, s_exposure)
+    d_exposure_arrays = private_convert_strarray_to_array(DT, d_exposure)
+  
+    new{DT}(w, elevations, cumsum(area), cumsum(s_exposure_arrays, dims=1), keys(fieldarrays(s_exposure)), s_exposure_units, cumsum(d_exposure_arrays, dims=1), keys(fieldarrays(d_exposure)), d_exposure_units, ExtendedLogger())
   end
 
   function HypsometricProfile(w::DT, elevations::Array{DT}, area::Array{DT},
@@ -116,29 +115,30 @@ mutable struct HypsometricProfile{DT<:Real}
     new{DT}(w, elevations, cumsum(area), cumsum(s_exposure, dims=1), Tuple(map(x -> Symbol(x), s_exposure_names)), s_exposure_units, cumsum(d_exposure, dims=1), Tuple(map(x -> Symbol(x), d_exposure_names)), d_exposure_units, logger)
   end
 
-end
 
-function HypsometricProfile(w::DT, elevations::Vector{DT}, area::Vector{DT},
-  s_exposure::Vector{Any}, s_exposure_names::Vector{Any}, s_exposure_units::Vector{Any},
-  d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String},
-  logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
-  if s_exposure == []
-    return HypsometricProfile(w, elevations, area, Matrix{Float32}(undef, 0, 0), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units, logger)
-  else
-    return HypsometricProfile(w, elevations, area, convert(Array{DT,2}, s_exposure), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units, logger)
+  function HypsometricProfile(w::DT, elevations::Vector{DT}, area::Vector{DT},
+    s_exposure::Vector{Any}, s_exposure_names::Vector{Any}, s_exposure_units::Vector{Any},
+    d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String},
+    logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
+    if s_exposure == []
+      return HypsometricProfile(w, elevations, area, Matrix{Float32}(undef, 0, 0), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units, logger)
+    else
+      return HypsometricProfile(w, elevations, area, convert(Array{DT,2}, s_exposure), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units, logger)
+    end
+  end
+
+  function HypsometricProfile(w::DT, elevations::Vector{DT}, area::Vector{DT},
+    s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
+    d_exposure::Vector{Any}, d_exposure_names::Vector{Any}, d_exposure_units::Vector{Any},
+    logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
+    if d_exposure == []
+      return HypsometricProfile(w, elevations, area, s_exposure, s_exposure_names, s_exposure_units, Matrix{Float32}(undef, 0, 0), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
+    else
+      return HypsometricProfile(w, elevations, area, s_exposure, s_exposure_names, s_exposure_units, convert(Array{DT,2}, d_exposure), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
+    end
   end
 end
 
-function HypsometricProfile(w::DT, elevations::Vector{DT}, area::Vector{DT},
-  s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
-  d_exposure::Vector{Any}, d_exposure_names::Vector{Any}, d_exposure_units::Vector{Any},
-  logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
-  if d_exposure == []
-    return HypsometricProfile(w, elevations, area, s_exposure, s_exposure_names, s_exposure_units, Matrix{Float32}(undef, 0, 0), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
-  else
-    return HypsometricProfile(w, elevations, area, s_exposure, s_exposure_names, s_exposure_units, convert(Array{DT,2}, d_exposure), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
-  end
-end
 
 include("hypsometric_profile_exposure.jl")
 include("hypsometric_profile_damage.jl")

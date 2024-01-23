@@ -158,7 +158,7 @@ end
 
 clear_data!(sga) = empty!(sga.data)
 
-function reset!(sga :: SparseGeoArray{DT,IT}) where {DT <: Real, IT <: Integer} 
+function hard_reset!(sga :: SparseGeoArray{DT,IT}) where {DT <: Real, IT <: Integer} 
   sga = SparseGeoArray{DT,IT}()  
 end
 
