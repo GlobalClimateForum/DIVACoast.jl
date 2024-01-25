@@ -144,6 +144,7 @@ include("hypsometric_profile_exposure.jl")
 include("hypsometric_profile_damage.jl")
 include("hypsometric_profile_sed.jl")
 include("hypsometric_profile_modifications.jl")
+include("hypsometric_profile_plot.jl")
 
 function distance(hspf::HypsometricProfile, e::Real)::DT
   ind::Int64 = searchsortedfirst(hspf.elevation, e)
