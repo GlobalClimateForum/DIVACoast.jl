@@ -35,11 +35,17 @@ end
 
 function sga_union(sgaArray::Array{SparseGeoArray{DT, IT}}) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer}
     
+    if isempty(sgaArray)
+        @warn "sga_union(): Can not run sga_union(). No SparseGeoArray provided."
+        return nothing
+    end
+
     unionExtent = getExtent(sgaArray)
     xOffset = sga -> ((indices(sga, unionExtent.uppL)[1]) *-1) + 1
     yOffset = sga -> ((indices(sga, unionExtent.uppL)[2]) *-1) + 1
     unionSize = (maximum([xOffset(sga) + size(sga)[1] + 1 for sga in sgaArray]),
     maximum([yOffset(sga) + size(sga)[2] + 1 for sga in sgaArray]))
+
 
     # Create Union Object
     union = deepcopy(sgaArray[1])
