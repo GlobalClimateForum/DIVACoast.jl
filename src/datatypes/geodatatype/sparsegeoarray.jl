@@ -28,6 +28,17 @@ function SparseGeoArray{DT,IT}(filename :: String, band :: Integer = 1) where {D
   sga
 end
 
+function SparseGeoArray{DT,IT}(filename :: String, band :: Integer = 1) where {DT <: Real, IT <: Integer} 
+  sga = SparseGeoArray{DT,IT}()
+  sga.filename = filename
+  read_geotiff_data_complete!(sga,filename,band,1)
+  sga
+end
+
+function empty_copy(sga :: SparseGeoArray{DT,IT}) :: SparseGeoArray{DT,IT} where {DT <: Real, IT <: Integer} 
+  return SparseGeoArray{DT,IT}(Dict{Tuple{IT,IT},DT}(), sga.nodatavalue,sga.f,sga.crs,sga.metadata,sga.xsize,sga.ysize,sga.projref,sga.circular,sga.filename)
+end
+
 
 # Behave like an Array
 Base.size(sga::SparseGeoArray) = (sga.xsize,sga.ysize)
@@ -232,4 +243,6 @@ area(sga :: SparseGeoArray, p::Tuple{I,I}) where {I <: Integer} = area(sga, p[1]
 
 pixelsize_x(sga :: SparseGeoArray) = sga.f.linear[1,1]
 pixelsize_y(sga :: SparseGeoArray) = sga.f.linear[2,2]
+
+
 

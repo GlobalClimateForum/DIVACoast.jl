@@ -9,6 +9,7 @@ include("geoutils_types.jl")
 include("geoutils.jl")
 
 export SparseGeoArray, SparseGeoArrayFromFile
+export empty_copy
 export read_geotiff_header!, read_geotiff_data_complete!, save_geotiff_data_complete, read_geotiff_data_partial!, partial_read_around!
 export read_geotiff_data_categorised!
 export nh4, nh8
