@@ -9,7 +9,9 @@ export HypsometricProfile,
 mutable struct HypsometricProfile{DT<:Real}
   width::DT
   elevation::Array{DT}
+  elevation_unit::String
   cummulativeArea::Array{DT}
+  area_unit::String
   cummulativeStaticExposure::Array{DT,2}
   staticExposureSymbols
   staticExposureUnits::Array{String}
@@ -19,8 +21,10 @@ mutable struct HypsometricProfile{DT<:Real}
   logger::ExtendedLogger
 
   # Constructors
-  function HypsometricProfile(w::DT, elevations::Array{DT}, area::Array{DT}, s_exposure::StructArray{T1},
-    s_exposure_units::Array{String}, d_exposure::StructArray{T2}, d_exposure_units::Array{String},
+  function HypsometricProfile(w::DT,
+    elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
+    s_exposure::StructArray{T1}, s_exposure_units::Array{String},
+    d_exposure::StructArray{T2}, d_exposure_units::Array{String},
     logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real,T1,T2}
     if (length(elevations) != length(area))
       logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))")
@@ -37,7 +41,7 @@ mutable struct HypsometricProfile{DT<:Real}
     if (!issorted(elevations))
       logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n elevations is not sorted: $elevations")
     end
-    
+
     if (area[1] != 0)
       logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n area[1] should be zero, but its not: $area")
     end
@@ -50,11 +54,12 @@ mutable struct HypsometricProfile{DT<:Real}
 
     s_exposure_arrays = private_convert_strarray_to_array(DT, s_exposure)
     d_exposure_arrays = private_convert_strarray_to_array(DT, d_exposure)
-  
-    new{DT}(w, elevations, cumsum(area), cumsum(s_exposure_arrays, dims=1), keys(fieldarrays(s_exposure)), s_exposure_units, cumsum(d_exposure_arrays, dims=1), keys(fieldarrays(d_exposure)), d_exposure_units, ExtendedLogger())
+
+    new{DT}(w, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure_arrays, dims=1), keys(fieldarrays(s_exposure)), s_exposure_units, cumsum(d_exposure_arrays, dims=1), keys(fieldarrays(d_exposure)), d_exposure_units, ExtendedLogger())
   end
 
-  function HypsometricProfile(w::DT, elevations::Array{DT}, area::Array{DT},
+  function HypsometricProfile(w::DT,
+    elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Array{DT,2}, s_exposure_units::Array{String},
     d_exposure::Array{DT,2}, d_exposure_units::Array{String},
     logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
@@ -81,11 +86,12 @@ mutable struct HypsometricProfile{DT<:Real}
     #if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $s_exposure") end
     #if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $d_exposure") end
 
-    new{DT}(w, elevations, cumsum(area), cumsum(s_exposure, dims=1), ntuple(i -> Symbol("s_exposure_name_$i"), size(s_exposure, 2)), s_exposure_units, cumsum(d_exposure, dims=1), ntuple(i -> Symbol("d_exposure_name_$i"), size(d_exposure, 2)), d_exposure_units, logger)
+    new{DT}(w, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), ntuple(i -> Symbol("s_exposure_name_$i"), size(s_exposure, 2)), s_exposure_units, cumsum(d_exposure, dims=1), ntuple(i -> Symbol("d_exposure_name_$i"), size(d_exposure, 2)), d_exposure_units, logger)
   end
 
 
-  function HypsometricProfile(w::DT, elevations::Vector{DT}, area::Vector{DT},
+  function HypsometricProfile(w::DT,
+    elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
     d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String},
     logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
@@ -112,11 +118,12 @@ mutable struct HypsometricProfile{DT<:Real}
     #if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $s_exposure") end
     #if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $d_exposure") end
 
-    new{DT}(w, elevations, cumsum(area), cumsum(s_exposure, dims=1), Tuple(map(x -> Symbol(x), s_exposure_names)), s_exposure_units, cumsum(d_exposure, dims=1), Tuple(map(x -> Symbol(x), d_exposure_names)), d_exposure_units, logger)
+    new{DT}(w, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), Tuple(map(x -> Symbol(x), s_exposure_names)), s_exposure_units, cumsum(d_exposure, dims=1), Tuple(map(x -> Symbol(x), d_exposure_names)), d_exposure_units, logger)
   end
 
 
-  function HypsometricProfile(w::DT, elevations::Vector{DT}, area::Vector{DT},
+  function HypsometricProfile(w::DT,
+    elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Vector{Any}, s_exposure_names::Vector{Any}, s_exposure_units::Vector{Any},
     d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String},
     logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
@@ -127,14 +134,15 @@ mutable struct HypsometricProfile{DT<:Real}
     end
   end
 
-  function HypsometricProfile(w::DT, elevations::Vector{DT}, area::Vector{DT},
+  function HypsometricProfile(w::DT,
+    elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
     d_exposure::Vector{Any}, d_exposure_names::Vector{Any}, d_exposure_units::Vector{Any},
     logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
     if d_exposure == []
-      return HypsometricProfile(w, elevations, area, s_exposure, s_exposure_names, s_exposure_units, Matrix{Float32}(undef, 0, 0), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
+      return HypsometricProfile(w, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, Matrix{Float32}(undef, 0, 0), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
     else
-      return HypsometricProfile(w, elevations, area, s_exposure, s_exposure_names, s_exposure_units, convert(Array{DT,2}, d_exposure), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
+      return HypsometricProfile(w, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, convert(Array{DT,2}, d_exposure), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
     end
   end
 end
