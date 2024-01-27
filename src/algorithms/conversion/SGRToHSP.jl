@@ -34,10 +34,10 @@ function to_hypsometric_profile(sga::SparseGeoArray{DT,IT}, w::DT2, min_elevatio
 end
 
 
-function to_hypsometric_profile(sga_elevation::SparseGeoArray{DT,IT},
+function to_hypsometric_profile(sga_elevation::SparseGeoArray{DT,IT}, area_unit::String,
   sgas_exp_st::Array{SparseGeoArray{DT,IT}}, exp_st_names::Array{String}, exp_st_units::Array{String},
   sgas_exp_dyn::Array{SparseGeoArray{DT,IT}}, exp_dyn_names::Array{String}, exp_dyn_units::Array{String},
-  w::DT2, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
+  w::DT2, width_unit :: String, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2, elevation_unit :: String)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
   # ToDo:: check if all dimensions match.
 
   s = floor(Int, ((max_elevation - min_elevation) / elevation_incr))
@@ -98,14 +98,14 @@ function to_hypsometric_profile(sga_elevation::SparseGeoArray{DT,IT},
   z_st::Array{DT2} = zeros(size(sgas_exp_st, 1))
   z_dy::Array{DT2} = zeros(size(sgas_exp_dyn, 1))
 
-  return HypsometricProfile(w, pushfirst!(e, min_elevation), pushfirst!(a, 0), [z_st'; st], exp_st_names, exp_st_units, [z_dy'; dyn], exp_dyn_names, exp_dyn_units)
+  return HypsometricProfile(w, width_unit, pushfirst!(e, min_elevation), elevation_unit, pushfirst!(a, 0), area_unit, [z_st'; st], exp_st_names, exp_st_units, [z_dy'; dyn], exp_dyn_names, exp_dyn_units)
 end
 
 
-function to_hypsometric_profile(sgas_elevation::Dict{IT2,SparseGeoArray{DT,IT}},
+function to_hypsometric_profile(sgas_elevation::Dict{IT2,SparseGeoArray{DT,IT}}, area_unit::String,
   sgas_exp_st::Array{Dict{IT2,SparseGeoArray{DT,IT}}}, exp_st_names::Array{String}, exp_st_units::Array{String},
   sgas_exp_dyn::Array{Dict{IT2,SparseGeoArray{DT,IT}}}, exp_dyn_names::Array{String}, exp_dyn_units::Array{String},
-  w::DT2, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2)::Dict{IT2,HypsometricProfile} where {DT<:Real,IT<:Integer,DT2<:Real,IT2<:Integer}
+  widths::Dict{IT3,DT3}, width_unit :: String, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2 , elevation_unit :: String)::Dict{IT2,HypsometricProfile} where {DT<:Real,IT<:Integer,DT2<:Real,IT2<:Integer,DT3<:Real,IT3<:Integer}
 
   ret::Dict{IT2,HypsometricProfile{DT2}} = Dict{IT2,HypsometricProfile{DT2}}()
   st = Array{SparseGeoArray{DT,IT}}(undef, size(sgas_exp_st, 1))
@@ -143,16 +143,16 @@ function to_hypsometric_profile(sgas_elevation::Dict{IT2,SparseGeoArray{DT,IT}},
         dy[j].ysize = elevation_data.ysize
       end
     end
-    ret[index] = to_hypsometric_profile(elevation_data, st, exp_st_names, exp_st_units, dy, exp_dyn_names, exp_dyn_units, convert(DT2, 1), min_elevation, max_elevation, elevation_incr)
+    ret[index] = to_hypsometric_profile(elevation_data, area_unit, st, exp_st_names, exp_st_units, dy, exp_dyn_names, exp_dyn_units, convert(DT2,widths[index]), width_unit, min_elevation, max_elevation, elevation_incr, elevation_unit)
   end
   println()
   return ret
 end
 
-function to_hypsometric_profile(e::Array{DT}, a::Array{DT},
+function to_hypsometric_profile(e::Array{DT}, a::Array{DT}, area_unit::String,
   static_exposure::Array{DT,2}, static_exposure_names::Array{String}, static_exposure_units::Array{String},
   dynamic_exposure::Array{DT,2}, dynamic_exposure_names::Array{String}, dynamic_exposure_units::Array{String},
-  w::DT, min_elevation::DT, max_elevation::DT, elevation_incr::DT)::HypsometricProfile where {DT<:Real}
+  width::DT, width_unit::String, min_elevation::DT, max_elevation::DT, elevation_incr::DT, elevation_unit :: String)::HypsometricProfile where {DT<:Real}
   i = 1
   while (i <= (length(e) - 1))
     if (a[i] == 0 && a[i+1] == 0)
@@ -165,14 +165,14 @@ function to_hypsometric_profile(e::Array{DT}, a::Array{DT},
     end
   end
 
-  return HypsometricProfile(w, pushfirst!(e, min_elevation), pushfirst!(a, 0), vcat(zeros(DT, 1, size(static_exposure, 2)), static_exposure), static_exposure_names, static_exposure_units, vcat(zeros(DT, 1, size(dynamic_exposure, 2)), dynamic_exposure), dynamic_exposure_names, dynamic_exposure_units)
+  return HypsometricProfile(width, width_unit, pushfirst!(e, min_elevation), elevation_unit, pushfirst!(a,0), area_unit, vcat(zeros(DT, 1, size(static_exposure, 2)), static_exposure), static_exposure_names, static_exposure_units, vcat(zeros(DT, 1, size(dynamic_exposure, 2)), dynamic_exposure), dynamic_exposure_names, dynamic_exposure_units)
 end
 
 function to_hypsometric_profiles(
-  category_file_name::String, elevation_file_name::String,
+  category_file_name::String, elevation_file_name::String, area_unit::String,
   exposure_static_file_names::Array{String}, exposure_static_names::Array{String}, exposure_static_units::Array{String},
   exposure_dynamic_file_names::Array{String}, exposure_dynamic_names::Array{String}, exposure_dynamic_units::Array{String},
-  w::Float32, min_elevation::Float32, max_elevation::Float32, elevation_incr::Real)::Dict{Int32,HypsometricProfile{Float32}}
+  widths::Dict{IT,DT}, width_unit::String, min_elevation::Float32, max_elevation::Float32, elevation_incr::Real, elevation_unit :: String) :: Dict{Int32,HypsometricProfile{Float32}} where {DT<:Real,IT<:Integer} 
 
   category_data = SparseGeoArray{Float32,Int32}()
   read_geotiff_header!(category_data, category_file_name)
@@ -272,11 +272,11 @@ function to_hypsometric_profiles(
 
   ret::Dict{Int32,HypsometricProfile{Float32}} = Dict{Int32,HypsometricProfile{Float32}}()
   for (index, areas) in area_data
-    ret[index] = to_hypsometric_profile(copy(e), areas,
+    ret[index] = to_hypsometric_profile(copy(e), areas, area_unit,
       exp_st_data[index], copy(exposure_static_names), copy(exposure_static_units),
       exp_dyn_data[index], copy(exposure_dynamic_names), copy(exposure_dynamic_units),
-      w, min_elevation, max_elevation, elevation_incr)
-  end
+      convert(Float32, widths[index]), width_unit, min_elevation, max_elevation, elevation_incr, elevation_unit)
+    end
   return ret
 end
 

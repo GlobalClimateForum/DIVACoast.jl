@@ -35,20 +35,39 @@ function load_hsps_nc(::Type{IT}, ::Type{DT}, filename::String)::Dict{IT,Hypsome
     error("$filename has no dimension 'elevations'")
   end
   el::Array{DT} = convert(Array{DT}, ds["elevations"])
+  el_unit::String = if haskey(ds["elevations"].attrib, "unit")
+    ds["elevations"].attrib["unit"]
+  else
+    "m"
+  end
 
   if !haskey(ds, "width")
-    error("$filename has no dimension 'width'")
+    error("$filename has no variable 'width'")
   end
-  if size(ds["width"],1)!=size(ids,1) error("variable 'width' in $filename has wrong dimension ($(size(ds["width"],1))) - it should have ($(size(ids,1)))") end
+  if size(ds["width"], 1) != size(ids, 1)
+    error("variable 'width' in $filename has wrong dimension ($(size(ds["width"],1))) - it should have ($(size(ids,1)))")
+  end
   width::Array{DT} = convert(Array{DT}, ds["width"])
+  width_unit::String = if haskey(ds["width"].attrib, "unit")
+    ds["width"].attrib["unit"]
+  else
+    "km"
+  end
 
   if !haskey(ds, "area")
     error("$filename has no variable 'area'")
   end
   area_nc = ds["area"]
-  if size(area_nc,1)!=size(ids,1) error("variable 'area' in $filename has wrong dimensions ($(size(area_nc,1)),$(size(area_nc,2))) - it should have ($(size(ids,1)),$(size(elevations,1)))") end
+  if size(area_nc, 1) != size(ids, 1)
+    error("variable 'area' in $filename has wrong dimensions ($(size(area_nc,1)),$(size(area_nc,2))) - it should have ($(size(ids,1)),$(size(elevations,1)))")
+  end
+  area_unit::String = if haskey(ds["area"].attrib, "unit")
+    ds["area"].attrib["unit"]
+  else
+    "km^2"
+  end
 
-  hpsf_data :: Dict{IT,HypsometricProfile{DT}} = Dict()
+  hpsf_data::Dict{IT,HypsometricProfile{DT}} = Dict()
   static_exp = Array{NCDatasets.CFVariable}(undef, 0)
   static_exp_names = Array{String}(undef, 0)
   static_exp_units = Array{String}(undef, 0)
@@ -61,34 +80,42 @@ function load_hsps_nc(::Type{IT}, ::Type{DT}, filename::String)::Dict{IT,Hypsome
     #    @show (varname, size(var))
     if (varname != "ids" && varname != "elevations")
       if haskey(var.attrib, "static") && lowercase(var.attrib["static"]) == "true"
-        push!(static_exp,var)
-        push!(static_exp_names,varname)
-        if haskey(var.attrib, "unit") push!(static_exp_units,var.attrib["unit"]) else push!(static_exp_units,"") end
+        push!(static_exp, var)
+        push!(static_exp_names, varname)
+        if haskey(var.attrib, "unit")
+          push!(static_exp_units, var.attrib["unit"])
+        else
+          push!(static_exp_units, "")
+        end
       end
       if haskey(var.attrib, "dynamic") && lowercase(var.attrib["dynamic"]) == "true"
-        push!(dynamic_exp,var)
-        push!(dynamic_exp_names,varname)
-        if haskey(var.attrib, "unit") push!(dynamic_exp_units,var.attrib["unit"]) else push!(dynamic_exp_units,"") end
+        push!(dynamic_exp, var)
+        push!(dynamic_exp_names, varname)
+        if haskey(var.attrib, "unit")
+          push!(dynamic_exp_units, var.attrib["unit"])
+        else
+          push!(dynamic_exp_units, "")
+        end
       end
     end
   end
 
-  for i in 1:size(ids,1)
-    area::Array{DT} = convert(Array{DT},area_nc[i,:])
-    s_exposure :: Array{DT,2} = Array{DT, 2}(undef, size(el,1), size(static_exp,1))
-    d_exposure :: Array{DT,2} = Array{DT, 2}(undef, size(el,1), size(dynamic_exp,1))
-    for j in 1:size(static_exp,1)
-      s_exposure[:,j] = convert(Array{DT},static_exp[j][i,:])
+  for i in 1:size(ids, 1)
+    area::Array{DT} = convert(Array{DT}, area_nc[i, :])
+    s_exposure::Array{DT,2} = Array{DT,2}(undef, size(el, 1), size(static_exp, 1))
+    d_exposure::Array{DT,2} = Array{DT,2}(undef, size(el, 1), size(dynamic_exp, 1))
+    for j in 1:size(static_exp, 1)
+      s_exposure[:, j] = convert(Array{DT}, static_exp[j][i, :])
     end
-    for j in 1:size(dynamic_exp,1)
-      d_exposure[:,j] = convert(Array{DT},dynamic_exp[j][i,:])
+    for j in 1:size(dynamic_exp, 1)
+      d_exposure[:, j] = convert(Array{DT}, dynamic_exp[j][i, :])
     end
-    hpsf = HypsometricProfile(width[i], el, area, s_exposure, static_exp_names, static_exp_units, d_exposure, dynamic_exp_names, dynamic_exp_units) 
+    hpsf = HypsometricProfile(width[i], width_unit, el, el_unit, area, area_unit, s_exposure, static_exp_names, static_exp_units, d_exposure, dynamic_exp_names, dynamic_exp_units)
     hpsf_data[ids[i]] = hpsf
   end
 
   close(ds)
-  return hpsf_data 
+  return hpsf_data
 end
 
 
