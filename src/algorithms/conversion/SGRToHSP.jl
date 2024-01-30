@@ -272,10 +272,14 @@ function to_hypsometric_profiles(
 
   ret::Dict{Int32,HypsometricProfile{Float32}} = Dict{Int32,HypsometricProfile{Float32}}()
   for (index, areas) in area_data
+    if haskey(widths,index)
     ret[index] = to_hypsometric_profile(copy(e), areas, area_unit,
       exp_st_data[index], copy(exposure_static_names), copy(exposure_static_units),
       exp_dyn_data[index], copy(exposure_dynamic_names), copy(exposure_dynamic_units),
       convert(Float32, widths[index]), width_unit, min_elevation, max_elevation, elevation_incr, elevation_unit)
+    else 
+      # warning
+    end
     end
   return ret
 end
