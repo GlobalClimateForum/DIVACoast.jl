@@ -55,8 +55,8 @@ function logg(logger, command, caller1, caller2, message)
             end
             flush(logger.io)
         end
-        println("ERROR: $(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message)
-        exit()
+        error("ERROR: $(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message)
+#        println("ERROR: $(now()) after  $(now()-logger.starttime) from " * caller2 * " in " * caller1 * ": " * message)
     end
 end
 

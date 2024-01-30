@@ -278,7 +278,7 @@ function to_hypsometric_profiles(
       exp_dyn_data[index], copy(exposure_dynamic_names), copy(exposure_dynamic_units),
       convert(Float32, widths[index]), width_unit, min_elevation, max_elevation, elevation_incr, elevation_unit)
     else 
-      # warning
+      # warning?
     end
     end
   return ret
