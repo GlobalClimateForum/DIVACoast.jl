@@ -1,6 +1,6 @@
 using QuadGK
 
-function damage(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
+function damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
   dam = exposure(hspf, first(hspf.elevation))
   dam_area = dam[1]
   dam_static = dam[2]
@@ -12,13 +12,13 @@ function damage(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_static:
     else
       if (hspf.elevation[ind+1] <= wl)
         #        println("case 1 $(hspf.elevation[ind+1]) $wl")
-        dam_t = partial_damage(hspf, wl, ind, ind + 1, hdd_area, hdds_static, hdds_dynamic)
+        dam_t = partial_damage_standard_ddf(hspf, wl, ind, ind + 1, hdd_area, hdds_static, hdds_dynamic)
         dam_area = dam_area + dam_t[1]
         dam_static = dam_static + dam_t[2]
         dam_dynamic = dam_dynamic + dam_t[3]
       else
         if (hspf.elevation[ind] > wl)
-          dam_t = partial_damage(hspf, wl, ind, hdd_area, hdds_static, hdds_dynamic)
+          dam_t = partial_damage_standard_ddf(hspf, wl, ind, hdd_area, hdds_static, hdds_dynamic)
           dam_area = dam_area + dam_t[1]
           dam_static = dam_static + dam_t[2]
           dam_dynamic = dam_dynamic + dam_t[3]
@@ -30,8 +30,8 @@ function damage(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_static:
   return (dam_area, dam_static, dam_dynamic)
 end
 
-damage(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real} = damage(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, hdds_dynamic)
-damage(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{T1}, hdds_dynamic::Array{T2}) where {DT<:Real,T1<:Real,T2<:Real} = damage(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
+damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real} = damage(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, hdds_dynamic)
+damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{T1}, hdds_dynamic::Array{T2}) where {DT<:Real,T1<:Real,T2<:Real} = damage(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
 
 
 function damage(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real}
@@ -65,7 +65,7 @@ end
 
 
 # special case ddf = d/(d+hdd)
-function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, i2::Integer, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
+function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, i2::Integer, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
   # internal function for partial damage calculation
   # attention: only works for i1 < i2 and hspf.elevation[i2] <= wl -- this is not checked 
   sl = slope(hspf, i2)
@@ -82,10 +82,10 @@ function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, i2::I
   ρ_exp_dy = (Δ_exp_dy / (Δ_area / hspf.width)) / 1000
 
   #  println("coastplain: $(ρ_exp_dy) $(sl)")
-  return partial_damage(hspf, sl, hspf.elevation[i1], hspf.elevation[i2], wl, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy, hdd_area, hdds_static, hdds_dynamic)
+  return partial_damage_standard_ddf(hspf, sl, hspf.elevation[i1], hspf.elevation[i2], wl, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy, hdd_area, hdds_static, hdds_dynamic)
 end
 
-function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
+function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
   sl = slope(hspf, i1 + 1)
 
   exp_wl = exposure(hspf, wl)
@@ -102,11 +102,11 @@ function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, hdd_a
   ρ_exp_dy = (Δ_exp_dy / (Δ_area / hspf.width)) / 1000
 
   #println("  partial_damage(hspf, $sl, $(hspf.elevation[i1]), $wl, $wl, $Δ_area, $Δ_exp_st, $Δ_exp_dy, $ρ_area, $ρ_exp_st, $ρ_exp_dy, $hdd_area, $hdds_static, $hdds_dynamic)")
-  return partial_damage(hspf, sl, hspf.elevation[i1], wl, wl, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy, hdd_area, hdds_static, hdds_dynamic)
+  return partial_damage_standard_ddf(hspf, sl, hspf.elevation[i1], wl, wl, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy, hdd_area, hdds_static, hdds_dynamic)
 end
 
 # @inline
-function partial_damage(hspf::HypsometricProfile{DT}, sl::DT, wl_low::DT, wl_high::DT, wl::DT,
+function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, sl::DT, wl_low::DT, wl_high::DT, wl::DT,
   Δ_area::DT, Δ_exp_st::Array{DT}, Δ_exp_dy::Array{DT},
   ρ_area::DT, ρ_exp_st::Array{DT}, ρ_exp_dy::Array{DT},
   hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
