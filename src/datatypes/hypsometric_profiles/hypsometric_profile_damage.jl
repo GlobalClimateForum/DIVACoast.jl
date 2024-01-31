@@ -30,8 +30,8 @@ function damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT,
   return (dam_area, dam_static, dam_dynamic)
 end
 
-damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real} = damage(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, hdds_dynamic)
-damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{T1}, hdds_dynamic::Array{T2}) where {DT<:Real,T1<:Real,T2<:Real} = damage(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
+damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real} = damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, hdds_dynamic)
+damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{T1}, hdds_dynamic::Array{T2}) where {DT<:Real,T1<:Real,T2<:Real} = damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
 
 
 function damage(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real}
