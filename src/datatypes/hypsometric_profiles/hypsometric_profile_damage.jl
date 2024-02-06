@@ -14,14 +14,14 @@ function damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT,
         #        println("case 1 $(hspf.elevation[ind+1]) $wl")
         dam_t = partial_damage_standard_ddf(hspf, wl, ind, ind + 1, hdd_area, hdds_static, hdds_dynamic)
         dam_area = dam_area + dam_t[1]
-        dam_static = dam_static + dam_t[2]
-        dam_dynamic = dam_dynamic + dam_t[3]
+        dam_static = (size(dam_t[2], 1) > 0) ? dam_static + dam_t[2] : dam_static
+        dam_dynamic = (size(dam_t[3], 1) > 0) ? dam_dynamic + dam_t[3] : dam_dynamic
       else
         if (hspf.elevation[ind] > wl)
           dam_t = partial_damage_standard_ddf(hspf, wl, ind, hdd_area, hdds_static, hdds_dynamic)
           dam_area = dam_area + dam_t[1]
-          dam_static = dam_static + dam_t[2]
-          dam_dynamic = dam_dynamic + dam_t[3]
+          dam_static = (size(dam_t[2], 1) > 0) ? dam_static + dam_t[2] : dam_static
+          dam_dynamic = (size(dam_t[3], 1) > 0) ? dam_dynamic + dam_t[3] : dam_dynamic
         end
       end
     end
@@ -32,7 +32,30 @@ end
 
 damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real} = damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, hdds_dynamic)
 damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{T1}, hdds_dynamic::Array{T2}) where {DT<:Real,T1<:Real,T2<:Real} = damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
-
+damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{Any}, hdds_dynamic::Array{DT}) where {DT<:Real} =
+  if (hdds_static == [])
+    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), Matrix{DT}(undef, 0, 0), hdds_dynamic)
+  else
+    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), hdds_dynamic)
+  end
+damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{DT}, hdds_dynamic::Array{Any}) where {DT<:Real} =
+  if (hdds_dynamic == [])
+    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, convert(Array{DT}, hdds_dynamic))
+  else
+    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, Matrix{DT}(undef, 0, 0))
+  end
+damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{Any}, hdds_dynamic::Array{T}) where {DT<:Real,T<:Real} =
+  if (hdds_static == [])
+    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), Matrix{DT}(undef, 0, 0), convert(Array{DT}, hdds_dynamic))
+  else
+    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
+  end
+damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{T}, hdds_dynamic::Array{Any}) where {DT<:Real,T<:Real} =
+  if (hdds_dynamic == [])
+    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
+  else
+    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), Matrix{DT}(undef, 0, 0))
+  end
 
 function damage(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real}
   dam = exposure(hspf, first(hspf.elevation))
@@ -47,20 +70,44 @@ function damage(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_s
       if (hspf.elevation[ind+1] <= wl)
         dam_t = partial_damage(hspf, wl, ind, ind + 1, ddf_area, ddfs_static, ddfs_dynamic)
         dam_area = dam_area + dam_t[1]
-        dam_static = dam_static + dam_t[2]
-        dam_dynamic = dam_dynamic + dam_t[3]
+        dam_static = (size(dam_t[2], 1) > 0) ? dam_static + dam_t[2] : dam_static
+        dam_dynamic = (size(dam_t[3], 1) > 0) ? dam_dynamic + dam_t[3] : dam_dynamic
       else
         if (hspf.elevation[ind] > wl)
           dam_t = partial_damage(hspf, wl, ind, ddf_area, ddfs_static, ddfs_dynamic)
           dam_area = dam_area + dam_t[1]
-          dam_static = dam_static + dam_t[2]
-          dam_dynamic = dam_dynamic + dam_t[3]
+          dam_static = (size(dam_t[2], 1) > 0) ? dam_static + dam_t[2] : dam_static
+          dam_dynamic = (size(dam_t[3], 1) > 0) ? dam_dynamic + dam_t[3] : dam_dynamic
         end
       end
     end
   end
 
   return (dam_area, dam_static, dam_dynamic)
+end
+
+damage(hspf::HypsometricProfile{DT}, wl::Real, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real} = damage(hspf, convert(DT, wl), ddf_area, ddfs_static, ddfs_dynamic)
+damage(hspf::HypsometricProfile{DT}, wl::Real, ddf_area::Function, ddfs_static::Vector{Any}, ddfs_dynamic::Vector{Function}) where {DT<:Real} = 
+if (ddfs_static == [])
+  damage(hspf, convert(DT, wl), ddf_area, Vector{Function}(undef, 0), ddfs_dynamic)
+else
+  damage(hspf, convert(DT, wl), ddf_area, convert(Vector{Function},ddfs_static), ddfs_dynamic)
+end
+damage(hspf::HypsometricProfile{DT}, wl::Real, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Any}) where {DT<:Real} = 
+if (ddfs_dynamic == [])
+  damage(hspf, convert(DT, wl), ddf_area, ddfs_static, Vector{Function}(undef, 0))
+else
+  damage(hspf, convert(DT, wl), ddf_area, ddfs_static, convert(Vector{Function}, ddfs_dynamic))
+end
+damage(hspf::HypsometricProfile{DT}, wl::Real, ddf_area::Function, ddfs_static::Vector{Any}, ddfs_dynamic::Vector{Any}) where {DT<:Real} = 
+if (ddfs_static == [] && ddfs_dynamic == [])
+  damage(hspf, convert(DT, wl), ddf_area, Vector{Function}(undef, 0), Vector{Function}(undef, 0))
+elseif (ddfs_static == [])
+  damage(hspf, convert(DT, wl), ddf_area, Vector{Function}(undef, 0), convert(Vector{Function}, ddfs_dynamic))
+elseif (ddfs_dynamic == [])
+  damage(hspf, convert(DT, wl), ddf_area, convert(Vector{Function}, ddfs_static), Vector{Function}(undef, 0))
+else
+  damage(hspf, convert(DT, wl), ddf_area, convert(Vector{Function}, ddfs_static), convert(Vector{Function}, ddfs_dynamic))
 end
 
 
