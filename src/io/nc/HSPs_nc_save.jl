@@ -6,7 +6,7 @@ export save_hsps_nc
 function get_area_exposures(hspf :: HypsometricProfile{Float32}, elevations :: Array{DT}) where {DT <: Real}
   ret :: Array{Float32} = zeros(Float32, size(elevations,1)+1)
   for j in 1:size(elevations,1)
-    ret[j+1] = exposure_below_below(hspf,elevations[j])[1]
+    ret[j+1] = exposure_below(hspf,elevations[j])[1]
   end
   for j in size(elevations,1):-1:1
     ret[j+1] = ret[j+1] - ret[j]
@@ -17,7 +17,7 @@ end
 function get_exposures(hspf :: HypsometricProfile{Float32}, elevations :: Array{DT}, t :: Int, pos :: Int) where {DT <: Real}
   ret :: Array{Float32} = zeros(Float32, size(elevations,1)+1)
   for j in 1:size(elevations,1)
-    ret[j+1] = exposure_below_below(hspf,elevations[j])[t][pos]
+    ret[j+1] = exposure_below(hspf,elevations[j])[t][pos]
   end
   for j in size(elevations,1):-1:1
     ret[j+1] = ret[j+1] - ret[j]
