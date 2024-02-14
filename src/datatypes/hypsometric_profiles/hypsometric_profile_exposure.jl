@@ -1,4 +1,4 @@
-function exposure(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
+function exposure_below(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
   ind::Int64 = searchsortedfirst(hspf.elevation, e)
   if (e in hspf.elevation)
     @inbounds ea = hspf.cummulativeArea[ind]
@@ -26,8 +26,8 @@ function exposure(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
   end
 end
 
-function exposure_named(hspf::HypsometricProfile, e::Real)
-  ex = exposure(hspf, e)
+function exposure_below_named(hspf::HypsometricProfile, e::Real)
+  ex = exposure_below(hspf, e)
   @inbounds return (ex[1], NamedTuple{hspf.staticExposureSymbols}(ex[2]), NamedTuple{hspf.dynamicExposureSymbols}(ex[3]))
 end
 

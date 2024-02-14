@@ -1,7 +1,7 @@
 using StructArrays
 
 export HypsometricProfile,
-  exposure, exposure_named,
+  exposure_below, exposure_below_named,
   sed, sed_above, sed_below, remove_below, remove_below_named, add_above, add_between,
   add_static_exposure!, add_dynamic_exposure!, remove_static_exposure!, remove_dynamic_exposure!,
   damage_standard_ddf, damage
@@ -203,7 +203,7 @@ function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT
   cden::Array{DT,2} = Array{DT,2}(undef, size(elevation, 1), size(hspf.cummulativeDynamicExposure, 2))
 
   for i in 1:size(elevation, 1)
-    t_exposure = exposure(hspf, elevation[i])
+    t_exposure = exposure_below(hspf, elevation[i])
     can[i] = t_exposure[1]
     csen[i, :] = t_exposure[2]
     cden[i, :] = t_exposure[3]
@@ -229,9 +229,9 @@ end
 
 
 function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, i3::Int64)::Bool
-  ex1 = exposure(hspf, hspf.elevation[i1])
-  ex2 = exposure(hspf, hspf.elevation[i2])
-  ex3 = exposure(hspf, hspf.elevation[i3])
+  ex1 = exposure_below(hspf, hspf.elevation[i1])
+  ex2 = exposure_below(hspf, hspf.elevation[i2])
+  ex3 = exposure_below(hspf, hspf.elevation[i3])
   r = (hspf.elevation[i2] - hspf.elevation[i1]) / (hspf.elevation[i3] - hspf.elevation[i1])
   return isapprox(ex2[1], ex1[1] + r * (ex2[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex2[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex2[3] - ex1[3]))
 end

@@ -1,7 +1,7 @@
 using QuadGK
 
 function damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
-  dam = exposure(hspf, first(hspf.elevation))
+  dam = exposure_below(hspf, first(hspf.elevation))
   dam_area = dam[1]
   dam_static = dam[2]
   dam_dynamic = dam[3]
@@ -58,7 +58,7 @@ damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds
   end
 
 function damage(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real}
-  dam = exposure(hspf, first(hspf.elevation))
+  dam = exposure_below(hspf, first(hspf.elevation))
   dam_area = dam[1]
   dam_static = dam[2]
   dam_dynamic = dam[3]
@@ -135,7 +135,7 @@ end
 function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
   sl = slope(hspf, i1 + 1)
 
-  exp_wl = exposure(hspf, wl)
+  exp_wl = exposure_below(hspf, wl)
   Δ_area = exp_wl[1] - hspf.cummulativeArea[i1]
   if Δ_area == 0
     return (convert(DT, 0), zeros(DT, size(hspf.staticExposureSymbols, 1)), zeros(DT, size(hspf.dynamicExposureSymbols, 1)))
@@ -201,7 +201,7 @@ end
 function partial_damage(hspf::HypsometricProfile{DT}, wl::DT, i1::Integer, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real}
   sl = slope(hspf, i1 + 1)
 
-  exp_wl = exposure(hspf, wl)
+  exp_wl = exposure_below(hspf, wl)
   Δ_area = exp_wl[1] - hspf.cummulativeArea[i1]
   if Δ_area == 0
     return (0, zeros(size(hspf.staticExposureSymbols, 1)), zeros(size(hspf.dynamicExposureSymbols, 1)))
