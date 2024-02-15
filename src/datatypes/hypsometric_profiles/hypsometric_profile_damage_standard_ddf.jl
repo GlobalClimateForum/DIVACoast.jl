@@ -73,13 +73,14 @@ function damage_standard_ddf(hspf::HypsometricProfile{DT}, s::Symbol, wl::DT, hd
       Δ_exp = (hspf.elevation[ind+1] <= wl) ? exposure[ind+1] - exposure[ind] : exposure_below(hspf, s, wl_high) - exposure[ind]
       Δ_area = (hspf.elevation[ind+1] <= wl) ? hspf.cummulativeArea[ind+1] - hspf.cummulativeArea[ind] : exposure_below(hspf, :area, wl_high) - hspf.cummulativeArea[ind]
 
-      if Δ_area != 0
+      if (Δ_area != 0 && Δ_exp != 0)
         ρ_exp = (Δ_exp / (Δ_area / hspf.width)) / 1000
         Δ_elevation1 = wl - wl_high
         Δ_elevation2 = wl - wl_low
         Δ_elevation3 = wl_high - wl_low
         factor = (hdd > 0) ? hdd * log((hdd + Δ_elevation1) / (hdd + Δ_elevation2)) + Δ_elevation3 : sl / ρ_exp * Δ_exp
         dam += factor * ρ_exp / sl
+        if isnan(dam) println("$factor * $(ρ_exp) / $sl") end
       end
     end
   end
