@@ -1,10 +1,12 @@
 using StructArrays
 
 export HypsometricProfile,
+  unit,
   exposure_below, exposure_below_named,
   sed, sed_above, sed_below, remove_below, remove_below_named, add_above, add_between,
   add_static_exposure!, add_dynamic_exposure!, remove_static_exposure!, remove_dynamic_exposure!,
   damage_standard_ddf, damage
+
 
 mutable struct HypsometricProfile{DT<:Real}
   width::DT
@@ -80,7 +82,6 @@ mutable struct HypsometricProfile{DT<:Real}
     if (!issorted(elevations))
       logg(logger, Logging.Error, @__FILE__, "", "\n elevations is not sorted: $elevations")
     end
-
     if (area[1] != 0)
       logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n area[1] should be zero, but its not: $area")
     end
@@ -112,7 +113,12 @@ mutable struct HypsometricProfile{DT<:Real}
     if (!issorted(elevations))
       logg(logger, Logging.Error, @__FILE__, "", "\n elevations is not sorted: $elevations")
     end
-
+    if (s_exposure_names != unique(s_exposure_names))
+      logg(logger, Logging.Error, @__FILE__, "", "\n s_exposure_names has duplicates: $s_exposure_names")
+    end
+    if (d_exposure_names != unique(d_exposure_names))
+      logg(logger, Logging.Error, @__FILE__, "", "\n d_exposure_names has duplicates: $d_exposure_names")
+    end
     if (area[1] != 0)
       logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n area[1] should be zero, but its not: $area")
     end
@@ -148,9 +154,9 @@ mutable struct HypsometricProfile{DT<:Real}
   end
 end
 
-
 include("hypsometric_profile_exposure.jl")
-include("hypsometric_profile_damage.jl")
+include("hypsometric_profile_damage_arbitrary_ddf.jl")
+include("hypsometric_profile_damage_standard_ddf.jl")
 include("hypsometric_profile_sed.jl")
 include("hypsometric_profile_modifications.jl")
 include("hypsometric_profile_plot.jl")
@@ -226,6 +232,37 @@ function compress!(hspf::HypsometricProfile)
     end
   end
 end
+
+function get_position(hspf::HypsometricProfile, s::Symbol)
+  if (s == :area)
+    return (1,1)
+  end
+  if (findfirst(==(s), hspf.staticExposureSymbols) != nothing)
+    return (2,findfirst(==(s), hspf.staticExposureSymbols))
+  end
+  if (findfirst(==(s), hspf.dynamicExposureSymbols) != nothing)
+    return (3,findfirst(==(s), hspf.dynamicExposureSymbols))
+  end
+  return (-1,0)
+end
+
+get_position(hspf::HypsometricProfile, n::String) = get_position(hspf, Symbol(n))
+
+function unit(hspf::HypsometricProfile, s::Symbol)
+  p = get_position(hspf, s)
+  if (p[1]==1)
+    return hspf.area_unit
+  end
+  if (p[1]==2)
+    return hspf.staticExposureUnits[p[2]]
+  end
+  if (p[1]==3)
+    return hspf.dynamicExposureUnits[p[2]]
+  end
+  return "unknown symbol: $s"
+end
+
+unit(hspf::HypsometricProfile, n::String) = unit(hspf, Symbol(n))
 
 
 function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, i3::Int64)::Bool

@@ -26,6 +26,35 @@ function exposure_below(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
   end
 end
 
+function exposure_below(hspf::HypsometricProfile{DT}, s::Symbol, e::Real) where {DT<:Real}
+  p = get_position(hspf, s)
+
+  exposure = zeros(DT, size(hspf.elevation,1))
+  if (p[1]==1)
+    exposure = hspf.cummulativeArea
+  end
+  if (p[1]==2)
+    exposure = hspf.cummulativeStaticExposure[:, p[2]]
+  end
+  if (p[1]==3)
+    exposure = hspf.cummulativeDynamicExposure[:, p[2]] 
+  end
+
+  ind::Int64 = searchsortedfirst(hspf.elevation, e)
+  if (e in hspf.elevation)
+    return exposure[ind]
+  else
+    if (ind == 1)
+      return exposure[ind]
+    end
+    if (ind > size(hspf.elevation, 1))
+      return exposure[size(hspf.elevation, 1)]
+    end
+    @inbounds r = (e - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
+    return exposure[ind-1] + ((exposure[ind] - exposure[ind-1]) * r)
+  end
+end
+
 function exposure_below_named(hspf::HypsometricProfile, e::Real)
   ex = exposure_below(hspf, e)
   @inbounds return (ex[1], NamedTuple{hspf.staticExposureSymbols}(ex[2]), NamedTuple{hspf.dynamicExposureSymbols}(ex[3]))

@@ -15,3 +15,5 @@ Pkg.add("Distributions")
 Pkg.add("Plots")
 Pkg.add("NearestNeighbors")
 Pkg.add("Distances")
+Pkg.add("LsqFit")
+
