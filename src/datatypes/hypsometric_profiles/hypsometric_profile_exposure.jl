@@ -55,6 +55,10 @@ function exposure_below(hspf::HypsometricProfile{DT}, s::Symbol, e::Real) where 
   end
 end
 
+function exposure_below(hspf::HypsometricProfile{DT}, s::Array{Symbol}, e::Real) where {DT<:Real}
+  map(x -> exposure_below(hspf, x, e), s)
+end
+
 function exposure_below_named(hspf::HypsometricProfile, e::Real)
   ex = exposure_below(hspf, e)
   @inbounds return (ex[1], NamedTuple{hspf.staticExposureSymbols}(ex[2]), NamedTuple{hspf.dynamicExposureSymbols}(ex[3]))

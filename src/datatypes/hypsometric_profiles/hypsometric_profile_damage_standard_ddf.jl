@@ -1,7 +1,7 @@
 using QuadGK
 
 # special case ddf = d/(d+hdd)
-function damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
+function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
   dam = exposure_below(hspf, first(hspf.elevation))
   dam_area = dam[1]
   dam_static = dam[2]
@@ -32,7 +32,7 @@ function damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT,
         ρ_area = hspf.width / 1000
         ρ_exp_st = (Δ_exp_st / (Δ_area / hspf.width)) / 1000
         ρ_exp_dy = (Δ_exp_dy / (Δ_area / hspf.width)) / 1000
-        dam_t = partial_damage_standard_ddf(hspf, wl, hdd_area, hdds_static, hdds_dynamic, sl, wl_low, wl_high, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy)
+        dam_t = partial_damage_bathtub_standard_ddf(hspf, wl, hdd_area, hdds_static, hdds_dynamic, sl, wl_low, wl_high, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy)
         dam_area = dam_area + dam[1]
         dam_static = (size(dam_t[2], 1) > 0) ? dam_static + dam_t[2] : dam_static
         dam_dynamic = (size(dam_t[3], 1) > 0) ? dam_dynamic + dam_t[3] : dam_dynamic
@@ -44,7 +44,7 @@ function damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT,
 end
 
 
-function damage_standard_ddf(hspf::HypsometricProfile{DT}, s::Symbol, wl::DT, hdd::DT)::DT where {DT<:Real}
+function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, s::Symbol, wl::DT, hdd::DT)::DT where {DT<:Real}
   pos = get_position(hspf, s)
   if (pos[1] == -1)
     return zero(DT)
@@ -88,38 +88,38 @@ function damage_standard_ddf(hspf::HypsometricProfile{DT}, s::Symbol, wl::DT, hd
 end
 
 
-damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real} = damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, hdds_dynamic)
-damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{T1}, hdds_dynamic::Array{T2}) where {DT<:Real,T1<:Real,T2<:Real} = damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
-damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{Any}, hdds_dynamic::Array{DT}) where {DT<:Real} =
+damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real} = damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, hdds_dynamic)
+damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Array{T1}, hdds_dynamic::Array{T2}) where {DT<:Real,T1<:Real,T2<:Real} = damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
+damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{Any}, hdds_dynamic::Array{DT}) where {DT<:Real} =
   if (hdds_static == [])
-    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), Matrix{DT}(undef, 0, 0), hdds_dynamic)
+    damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), Matrix{DT}(undef, 0, 0), hdds_dynamic)
   else
-    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), hdds_dynamic)
+    damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), hdds_dynamic)
   end
-damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{DT}, hdds_dynamic::Array{Any}) where {DT<:Real} =
+damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{DT}, hdds_dynamic::Array{Any}) where {DT<:Real} =
   if (hdds_dynamic == [])
-    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, convert(Array{DT}, hdds_dynamic))
+    damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, convert(Array{DT}, hdds_dynamic))
   else
-    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, Matrix{DT}(undef, 0, 0))
+    damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), hdds_static, Matrix{DT}(undef, 0, 0))
   end
-damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{Any}, hdds_dynamic::Array{T}) where {DT<:Real,T<:Real} =
+damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{Any}, hdds_dynamic::Array{T}) where {DT<:Real,T<:Real} =
   if (hdds_static == [])
-    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), Matrix{DT}(undef, 0, 0), convert(Array{DT}, hdds_dynamic))
+    damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), Matrix{DT}(undef, 0, 0), convert(Array{DT}, hdds_dynamic))
   else
-    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
+    damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
   end
-damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{T}, hdds_dynamic::Array{Any}) where {DT<:Real,T<:Real} =
+damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Real, hdds_static::Vector{T}, hdds_dynamic::Array{Any}) where {DT<:Real,T<:Real} =
   if (hdds_dynamic == [])
-    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
+    damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
   else
-    damage_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), Matrix{DT}(undef, 0, 0))
+    damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), Matrix{DT}(undef, 0, 0))
   end
 
-damage_standard_ddf(hspf::HypsometricProfile{DT}, s::Symbol, wl::T1, hdd::T2) where {DT<:Real,T1<:Real,T2<:Real} = damage_standard_ddf(hspf, s, convert(DT, wl), convert(DT, hdd))
+damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, s::Symbol, wl::T1, hdd::T2) where {DT<:Real,T1<:Real,T2<:Real} = damage_bathtub_standard_ddf(hspf, s, convert(DT, wl), convert(DT, hdd))
 
 
 # @inline
-function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT,
+function partial_damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT,
   hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT},
   sl::DT, wl_low::DT, wl_high::DT,
   Δ_area::DT, Δ_exp_st::Array{DT}, Δ_exp_dy::Array{DT},

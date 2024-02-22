@@ -5,7 +5,7 @@ export HypsometricProfile,
   exposure_below, exposure_below_named,
   sed, sed_above, sed_below, remove_below, remove_below_named, add_above, add_between,
   add_static_exposure!, add_dynamic_exposure!, remove_static_exposure!, remove_dynamic_exposure!,
-  damage_standard_ddf, damage
+  damage_bathtub_standard_ddf, damage_bathtub
 
 
 mutable struct HypsometricProfile{DT<:Real}
