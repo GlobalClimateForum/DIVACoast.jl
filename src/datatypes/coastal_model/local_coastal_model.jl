@@ -60,8 +60,6 @@ function expected_damage_bathtub(lcm::LocalCoastalModel{DT}, s::Symbol, ddf::Fun
   quadgk(x -> (damage_bathtub(lcm.coastal_plain_model, s, convert(DT, x), ddf) * pdf(lcm.surge_model, x)), minimum(0), maximum(lcm.surge_model), rtol=1e-3)[1]
 end
 
-
-
 exposure_below(lcm::LocalCoastalModel{DT}, e::Real) where {DT<:Real} = exposure_below(lcm.coastal_plain_model, e)
 exposure_below(lcm::LocalCoastalModel{DT}, s::Symbol, e::Real) where {DT<:Real} = exposure_below(lcm.coastal_plain_model, s, e)
 
