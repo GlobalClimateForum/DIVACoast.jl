@@ -222,9 +222,14 @@ function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT
   hspf.cummulativeDynamicExposure = cden
 end
 
-
+"""
+    compress!(hspf::HypsometricProfile)
+  
+Comress a hypsometric profile by removing colinear points. Calculations on compressed hypsometric profiles can be faster. Idempotent operation.
+"""
 function compress!(hspf::HypsometricProfile)
-  i = 3
+  # probably not efficient
+  i = 2
   while i <= size(hspf.elevation, 1) - 1
     if private_colinear_lines(hspf, i - 1, i, i + 1)
       private_remove_line(hspf, i)
@@ -232,6 +237,18 @@ function compress!(hspf::HypsometricProfile)
       i = i + 1
     end
   end
+end
+
+function compress_fast!(hspf::HypsometricProfile)
+  # probably not efficient
+  i = 2
+  keep = ones(Bool,size(hspf.elevation, 1))
+  for i in 2:size(hspf.elevation, 1) - 1
+    if private_colinear_lines(hspf, i - 1, i, i + 1)
+      keep[i]=false
+    end
+  end
+
 end
 
 function get_position(hspf::HypsometricProfile, s::Symbol)
