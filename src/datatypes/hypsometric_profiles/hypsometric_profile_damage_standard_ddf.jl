@@ -15,7 +15,7 @@ function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_a
       wl_low = hspf.elevation[ind]
       wl_high = (hspf.elevation[ind+1] <= wl) ? hspf.elevation[ind+1] : wl
 
-      Δ_area = (hspf.elevation[ind+1] <= wl) ? hspf.cummulativeArea[ind+1] - hspf.cummulativeArea[ind] : exposure_below(hspf, :area, wl_high) - hspf.cummulativeArea[ind]
+      Δ_area = (hspf.elevation[ind+1] <= wl) ? hspf.cummulativeArea[ind+1] - hspf.cummulativeArea[ind] : exposure_below(hspf, wl_high, :area) - hspf.cummulativeArea[ind]
 
       if (Δ_area != 0)
         Δ_exp_st = (hspf.elevation[ind+1] <= wl) ? (
@@ -44,13 +44,13 @@ function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_a
 end
 
 
-function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, s::Symbol, wl::DT, hdd::DT)::DT where {DT<:Real}
+function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd::DT, s::Symbol)::DT where {DT<:Real}
   pos = get_position(hspf, s)
   if (pos[1] == -1)
     return zero(DT)
   end
 
-  dam = exposure_below(hspf, s, first(hspf.elevation))
+  dam = exposure_below(hspf, first(hspf.elevation), s)
   exposure = zeros(DT, size(hspf.elevation, 1))
   if (pos[1] == 1)
     exposure = hspf.cummulativeArea
@@ -70,8 +70,8 @@ function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, s::Symbol, wl
       wl_low = hspf.elevation[ind]
       wl_high = (hspf.elevation[ind+1] <= wl) ? hspf.elevation[ind+1] : wl
 
-      Δ_exp = (hspf.elevation[ind+1] <= wl) ? exposure[ind+1] - exposure[ind] : exposure_below(hspf, s, wl_high) - exposure[ind]
-      Δ_area = (hspf.elevation[ind+1] <= wl) ? hspf.cummulativeArea[ind+1] - hspf.cummulativeArea[ind] : exposure_below(hspf, :area, wl_high) - hspf.cummulativeArea[ind]
+      Δ_exp = (hspf.elevation[ind+1] <= wl) ? exposure[ind+1] - exposure[ind] : exposure_below(hspf, wl_high, s) - exposure[ind]
+      Δ_area = (hspf.elevation[ind+1] <= wl) ? hspf.cummulativeArea[ind+1] - hspf.cummulativeArea[ind] : exposure_below(hspf, wl_high, :area) - hspf.cummulativeArea[ind]
 
       if (Δ_area != 0 && Δ_exp != 0)
         ρ_exp = (Δ_exp / (Δ_area / hspf.width)) / 1000
@@ -115,7 +115,7 @@ damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::Real, hdd_area::Re
     damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd_area), convert(Array{DT}, hdds_static), Matrix{DT}(undef, 0, 0))
   end
 
-damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, s::Symbol, wl::T1, hdd::T2) where {DT<:Real,T1<:Real,T2<:Real} = damage_bathtub_standard_ddf(hspf, s, convert(DT, wl), convert(DT, hdd))
+damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::T1, hdd::T2, s::Symbol) where {DT<:Real,T1<:Real,T2<:Real} = damage_bathtub_standard_ddf(hspf, convert(DT, wl), convert(DT, hdd), s)
 
 
 # @inline

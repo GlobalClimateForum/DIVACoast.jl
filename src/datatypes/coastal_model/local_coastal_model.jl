@@ -35,7 +35,7 @@ expected_damage_bathtub_standard_ddf(lcm::LocalCoastalModel{DT}, hdd_area::Real,
     expected_damage_bathtub_standard_ddf(lcm, convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic))
   end
 
-function expected_damage_bathtub_standard_ddf(lcm::LocalCoastalModel, s::Symbol, hdd::Real)
+function expected_damage_bathtub_standard_ddf(lcm::LocalCoastalModel, hdd::Real, s::Symbol)
   quadgk(x -> (damage_bathtub_standard_ddf(lcm.coastal_plain_model, s, x, hdd) * pdf(lcm.surge_model, x)), minimum(0), maximum(lcm.surge_model), rtol=1e-3)[1]
 end
 
@@ -56,12 +56,12 @@ function expected_damage_bathtub(lcm::LocalCoastalModel{DT}, ddf_area::Function,
   (edam_area, edam_static, edam_dynamic)
 end
 
-function expected_damage_bathtub(lcm::LocalCoastalModel{DT}, s::Symbol, ddf::Function) where {DT<:Real}
+function expected_damage_bathtub(lcm::LocalCoastalModel{DT}, ddf::Function) where {DT<:Real}
   quadgk(x -> (damage_bathtub(lcm.coastal_plain_model, s, convert(DT, x), ddf) * pdf(lcm.surge_model, x)), minimum(0), maximum(lcm.surge_model), rtol=1e-3)[1]
 end
 
 exposure_below(lcm::LocalCoastalModel{DT}, e::Real) where {DT<:Real} = exposure_below(lcm.coastal_plain_model, e)
-exposure_below(lcm::LocalCoastalModel{DT}, s::Symbol, e::Real) where {DT<:Real} = exposure_below(lcm.coastal_plain_model, s, e)
+exposure_below(lcm::LocalCoastalModel{DT}, e::Real, s::Symbol) where {DT<:Real} = exposure_below(lcm.coastal_plain_model, s, e)
 
 damage_bathtub_standard_ddf(lcm::LocalCoastalModel{DT}, wl, hdd_area, hdds_static, hdds_dynamic) where {DT<:Real} = damage_standard_ddf(lcm.coastal_plain_model, wl, hdd_area, hdds_static, hdds_dynamic)
-damage_bathtub_standard_ddf(lcm::LocalCoastalModel{DT}, s::Symbol, wl::T1, hdd::T2) where {DT<:Real,T1<:Real,T2<:Real} = damage_standard_ddf(lcm.coastal_plain_model, s, convert(DT, wl), convert(DT, hdd))
+damage_bathtub_standard_ddf(lcm::LocalCoastalModel{DT}, wl::T1, hdd::T2, s::Symbol) where {DT<:Real,T1<:Real,T2<:Real} = damage_standard_ddf(lcm.coastal_plain_model, s, convert(DT, wl), convert(DT, hdd))

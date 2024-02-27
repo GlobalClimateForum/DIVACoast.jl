@@ -9,7 +9,7 @@ algorithms that compute flood impacts, erosion and wetland change.
 ## Hypsometric profiles
 ```@docs
 Main.jdiva.exposure_below
-Main.jdiva.compress
+Main.jdiva.compress!
 ```
 
 ## GeoUtils
