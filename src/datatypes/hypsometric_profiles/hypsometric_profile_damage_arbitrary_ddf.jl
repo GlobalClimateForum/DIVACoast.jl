@@ -2,7 +2,7 @@ using QuadGK
 
 # General case
 function damage_bathtub(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real}
-  dam = exposure_below(hspf, first(hspf.elevation))
+  dam = exposure_below_bathtub(hspf, first(hspf.elevation))
   dam_area = dam[1]
   dam_static = dam[2]
   dam_dynamic = dam[3]
@@ -15,19 +15,19 @@ function damage_bathtub(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function
       wl_low = hspf.elevation[ind]
       wl_high = (hspf.elevation[ind+1] <= wl) ? hspf.elevation[ind+1] : wl
 
-      Δ_area = (hspf.elevation[ind+1] <= wl) ? hspf.cummulativeArea[ind+1] - hspf.cummulativeArea[ind] : exposure_below(hspf, wl_high, :area) - hspf.cummulativeArea[ind]
+      Δ_area = (hspf.elevation[ind+1] <= wl) ? hspf.cummulativeArea[ind+1] - hspf.cummulativeArea[ind] : exposure_below_bathtub(hspf, wl_high, :area) - hspf.cummulativeArea[ind]
 
       if (Δ_area != 0)
         Δ_exp_st = (hspf.elevation[ind+1] <= wl) ? (
           size(hspf.cummulativeStaticExposure)[2] >= 1 ? hspf.cummulativeStaticExposure[ind+1, :] - hspf.cummulativeStaticExposure[ind, :] : Array{DT,2}(undef, 0, 0)
         ) : (
-          size(hspf.cummulativeStaticExposure)[2] >= 1 ? exposure_below(hspf, wl)[2] - hspf.cummulativeStaticExposure[ind, :] : Array{DT,2}(undef, 0, 0)
+          size(hspf.cummulativeStaticExposure)[2] >= 1 ? exposure_below_bathtub(hspf, wl)[2] - hspf.cummulativeStaticExposure[ind, :] : Array{DT,2}(undef, 0, 0)
         )
 
         Δ_exp_dy = (hspf.elevation[ind+1] <= wl) ? (
           size(hspf.cummulativeDynamicExposure)[2] >= 1 ? hspf.cummulativeDynamicExposure[ind+1, :] - hspf.cummulativeDynamicExposure[ind, :] : Array{DT,2}(undef, 0, 0)
         ) : (
-          size(hspf.cummulativeDynamicExposure)[2] >= 1 ? exposure_below(hspf, wl)[3] - hspf.cummulativeDynamicExposure[ind, :] : Array{DT,2}(undef, 0, 0)
+          size(hspf.cummulativeDynamicExposure)[2] >= 1 ? exposure_below_bathtub(hspf, wl)[3] - hspf.cummulativeDynamicExposure[ind, :] : Array{DT,2}(undef, 0, 0)
         )
         ρ_area = hspf.width / 1000
         ρ_exp_st = (Δ_exp_st / (Δ_area / hspf.width)) / 1000
@@ -51,7 +51,7 @@ function damage_bathtub(hspf::HypsometricProfile{DT}, wl::DT, ddf::Function, s::
     return zero(DT)
   end
 
-  dam = exposure_below(hspf, first(hspf.elevation), s)
+  dam = exposure_below_bathtub(hspf, first(hspf.elevation), s)
   exposure = zeros(DT, size(hspf.elevation, 1))
   if (pos[1] == 1)
     exposure = hspf.cummulativeArea
@@ -71,8 +71,8 @@ function damage_bathtub(hspf::HypsometricProfile{DT}, wl::DT, ddf::Function, s::
       wl_low = hspf.elevation[ind]
       wl_high = (hspf.elevation[ind+1] <= wl) ? hspf.elevation[ind+1] : wl
 
-      Δ_exp = (hspf.elevation[ind+1] <= wl) ? exposure[ind+1] - exposure[ind] : exposure_below(hspf, wl_high, s) - exposure[ind]
-      Δ_area = (hspf.elevation[ind+1] <= wl) ? hspf.cummulativeArea[ind+1] - hspf.cummulativeArea[ind] : exposure_below(hspf, wl_high, :area) - hspf.cummulativeArea[ind]
+      Δ_exp = (hspf.elevation[ind+1] <= wl) ? exposure[ind+1] - exposure[ind] : exposure_below_bathtub(hspf, wl_high, s) - exposure[ind]
+      Δ_area = (hspf.elevation[ind+1] <= wl) ? hspf.cummulativeArea[ind+1] - hspf.cummulativeArea[ind] : exposure_below_bathtub(hspf, wl_high, :area) - hspf.cummulativeArea[ind]
 
       if Δ_area != 0
         ρ_exp = (Δ_exp / (Δ_area / hspf.width)) / 1000

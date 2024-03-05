@@ -3,7 +3,7 @@
 
 Just to test if it works! ``\\sum_{n=0}^{\\infty} \\frac{1}{n^2} = \\zeta(2) = \\frac{\\pi^2}{6}``
 """
-function exposure_below(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
+function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
   ind::Int64 = searchsortedfirst(hspf.elevation, e)
   if (e in hspf.elevation)
     @inbounds ea = hspf.cummulativeArea[ind]
@@ -31,7 +31,7 @@ function exposure_below(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
   end
 end
 
-function exposure_below(hspf::HypsometricProfile{DT}, e::Real, s::Symbol) where {DT<:Real}
+function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real, s::Symbol) where {DT<:Real}
   p = get_position(hspf, s)
 
   exposure = zeros(DT, size(hspf.elevation,1))
@@ -60,13 +60,16 @@ function exposure_below(hspf::HypsometricProfile{DT}, e::Real, s::Symbol) where 
   end
 end
 
-function exposure_below(hspf::HypsometricProfile{DT}, e::Real, s::Array{Symbol}) where {DT<:Real}
-  map(x -> exposure_below(hspf, x, e), s)
+function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real, s::Array{Symbol}) where {DT<:Real}
+  map(x -> exposure_below_bathtub(hspf, x, e), s)
 end
 
-function exposure_below_named(hspf::HypsometricProfile, e::Real)
-  ex = exposure_below(hspf, e)
+function exposure_below_bathtub_named(hspf::HypsometricProfile, e::Real)
+  ex = exposure_below_bathtub(hspf, e)
   @inbounds return (ex[1], NamedTuple{hspf.staticExposureSymbols}(ex[2]), NamedTuple{hspf.dynamicExposureSymbols}(ex[3]))
 end
 
+#function exposure_below_attenuated(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
+#
+#end
 
