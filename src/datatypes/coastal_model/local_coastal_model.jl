@@ -7,7 +7,12 @@ mutable struct LocalCoastalModel{DT<:Real}
   surge_model::Distribution
   coastal_plain_model::HypsometricProfile{DT}
 end
+"
+expected_damage_bathtub_standard_ddf(LocalCoastalModel::LocalCoastalModel{DT}, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT})
 
+This function calculates the annual expected damage for one local coastal model (Hypsometric Profile and Extreme surge distribution) by 
+integrating the product of damages and the pdf (probability disctribution function) of the surge model over all possible extreme values. 
+The output are annual expected damage for area, static and dynamic. The standard depth damage function is used to estimate flood damages."
 function expected_damage_bathtub_standard_ddf(lcm::LocalCoastalModel{DT}, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}) where {DT<:Real}
   edam_area = quadgk(x -> (damage_bathtub_standard_ddf(lcm.coastal_plain_model, x, hdd_area, :area) * pdf(lcm.surge_model, x)), 0, maximum(lcm.surge_model), rtol=1e-3)[1]
   edam_static = Array{DT}(undef, size(lcm.coastal_plain_model.cummulativeStaticExposure)[2])
@@ -39,7 +44,12 @@ function expected_damage_bathtub_standard_ddf(lcm::LocalCoastalModel, hdd::Real,
   quadgk(x -> (damage_bathtub_standard_ddf(lcm.coastal_plain_model, x, hdd, s) * pdf(lcm.surge_model, x)), minimum(0), maximum(lcm.surge_model), rtol=1e-3)[1]
 end
 
+"
+expected_damage_bathtub(LocalCoastalModel::LocalCoastalModel{DT}, ddf_area::Function, ddf_static::Array{Function}, ddf_dynamic::Array{Function})
 
+This function calculates the annual expected damage for one local coastal model (Hypsometric Profile and Extreme surge distribution) by 
+integrating the product of damages and the pdf (probability disctribution function) of the surge model. The output are annual expected damage 
+for area, static and dynamic. The depth damage functions inserted as inputs are used in this functino to calculate flood damages."
 function expected_damage_bathtub(lcm::LocalCoastalModel{DT}, ddf_area::Function, ddf_static::Array{Function}, ddf_dynamic::Array{Function}) where {DT<:Real}
   edam_area = quadgk(x -> (damage_bathtub(lcm.coastal_plain_model, x, ddf_area, :area) * pdf(lcm.surge_model, x)), 0, maximum(lcm.surge_model), rtol=1e-3)[1]
   edam_static = Array{DT}(undef, size(lcm.coastal_plain_model.cummulativeStaticExposure)[2])
