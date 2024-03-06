@@ -6,7 +6,7 @@ export HypsometricProfile,
   sed, sed_above, sed_below, remove_below, remove_below_named, add_above, add_between,
   add_static_exposure!, add_dynamic_exposure!, remove_static_exposure!, remove_dynamic_exposure!,
   damage_bathtub_standard_ddf, damage_bathtub,
-  compress!, compress_fast!
+  compress!
 
 
 mutable struct HypsometricProfile{DT<:Real}
@@ -227,19 +227,7 @@ end
   
 Comress a hypsometric profile by removing colinear points. Calculations on compressed hypsometric profiles can be faster. Idempotent operation.
 """
-function compress!(hspf::HypsometricProfile)
-  # probably not efficient
-  i = 2
-  while i <= size(hspf.elevation, 1) - 1
-    if private_colinear_lines(hspf, i - 1, i, i + 1)
-      private_remove_line(hspf, i)
-    else
-      i = i + 1
-    end
-  end
-end
-
-function compress_fast!(hspf::HypsometricProfile{DT}) where {DT<:Real}
+function compress!(hspf::HypsometricProfile{DT}) where {DT<:Real}
   i = 2
   d = 0
   keep = ones(Bool,size(hspf.elevation, 1))
@@ -312,7 +300,7 @@ function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, 
   return isapprox(ex2[1], ex1[1] + r * (ex2[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex2[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex2[3] - ex1[3]))
 end
 
-
+#==
 function private_remove_line(hspf::HypsometricProfile, i)
   # probably not efficient
   deleteat!(hspf.elevation, i)
@@ -322,3 +310,4 @@ function private_remove_line(hspf::HypsometricProfile, i)
   newarray = hspf.cummulativeDynamicExposure[1:end.!=(i), :]
   hspf.cummulativeDynamicExposure = newarray
 end
+==#
