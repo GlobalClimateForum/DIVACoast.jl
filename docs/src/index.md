@@ -8,14 +8,8 @@ algorithms that compute flood impacts, erosion and wetland change.
 
 ## Hypsometric profiles
 ```@docs
-Main.jdiva.exposure_below_bathtub
+Main.jdiva.exposure_below
 Main.jdiva.compress!
-```
-
-## Local coastal model
-```@docs
-expected_damage_bathtub
-expected_damage_bathtub_standard_ddf
 ```
 
 ## GeoUtils
