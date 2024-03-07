@@ -1,17 +1,16 @@
-pages:
-  image: julia:1.8.5
+docs:
+  image: docker.km3net.de/base/julia:1.6
   stage: deploy
   script:
-    - apt-get update -qq && apt-get install -y git  # needed by Documenter
-    - julia -e 'include("./../src/jdiva_lib.jl"); using .jdiva; using Documenter'
-    - julia --color=yes docs/make.jl  # make documentation
-    - mv docs/build public  # move to the directory picked up by Gitlab pages
-  artifacts:
-    paths:
-      - public
+    - |
+      julia --project=docs -e '
+        using Pkg
+        Pkg.develop(PackageSpec(path=pwd()))
+        Pkg.instantiate()
+        using Documenter: doctest
+        using JuliaGitLabPages
+        doctest(JuliaGitLabPages)
+        include("docs/make.jl")'
   only:
-    - development
-
-
-
- 
+    - main
+    - tags
