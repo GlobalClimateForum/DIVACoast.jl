@@ -1,7 +1,14 @@
 """
-    ...
+    exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
 
-Just to test if it works! ``\\sum_{n=0}^{\\infty} \\frac{1}{n^2} = \\zeta(2) = \\frac{\\pi^2}{6}``
+Calculate the cumulative area, static exposure, and dynamic exposure below elevation (`e`) for a hypsometric profile. The function handles different cases based on the elevation's presence in the profile and its position.
+# Arguments
+`hspf::HypsometricProfile{DT}`: The hypsometric profile with elevation, area and exposure data.
+`e::Real`: The elevation threshold for which exposure is calculated (everything underneath this elevation).
+
+# Returns
+Exposed area, static and dynamic exposure for elevations smaller than `e`.
+
 """
 function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
   ind::Int64 = searchsortedfirst(hspf.elevation, e)
@@ -16,7 +23,7 @@ function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real) where {DT
       @inbounds es = (size(hspf.cummulativeStaticExposure, 1) > 0) ? hspf.cummulativeStaticExposure[ind, :] : Array{DT,2}(undef, 0, 0)
       @inbounds ed = (size(hspf.cummulativeDynamicExposure, 1) > 0) ? hspf.cummulativeDynamicExposure[ind, :] : Array{DT,2}(undef, 0, 0)
       return (ea, es, ed)
-    end
+    end^
     if (ind > size(hspf.elevation, 1))
       @inbounds ea = hspf.cummulativeArea[size(hspf.elevation, 1)]
       @inbounds es = (size(hspf.cummulativeStaticExposure, 1) > 0) ? hspf.cummulativeStaticExposure[size(hspf.elevation, 1), :] : Array{DT,2}(undef, 0, 0)
