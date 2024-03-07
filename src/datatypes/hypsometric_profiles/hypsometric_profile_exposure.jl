@@ -23,7 +23,7 @@ function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real) where {DT
       @inbounds es = (size(hspf.cummulativeStaticExposure, 1) > 0) ? hspf.cummulativeStaticExposure[ind, :] : Array{DT,2}(undef, 0, 0)
       @inbounds ed = (size(hspf.cummulativeDynamicExposure, 1) > 0) ? hspf.cummulativeDynamicExposure[ind, :] : Array{DT,2}(undef, 0, 0)
       return (ea, es, ed)
-    end^
+    end
     if (ind > size(hspf.elevation, 1))
       @inbounds ea = hspf.cummulativeArea[size(hspf.elevation, 1)]
       @inbounds es = (size(hspf.cummulativeStaticExposure, 1) > 0) ? hspf.cummulativeStaticExposure[size(hspf.elevation, 1), :] : Array{DT,2}(undef, 0, 0)
