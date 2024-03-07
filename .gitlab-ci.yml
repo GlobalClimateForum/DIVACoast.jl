@@ -7,10 +7,15 @@ docs:
         using Pkg
         Pkg.develop(PackageSpec(path=pwd()))
         Pkg.instantiate()
-        using Documenter: doctest
+        using Documenter:doctest
         using JuliaGitLabPages
         doctest(JuliaGitLabPages)
         include("docs/make.jl")'
+    - mkdir .public
+    - cp -r docs/build/* .public
+    - mv .public public
+  artifacts:
+      paths:
+        - public
   only:
-    - main
-    - tags
+    - development
