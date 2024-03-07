@@ -2,15 +2,7 @@ docs:
   image: julia:1.8.5
   stage: deploy
   script:
-    - |
-      julia --project=docs -e '
-        using Pkg
-        Pkg.develop(PackageSpec(path=pwd()))
-        Pkg.instantiate()
-        using Documenter:doctest
-        using JuliaGitLabPages
-        doctest(JuliaGitLabPages)
-        include("docs/make.jl")'
+    - julia --project=. ./docs/make.jl
     - mkdir .public
     - cp -r docs/build/* .public
     - mv .public public
