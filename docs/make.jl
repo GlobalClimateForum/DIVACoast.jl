@@ -9,7 +9,6 @@ makedocs(
     authors="Daniel Lincke et al <daniel.lincke@globalclimateforum.org>",
     sitename = "jdiva",
     modules  = [jdiva],
-    strict = false,
     remotes = nothing,
     pages=["Home" => "index.md"],
     format = Documenter.HTML(
