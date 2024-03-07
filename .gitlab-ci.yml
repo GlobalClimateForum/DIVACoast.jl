@@ -1,10 +1,14 @@
-pages:
+docs:
+  image: julia:1.8.5
+  stage: deploy
   script:
+    - julia --project=. -e 'using Pkg; Pkg.instantiate()'
+    - julia --project=. ./docs/make.jl
     - mkdir .public
     - cp -r docs/build/* .public
     - mv .public public
   artifacts:
-    paths:
-      - public
+      paths:
+        - public
   only:
     - development
