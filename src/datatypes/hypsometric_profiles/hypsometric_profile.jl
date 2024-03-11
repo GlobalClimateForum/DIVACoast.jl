@@ -162,22 +162,23 @@ include("hypsometric_profile_sed.jl")
 include("hypsometric_profile_modifications.jl")
 include("hypsometric_profile_plot.jl")
 
-function distance(hspf::HypsometricProfile, e::Real)::DT
-  ind::Int64 = searchsortedfirst(hspf.elevation, e)
 
-  if (e in hspf.elevation)
-    return cos(asin(hspf.elevation[i] / (hspf.cummulativeArea[ind] / hspf.width))) * (hspf.cummulativeArea[ind] / hspf.width)
-  else
-    @inbounds if (ind == 1)
-      return 0.0f0
-    end
-    @inbounds if (ind >= size(hspf.elevation, 1))
-      cos(asin(hspf.elevation[size(hspf.elevation, 1)] / (hspf.cummulativeArea[size(hspf.elevation, 1)] / hspf.width))) * (hspf.cummulativeArea[size(hspf.elevation, 1)] / hspf.width)
-    end
-    @inbounds r = (DT)(e - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
+"""
+   distance(hspf::HypsometricProfile, e::Real)
+  
+Compute the distance of elevation e (given in m) from the coastline in hspf. disatnce is returned in km.
+"""
+function distance(hspf::HypsometricProfile{DT}, e::Real)::DT where {DT<:Real}
+  if (e<= hspf.elevation[1]) return 0.0 end
 
-    @inbounds return cos(asin(hspf.elevation[ind-1] + ((hspf.elevation[ind] - hspf.elevation[ind-1]) * r) / (hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1]) * r) / hspf.width))) * (hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1]) * r) / hspf.width)
-  end
+  Δ_area = exposure_below_bathtub(hspf, e, :area)
+  Δ_el = (e - hspf.elevation[1]) / 1000
+  if (Δ_area<=0)     return 0.0 end
+  if (Δ_el<=0)       return 0.0 end
+  if (hspf.width==0) return 0.0 end
+  if ((Δ_area/hspf.width)<Δ_el) return 0.0 end
+
+  return sqrt( (Δ_area/hspf.width)*(Δ_area/hspf.width) - (Δ_el * Δ_el))
 end
 
 function private_convert_strarray_to_array(::Type{DT}, sarr::StructArray{T1})::Array{DT} where {DT,T1}
@@ -333,14 +334,3 @@ function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, 
   return isapprox(ex2[1], ex1[1] + r * (ex2[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex2[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex2[3] - ex1[3]))
 end
 
-#==
-function private_remove_line(hspf::HypsometricProfile, i)
-  # probably not efficient
-  deleteat!(hspf.elevation, i)
-  deleteat!(hspf.cummulativeArea, i)
-  newarray = hspf.cummulativeStaticExposure[1:end.!=(i), :]
-  hspf.cummulativeStaticExposure = newarray
-  newarray = hspf.cummulativeDynamicExposure[1:end.!=(i), :]
-  hspf.cummulativeDynamicExposure = newarray
-end
-==#
