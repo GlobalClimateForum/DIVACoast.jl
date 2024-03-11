@@ -333,3 +333,14 @@ function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, 
   return isapprox(ex2[1], ex1[1] + r * (ex2[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex2[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex2[3] - ex1[3]))
 end
 
+#==
+function private_remove_line(hspf::HypsometricProfile, i)
+  # probably not efficient
+  deleteat!(hspf.elevation, i)
+  deleteat!(hspf.cummulativeArea, i)
+  newarray = hspf.cummulativeStaticExposure[1:end.!=(i), :]
+  hspf.cummulativeStaticExposure = newarray
+  newarray = hspf.cummulativeDynamicExposure[1:end.!=(i), :]
+  hspf.cummulativeDynamicExposure = newarray
+end
+==#

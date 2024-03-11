@@ -12,12 +12,6 @@ Main.jdiva.exposure_below_bathtub
 Main.jdiva.compress!
 ```
 
-## Local coastal model
-```@docs
-expected_damage_bathtub
-expected_damage_bathtub_standard_ddf
-```
-
 ## GeoUtils
 
 ## SparseGeoArray
