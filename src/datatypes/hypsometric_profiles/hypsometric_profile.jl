@@ -228,62 +228,73 @@ end
 Comress a hypsometric profile by removing colinear points. Calculations on compressed hypsometric profiles can be faster. Idempotent operation.
 """
 function compress!(hspf::HypsometricProfile{DT}) where {DT<:Real}
-  i = 2
-  d = 0
-  keep = ones(Bool,size(hspf.elevation, 1))
-  for i in 2:size(hspf.elevation, 1) - 1
-    if private_colinear_lines(hspf, i - 1, i, i + 1)
-      keep[i]=false
+  if (size(hspf.elevation, 1) > 2)
+    i = 2
+    d = 0
+    keep = ones(Bool, size(hspf.elevation, 1))
+    nzlf = false
+
+    if (private_complete_zero(exposure_below_bathtub(hspf, hspf.elevation[1])))
+      keep[1] = false
       d = d + 1
     end
-  end
 
-  newElevation = zeros(DT,size(hspf.elevation, 1)-d)
-  newCummulativeArea = zeros(DT,size(hspf.elevation, 1)-d)
-  newCummulativeStaticExposure = zeros(DT,size(hspf.cummulativeStaticExposure,1)-d,size(hspf.cummulativeStaticExposure,2))
-  newCummulativeDynamicExposure = zeros(DT,size(hspf.cummulativeDynamicExposure,1)-d,size(hspf.cummulativeDynamicExposure,2))
-
-  c=1 
-  for i in 1:size(hspf.elevation, 1)
-    if (keep[i])
-      newElevation[c] = hspf.elevation[i]
-      newCummulativeArea[c] = hspf.cummulativeArea[i]
-      newCummulativeStaticExposure[c,:] = hspf.cummulativeStaticExposure[i,:]
-      newCummulativeDynamicExposure[c,:] = hspf.cummulativeDynamicExposure[i,:]
-      c += 1
+    for i in 2:size(hspf.elevation, 1)-1
+      if private_colinear_lines(hspf, i - 1, i, i + 1, !nzlf)
+        keep[i] = false
+        d = d + 1
+      else 
+        nzlf = true
+      end
     end
-  end
 
-  hspf.elevation = newElevation
-  hspf.cummulativeArea = newCummulativeArea
-  hspf.cummulativeStaticExposure = newCummulativeStaticExposure
-  hspf.cummulativeDynamicExposure = newCummulativeDynamicExposure
+    newElevation = zeros(DT, size(hspf.elevation, 1) - d)
+    newCummulativeArea = zeros(DT, size(hspf.elevation, 1) - d)
+    newCummulativeStaticExposure = zeros(DT, size(hspf.cummulativeStaticExposure, 1) - d, size(hspf.cummulativeStaticExposure, 2))
+    newCummulativeDynamicExposure = zeros(DT, size(hspf.cummulativeDynamicExposure, 1) - d, size(hspf.cummulativeDynamicExposure, 2))
+
+    c = 1
+    for i in 1:size(hspf.elevation, 1)
+      if (keep[i])
+        newElevation[c] = hspf.elevation[i]
+        newCummulativeArea[c] = hspf.cummulativeArea[i]
+        newCummulativeStaticExposure[c, :] = hspf.cummulativeStaticExposure[i, :]
+        newCummulativeDynamicExposure[c, :] = hspf.cummulativeDynamicExposure[i, :]
+        c += 1
+      end
+    end
+
+    hspf.elevation = newElevation
+    hspf.cummulativeArea = newCummulativeArea
+    hspf.cummulativeStaticExposure = newCummulativeStaticExposure
+    hspf.cummulativeDynamicExposure = newCummulativeDynamicExposure
+  end
 end
 
 function get_position(hspf::HypsometricProfile, s::Symbol)
   if (s == :area)
-    return (1,1)
+    return (1, 1)
   end
   if (findfirst(==(s), hspf.staticExposureSymbols) != nothing)
-    return (2,findfirst(==(s), hspf.staticExposureSymbols))
+    return (2, findfirst(==(s), hspf.staticExposureSymbols))
   end
   if (findfirst(==(s), hspf.dynamicExposureSymbols) != nothing)
-    return (3,findfirst(==(s), hspf.dynamicExposureSymbols))
+    return (3, findfirst(==(s), hspf.dynamicExposureSymbols))
   end
-  return (-1,0)
+  return (-1, 0)
 end
 
 get_position(hspf::HypsometricProfile, n::String) = get_position(hspf, Symbol(n))
 
 function unit(hspf::HypsometricProfile, s::Symbol)
   p = get_position(hspf, s)
-  if (p[1]==1)
+  if (p[1] == 1)
     return hspf.area_unit
   end
-  if (p[1]==2)
+  if (p[1] == 2)
     return hspf.staticExposureUnits[p[2]]
   end
-  if (p[1]==3)
+  if (p[1] == 3)
     return hspf.dynamicExposureUnits[p[2]]
   end
   return "unknown symbol: $s"
@@ -293,24 +304,32 @@ unit(hspf::HypsometricProfile, n::String) = unit(hspf, Symbol(n))
 
 
 function private_complete_zero(exposure)
-  if (exposure[1]!=0) return false end
+  if (exposure[1] != 0)
+    return false
+  end
   for i in 1:size(exposure[2], 1)
-    if exposure[2][i]!=0 return false end
+    if exposure[2][i] != 0
+      return false
+    end
   end
   for i in 1:size(exposure[3], 1)
-    if exposure[3][i]!=0 return false end
+    if exposure[3][i] != 0
+      return false
+    end
   end
   return true
 end
 
 
-function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, i3::Int64)::Bool
+function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, i3::Int64, check_zero::Bool)::Bool
   ex1 = exposure_below_bathtub(hspf, hspf.elevation[i1])
   ex2 = exposure_below_bathtub(hspf, hspf.elevation[i2])
   ex3 = exposure_below_bathtub(hspf, hspf.elevation[i3])
   r = (hspf.elevation[i2] - hspf.elevation[i1]) / (hspf.elevation[i3] - hspf.elevation[i1])
   # hack to capture special case that makes problems (if e3 is very small)
-  if (private_complete_zero(ex2) && !private_complete_zero(ex3)) return false end
+  if (check_zero && private_complete_zero(ex2) && !private_complete_zero(ex3))
+    return false
+  end
   return isapprox(ex2[1], ex1[1] + r * (ex2[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex2[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex2[3] - ex1[3]))
 end
 

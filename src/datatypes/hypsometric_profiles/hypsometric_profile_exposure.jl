@@ -69,7 +69,11 @@ function exposure_below_bathtub_named(hspf::HypsometricProfile, e::Real)
   @inbounds return (ex[1], NamedTuple{hspf.staticExposureSymbols}(ex[2]), NamedTuple{hspf.dynamicExposureSymbols}(ex[3]))
 end
 
-#function exposure_below_attenuated(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
-#
-#end
+function exposure_below_attenuated(hspf::HypsometricProfile{DT}, e::Real, att_rates :: Array{ART}) where {DT<:Real, ART<:Real}
+  if (size(hspf.elevation, 1)!= size(att_rates, 1)) 
+    return
+  end
+  #function distance(hspf::HypsometricProfile, e::Real)
+
+end
 

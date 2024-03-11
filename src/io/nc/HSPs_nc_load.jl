@@ -111,7 +111,6 @@ function load_hsps_nc(::Type{IT}, ::Type{DT}, filename::String)::Dict{IT,Hypsome
       d_exposure[:, j] = convert(Array{DT}, dynamic_exp[j][i, :])
     end
     hpsf_data[ids[i]] = HypsometricProfile(width[i], width_unit, copy(el), el_unit, area, area_unit, s_exposure, static_exp_names, static_exp_units, d_exposure, dynamic_exp_names, dynamic_exp_units)
-#    hpsf_data[ids[i]] = HypsometricProfile(width[i], width_unit, el, el_unit, area, area_unit, s_exposure, static_exp_names, static_exp_units, d_exposure, dynamic_exp_names, dynamic_exp_units)
   end
 
   close(ds)
