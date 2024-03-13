@@ -3,6 +3,7 @@ using StructArrays
 export HypsometricProfile,
   unit,
   exposure_below_bathtub, exposure_below_bathtub_named,
+  exposure_below_attenuated, attenuate,
   sed, sed_above, sed_below, remove_below, remove_below_named, add_above, add_between,
   add_static_exposure!, add_dynamic_exposure!, remove_static_exposure!, remove_dynamic_exposure!,
   damage_bathtub_standard_ddf, damage_bathtub,
@@ -22,6 +23,7 @@ mutable struct HypsometricProfile{DT<:Real}
   cummulativeDynamicExposure::Array{DT,2}
   dynamicExposureSymbols
   dynamicExposureUnits::Array{String}
+#  distances::Array{DT}
   logger::ExtendedLogger
 
   # Constructors
@@ -169,16 +171,27 @@ include("hypsometric_profile_plot.jl")
 Compute the distance of elevation e (given in m) from the coastline in hspf. disatnce is returned in km.
 """
 function distance(hspf::HypsometricProfile{DT}, e::Real)::DT where {DT<:Real}
+  # internal note: this might be inefficient - it would be more efficient 
   if (e<= hspf.elevation[1]) return 0.0 end
 
-  Δ_area = exposure_below_bathtub(hspf, e, :area)
-  Δ_el = (e - hspf.elevation[1]) / 1000
-  if (Δ_area<=0)     return 0.0 end
-  if (Δ_el<=0)       return 0.0 end
-  if (hspf.width==0) return 0.0 end
-  if ((Δ_area/hspf.width)<Δ_el) return 0.0 end
+  d = 0.0
+  ind::Int64 = searchsortedfirst(hspf.elevation, e)
+  for i in 2:(ind-1)
+    Δ_area = hspf.cummulativeArea[i] - hspf.cummulativeArea[i-1]
+    @inbounds Δ_el = (hspf.elevation[i] - hspf.elevation[i-1]) / 1000
+    #println("$e:  $(hspf.elevation[i]) $(hspf.elevation[i-1]) $(Δ_area) $(Δ_el)")
+    if (Δ_area != 0) && ((Δ_area/hspf.width)*(Δ_area/hspf.width) > (Δ_el * Δ_el))
+      d += sqrt((Δ_area/hspf.width)*(Δ_area/hspf.width) - (Δ_el * Δ_el))
+    end
+  end
 
-  return sqrt( (Δ_area/hspf.width)*(Δ_area/hspf.width) - (Δ_el * Δ_el))
+  @inbounds Δ_area = exposure_below_bathtub(hspf, e, :area) - hspf.cummulativeArea[ind-1]
+  @inbounds Δ_el = (e - hspf.elevation[ind-1]) / 1000
+  #println("$e:  $(hspf.elevation[ind-1]) $(Δ_el) $(Δ_area)")
+  if (Δ_area != 0) && ((Δ_area/hspf.width)*(Δ_area/hspf.width) > (Δ_el * Δ_el))
+    d += sqrt((Δ_area/hspf.width)*(Δ_area/hspf.width) - (Δ_el * Δ_el))
+  end
+  return d
 end
 
 function private_convert_strarray_to_array(::Type{DT}, sarr::StructArray{T1})::Array{DT} where {DT,T1}
@@ -321,6 +334,11 @@ function private_complete_zero(exposure)
   return true
 end
 
+(0.9f0, 0.0052929604f0)
+(1.0f0, 0.0052929604f0)
+(1.1f0, 0.058225032f0)
+
+
 
 function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, i3::Int64, check_zero::Bool)::Bool
   ex1 = exposure_below_bathtub(hspf, hspf.elevation[i1])
@@ -331,6 +349,6 @@ function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, 
   if (check_zero && private_complete_zero(ex2) && !private_complete_zero(ex3))
     return false
   end
-  return isapprox(ex2[1], ex1[1] + r * (ex2[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex2[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex2[3] - ex1[3]))
+  return isapprox(ex2[1], ex1[1] + r * (ex3[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex3[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex3[3] - ex1[3]))
 end
 
