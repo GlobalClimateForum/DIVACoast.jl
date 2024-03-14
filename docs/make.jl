@@ -2,7 +2,7 @@
 include("./../src/jdiva_lib.jl")
 push!(LOAD_PATH,"../src/")
 
-using .jdiva
+import .jdiva
 using Documenter
 
 makedocs(
