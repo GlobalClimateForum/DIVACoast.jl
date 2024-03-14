@@ -2,7 +2,7 @@ docs:
   image: julia:1.8.5
   stage: deploy
   script:
-    - julia -e "using Pkg; Pkg.add('Documenter')"
+    - julia -e "using Pkg; Pkg.add(Documenter)"
     - julia ./docs/make.jl
     - mkdir .public
     - cp -r docs/build/* .public
