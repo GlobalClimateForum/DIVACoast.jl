@@ -1,4 +1,16 @@
-function exposure_below(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
+"""
+    exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
+
+Calculate the cumulative area, static exposure, and dynamic exposure below elevation (`e`) for a hypsometric profile. The function handles different cases based on the elevation's presence in the profile and its position.
+# Arguments
+`hspf::HypsometricProfile{DT}`: The hypsometric profile with elevation, area and exposure data.
+`e::Real`: The elevation threshold for which exposure is calculated (everything underneath this elevation).
+
+# Returns
+Exposed area, static and dynamic exposure for elevations smaller than `e`.
+
+"""
+function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
   ind::Int64 = searchsortedfirst(hspf.elevation, e)
   if (e in hspf.elevation)
     @inbounds ea = hspf.cummulativeArea[ind]
@@ -26,7 +38,7 @@ function exposure_below(hspf::HypsometricProfile{DT}, e::Real) where {DT<:Real}
   end
 end
 
-function exposure_below(hspf::HypsometricProfile{DT}, s::Symbol, e::Real) where {DT<:Real}
+function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real, s::Symbol) where {DT<:Real}
   p = get_position(hspf, s)
 
   exposure = zeros(DT, size(hspf.elevation,1))
@@ -55,13 +67,80 @@ function exposure_below(hspf::HypsometricProfile{DT}, s::Symbol, e::Real) where 
   end
 end
 
-function exposure_below(hspf::HypsometricProfile{DT}, s::Array{Symbol}, e::Real) where {DT<:Real}
-  map(x -> exposure_below(hspf, x, e), s)
+function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real, s::Array{Symbol}) where {DT<:Real}
+  map(x -> exposure_below_bathtub(hspf, x, e), s)
 end
 
-function exposure_below_named(hspf::HypsometricProfile, e::Real)
-  ex = exposure_below(hspf, e)
+function exposure_below_bathtub_named(hspf::HypsometricProfile, e::Real)
+  ex = exposure_below_bathtub(hspf, e)
   @inbounds return (ex[1], NamedTuple{hspf.staticExposureSymbols}(ex[2]), NamedTuple{hspf.dynamicExposureSymbols}(ex[3]))
 end
 
+"""
+    exposure_below_attenuated(hspf::HypsometricProfile{DT}, e::Real, att_rates :: Array{<:Real}) where {DT<:Real}
+    exposure_below_attenuated(hspf::HypsometricProfile{DT}, e::Real, att_rate :: Real) where {DT<:Real}
 
+Calculate the cumulative area, static exposure, and dynamic exposure below elevation (`e`) for a hypsometric profile, taking into account attenuation.
+# Arguments
+`hspf::HypsometricProfile{DT}`: The hypsometric profile with elevation, area and exposure data.
+`e::Real`: The elevation threshold for which exposure is calculated (everything underneath this elevation).
+`att_rates` :: Array{<:Real}`: an array of attenuation rates, each given in m/km. A value of 0.3 stands for an attenuation of 0.3m per km of flood extend. 
+`att_rate` :: Real`: an attenuation rate, given in m/km. 
+
+If attenuation rates are given as array, the array dimension has to much the array dimension of the elevation array of hspf.
+
+# Returns
+Exposed area, static and dynamic exposure for elevations smaller than `e``, taking into account attenuation.
+
+
+"""
+exposure_below_attenuated(hspf::HypsometricProfile{DT}, e::Real, att_rates :: Array{<:Real}) where {DT<:Real} = exposure_below_bathtub(hspf, attenuate(hspf, e, att_rates))
+exposure_below_attenuated(hspf::HypsometricProfile{DT}, e::Real, att_rate :: Real) where {DT<:Real} = exposure_below_attenuated(hspf, e, map(x->att_rate, hspf.elevation))
+  
+"""
+    attenuate(hspf::HypsometricProfile{DT}, wl::Real, att_rates :: Array{<:Real}) where {DT<:Real}
+    attenuate(hspf::HypsometricProfile{DT}, wl::Real, att_rate :: Real) where {DT<:Real}
+
+Attenuate waterlevel wl for a hypsometric profile.
+# Arguments
+`hspf::HypsometricProfile{DT}`: The hypsometric profile with elevation, area and exposure data.
+`wl::Real`: The elevation threshold for which exposure is calculated (everything underneath this elevation).
+`att_rates` :: Array{<:Real}`: an array of attenuation rates, each given in m/km. A value of 0.3 stands for an attenuation of 0.3m per km of flood extend. 
+`att_rate` :: Real`: an attenuation rate, given in m/km. 
+
+If attenuation rates are given as array, the array dimension has to much the array dimension of the elevation array of hspf.
+
+# Returns
+The attenuated waterlevel.
+
+"""
+function attenuate(hspf::HypsometricProfile{DT}, wl::Real, att_rates :: Array{<:Real}) where {DT<:Real}
+  if (size(hspf.elevation, 1)!= size(att_rates, 1)) 
+    return wl
+  end
+
+  if (wl<=hspf.elevation[1]) return wl end
+
+  wl_attenuated = 0
+  ind = 2
+  Δ_wl_att_part = (distance(hspf, hspf.elevation[ind]) - distance(hspf,hspf.elevation[ind-1])) * att_rates[ind]
+  Δ_wl = (hspf.elevation[ind] - hspf.elevation[ind-1])
+
+  while ((Δ_wl_att_part + Δ_wl <= wl) && (ind < size(hspf.elevation, 1)))
+    wl = wl - (Δ_wl_att_part + Δ_wl)
+    wl_attenuated += Δ_wl
+    ind += 1 
+    Δ_wl_att_part = (distance(hspf, hspf.elevation[ind]) - distance(hspf, hspf.elevation[ind-1])) * att_rates[ind]
+    Δ_wl = (hspf.elevation[ind] - hspf.elevation[ind-1])
+  end
+
+  
+  if (ind <= size(hspf.elevation, 1))
+    Δ_wl_att_part = (distance(hspf, hspf.elevation[ind] + wl) - distance(hspf, hspf.elevation[ind])) * att_rates[ind]
+    wl_attenuated += Δ_wl_att_part 
+  end
+  
+  wl_attenuated
+end
+
+attenuate(hspf::HypsometricProfile{DT}, wl::Real, att_rate :: Real) where {DT<:Real} = attenuate(hspf, wl, map(x->att_rate, hspf.elevation))

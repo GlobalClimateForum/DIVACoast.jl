@@ -48,11 +48,11 @@ function runTests()
       end
   
       @testset "exposure(), exposure_named()" begin
-        @test exposure_below(hpTest, maximum(hpSettings[2])) == exposure_below(hpTest, hpTest.maxElevation)
-        @test exposure_below(hpTest, 0) == (0, 0, 0)
-        @test exposure_below(hpTest, 100) == (last(hpTest.cummulativeArea), last(hpTest.cummulativePopulation), last(hpTest.cummulativeAssets))
-        @test exposure_below(hpTest, 1) == (hpTest.cummulativeArea[1], hpTest.cummulativePopulation[1], hpTest.cummulativeAssets[1])
-        @test exposure_below(hpTest, 0.5) == (hpTest.cummulativeArea[1] * 0.5, hpTest.cummulativePopulation[1] * 0.5, hpTest.cummulativeAssets[1] * 0.5)
+        @test exposure_below_bathtub(hpTest, maximum(hpSettings[2])) == exposure_below_bathtub(hpTest, hpTest.maxElevation)
+        @test exposure_below_bathtub(hpTest, 0) == (0, 0, 0)
+        @test exposure_below_bathtub(hpTest, 100) == (last(hpTest.cummulativeArea), last(hpTest.cummulativePopulation), last(hpTest.cummulativeAssets))
+        @test exposure_below_bathtub(hpTest, 1) == (hpTest.cummulativeArea[1], hpTest.cummulativePopulation[1], hpTest.cummulativeAssets[1])
+        @test exposure_below_bathtub(hpTest, 0.5) == (hpTest.cummulativeArea[1] * 0.5, hpTest.cummulativePopulation[1] * 0.5, hpTest.cummulativeAssets[1] * 0.5)
       end
   
       @testset "sed(), sed_above(), sed_below()" begin
@@ -60,19 +60,19 @@ function runTests()
         hpTest2 = deepcopy(hpTest)
         
         sed(hpTest, 1, 1) 
-        @test exposure_below(hpTest,50) == exposure_below(hpTest2,50)
+        @test exposure_below_bathtub(hpTest,50) == exposure_below_bathtub(hpTest2,50)
         
         sed_below(hpTest, 50, 0.5, 0.5)
         sed(hpTest2, 0.5, 0.5)
   
-        @test exposure_below(hpTest, 50) == exposure_below(hpTest2, 50)
+        @test exposure_below_bathtub(hpTest, 50) == exposure_below_bathtub(hpTest2, 50)
   
         hpTest2 = deepcopy(hpTest)
         
         sed(hpTest,0.5, 0.3)
         sed_above(hpTest, 50, 0.5, 0.3)
         
-        @test exposure_below(hpTest, 50) == exposure_below(hpTest2, 50)
+        @test exposure_below_bathtub(hpTest, 50) == exposure_below_bathtub(hpTest2, 50)
       end
   
       @testset "remove_below(), add_above(), add_below(), add_between()" begin
@@ -85,7 +85,7 @@ function runTests()
         add_between(hpTest, 50, 100, 100, 100)
         add_above(hpTest2, 50, 100, 100)
   
-        @test exposure_below(hpTest, 100) == exposure_below(hpTest2, 100)
+        @test exposure_below_bathtub(hpTest, 100) == exposure_below_bathtub(hpTest2, 100)
       end
     end
 end

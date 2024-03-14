@@ -117,7 +117,7 @@ function remove_below(hspf::HypsometricProfile{DT}, below::Real) :: Array{DT}  w
     private_insert_elevation_point(hspf, below, ind)
   end
 
-  removed = exposure_below(hspf, hspf.elevation[ind])[3]
+  removed = exposure_below_bathtub(hspf, hspf.elevation[ind])[3]
 
   for i in 1:ind
     for j in 1:size(hspf.cummulativeDynamicExposure, 2)
@@ -218,7 +218,7 @@ end
 
 
 function private_insert_elevation_point(hspf::HypsometricProfile{DT}, el::Real, ind::Int64) where {DT<:Real}
-  ex = exposure_below(hspf, el)
+  ex = exposure_below_bathtub(hspf, el)
   insert!(hspf.elevation, ind, el)
   insert!(hspf.cummulativeArea, ind, ex[1])
   # probably not efficient
