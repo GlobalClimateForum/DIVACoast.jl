@@ -2,6 +2,8 @@
 include("./../src/jdiva_lib.jl")
 push!(LOAD_PATH,"../src/")
 
+Pkg.activate(".")
+
 import .jdiva
 using Documenter
 
