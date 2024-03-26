@@ -10,6 +10,10 @@ algorithms that compute flood impacts, erosion and wetland change.
 ```@docs
 Main.jdiva.exposure_below_bathtub
 Main.jdiva.compress!
+Main.jdiva.expected_damage_bathtub_standard_ddf
+Main.jdiva.exposure_below_attenuated
+Main.jdiva.expected_damage_bathtub
+Main.jdiva.attenuate
 ```
 
 ## GeoUtils
