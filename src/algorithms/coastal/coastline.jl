@@ -1,0 +1,126 @@
+export extract_coastline, find_coastline
+
+function find_coastline(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
+    s = starting_point(sga)
+    if s == (-1, -1)
+        return boundary(sga)
+    end
+
+    ret = empty_copy(sga)
+    curr = empty_copy(sga)
+    last = empty_copy(sga)
+    curr[s] = 1
+    while (length(curr.data) > 0)
+        propagate(sga, ret, curr, last)
+    end
+    println()
+
+    return ret
+end
+
+function propagate(sga::SparseGeoArray{DT,IT}, ret::SparseGeoArray{DT,IT}, curr::SparseGeoArray{DT,IT}, last::SparseGeoArray{DT,IT}) where {DT<:Real,IT<:Integer}
+    next = empty_copy(curr)
+    nh = Array{Tuple{IT,IT}}(undef, 8) 
+    for d in curr.data
+        n = nh8(curr, d[1], nh)
+        for i in 1:n
+            if sga[nh[i]] != sga.nodatavalue
+                ret[nh[i]] = sga[nh[i]]
+                if (length(ret.data) % 10000 == 0) 
+                    println("found coastline points: $(length(ret.data))")
+                end            
+            elseif last[nh[i]] == last.nodatavalue && curr[nh[i]] == curr.nodatavalue
+                next[nh[i]] = 1
+            end
+        end
+    end
+    clear_data!(last)
+    last.data = copy(curr.data)
+    clear_data!(curr)
+    curr.data = next.data
+end
+
+function starting_point(sga::SparseGeoArray{DT,IT}) where {DT<:Real,IT<:Integer}
+    for x in 1:size(sga, 1)
+        if sga[x, 1] == sga.nodatavalue
+            return (x, 1)
+        end
+        if sga[x, size(sga, 2)] == sga.nodatavalue
+            return (x, size(sga, 2))
+        end
+    end
+    for y in 1:size(sga, 2)
+        if sga[1, y] == sga.nodatavalue
+            return (1, y)
+        end
+        if sga[size(sga, 1), y] == sga.nodatavalue
+            return (size(sga, 1), y)
+        end
+    end
+    return (-1, -1)
+end
+
+function boundary(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
+    r = empty_copy(sga)
+    for x in 1:size(sga, 1)
+        r[x, 1] = sga[x, 1]
+        r[x, size(sga, 2)] = sga[x, size(sga, 2)]
+    end
+    for y in 1:size(sga, 2)
+        r[1, y] = sga[1, y]
+        r[size(sga, 1), y] = sga[size(sga, 1), y]
+    end
+    return r
+end
+
+function extract_coastline(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
+    ret = empty_copy(sga)
+    lf = 0
+
+    nh = Array{Tuple{IT,IT}}(undef, 8) 
+    for d in sga.data
+        n = nh8(sga, d[1], nh)
+        for i in 1:n
+            if sga[nh[i]] == sga.nodatavalue
+                ret[d[1]] = sga[d[1]]
+                break
+            end
+        end
+        if (length(ret.data) % 10000 == 0) && (lf < div(length(ret.data),10000))
+            lf = div(length(ret.data),10000)
+            println("found coastline points: $(length(ret.data))")
+        end
+    end
+
+    return ret
+end
+
+function extract_coastline(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
+    ret = empty_copy(sga)
+    lf = 0
+
+    nh = Array{Tuple{IT,IT}}(undef, 8) 
+    for d in sga.data
+        n = nh8(sga, d[1], nh)
+        for i in 1:n
+            if sga[nh[i]] == sga.nodatavalue
+                ret[d[1]] = sga[d[1]]
+                break
+            end
+        end
+        if (length(ret.data) % 10000 == 0) && (lf < div(length(ret.data),10000))
+            lf = div(length(ret.data),10000)
+            println("found coastline points: $(length(ret.data))")
+        end
+    end
+
+    return ret
+end
+
+function extract_coastline_fast(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
+    ret = empty_copy(sga)
+#    extract_cl(ret) = function(sga,x,y);
+#    end
+#    nh8_function_application(sga::SparseGeoArray{DT,IT}, x::Integer, y::Integer, f::Function)
+end
+
