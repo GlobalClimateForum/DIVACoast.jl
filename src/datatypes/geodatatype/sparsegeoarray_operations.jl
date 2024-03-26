@@ -189,6 +189,14 @@ function get_radial_kernel(sga::SparseGeoArray{DT,IT}, radius::Real, lon_min::Re
 end
 
 
+# summarize 
+function sga_summarize(sga::SparseGeoArray{DT,IT}, sumryFunction::Function, valueTransformation) where {DT<:Real,IT<:Integer}
+    sumryFunction(map(x -> valueTransformation(sgat, x[1], x[2]), collect(keys(sga.data))))
+end
+
+sga_summarize(sga::SparseGeoArray{DT,IT}, sumryFunction::Function) where {DT<:Real,IT<:Integer} = sga_summarize(sga, sumryFunction, (s, x, y) -> s[x, y])
+
+
 # a function to get data within a defined radius (given in KM)
 function sga_summarize_within(sga::SparseGeoArray{DT,IT}, p::Tuple{Real,Real}, radius::Real, sumryFunction::Function, valueTransformation) where {DT<:Real,IT<:Integer}
 
