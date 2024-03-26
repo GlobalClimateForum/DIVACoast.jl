@@ -1,4 +1,4 @@
-docs:
+documentation:
   image: julia:1.8.5
   stage: deploy
   script:
@@ -12,3 +12,5 @@ docs:
         - public
   only:
     - development
+
+  
