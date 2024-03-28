@@ -153,7 +153,7 @@ function crop!(sga::SparseGeoArray{DT, IT}, bbox::NamedTuple{(:min_x, :min_y, :m
 end 
 
 
-function crop!(sga::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
+function crop!(sga::SparseGeoArray{DT, IT}; margin_x :: Integer = 0, margin_y :: Integer = 0) where {DT <: Real, IT <: Integer}
   max_x = 1
   min_x = sga.xsize
   max_y = 1
@@ -164,6 +164,11 @@ function crop!(sga::SparseGeoArray{DT, IT}) where {DT <: Real, IT <: Integer}
     if (coordinates[2]<min_y) min_y=coordinates[2] end
     if (coordinates[2]>max_y) max_y=coordinates[2] end
   end
+  min_x = (min_x-margin_x < 1) ? 1 : min_x-margin_x
+  min_y = (min_y-margin_y < 1) ? 1 : min_y-margin_y  
+  max_x = (max_x+margin_x > sga.xsize) ? sga.xsize : max_x+margin_x
+  max_y = (max_y+margin_y > sga.ysize) ? sga.ysize : max_y+margin_y
+
   crop!(sga,(min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y))
 end
 
