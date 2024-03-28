@@ -153,6 +153,85 @@ function read_geotiff_header!(sgr :: SparseGeoArray{DT, IT}, filename :: String,
 end
 
 
+function read_geotiff_data_categorised!(sgrs :: Dict{CT, SparseGeoArray{DT, IT}}, filename_data :: String, filename_categories :: String, band :: Integer = 1, row_chunk_size :: Integer = 1) where {CT <: Integer, DT <: Real, IT <: Integer}
+  sga_data = SparseGeoArray{DT,IT}()
+  read_geotiff_header!(sga_data, filename_data, band)
+  dataset_data = GDAL.gdalopen(filename_data, GDAL.GA_ReadOnly)
+  band_data = GDAL.gdalgetrasterband(dataset_data, band)
+
+  sga_categories = SparseGeoArray{DT,IT}()
+  read_geotiff_header!(sga_categories, filename_categories, band)
+  dataset_categories = GDAL.gdalopen(filename_categories, GDAL.GA_ReadOnly)
+  band_categories = GDAL.gdalgetrasterband(dataset_categories, band)
+
+  if (sga_data.xsize != sga_categories.xsize) error("DimensionError: attempt categorized read of $filename_data ($(sga_data.xsize)×$(sga_data.ysize)) and $filename_categories ($(sga_categories.xsize)×$(sga_categories.ysize))") end
+  if (sga_data.ysize != sga_categories.ysize) error("DimensionError: attempt categorized read of $filename_data ($(sga_data.xsize)×$(sga_data.ysize)) and $filename_categories ($(sga_categories.xsize)×$(sga_categories.ysize))") end
+  if (sga_data.projref != sga_categories.projref) error("ProjRefError: attempt categorized read of $filename_data ($(sga_data.projref)) and $filename_categories ($(sga_categories.projref))") end
+  if (sga_data.f != sga_categories.f) error("GeoTransfomError: attempt categorized read of $filename_data ($(sga_data.f)) and $filename_categories ($(sga_categories.f))") end
+
+  r_tiles = sga_data.ysize ÷ convert(IT,row_chunk_size)
+  remaining_r = sga_data.ysize % convert(IT,row_chunk_size)
+  scanline_data = fill(0.0f0, row_chunk_size * sga_data.xsize)
+  scanline_categories = fill(0.0f0, row_chunk_size * sga_data.xsize)
+  print("read progress: 0 ")
+  p = 0
+
+  for r in 1:(r_tiles) 
+    GDAL.gdalrasterio(band_data,GDAL.GF_Read,0,(r-1)*row_chunk_size,sga_data.xsize,row_chunk_size,scanline_data,sga_data.xsize,row_chunk_size,GDAL.GDT_Float32,0,0)
+    GDAL.gdalrasterio(band_categories,GDAL.GF_Read,0,(r-1)*row_chunk_size,sga_data.xsize,row_chunk_size,scanline_categories,sga_data.xsize,row_chunk_size,GDAL.GDT_Float32,0,0)
+
+    private_insert_categorised_data!(sgrs, sga_data, sga_categories, scanline_data, scanline_categories, row_chunk_size, (r-1)*row_chunk_size)
+    if (((r*row_chunk_size)*100 ÷ sga_data.ysize) ÷ 10)>p
+      p=(((r*row_chunk_size)*100 ÷ sga_data.ysize) ÷ 10)
+      print("$(p*10) ")
+    end
+  end
+  
+  if (remaining_r != 0) 
+    GDAL.gdalrasterio(band_data,GDAL.GF_Read,0,(r_tiles)*row_chunk_size-1,sga_data.xsize,remaining_r,scanline_data,sga_data.xsize,remaining_r,GDAL.GDT_Float32,0,0)
+    GDAL.gdalrasterio(band_categories,GDAL.GF_Read,0,(r_tiles)*row_chunk_size-1,sga_data.xsize,remaining_r,scanline_categories,sga_data.xsize,remaining_r,GDAL.GDT_Float32,0,0)
+    private_insert_categorised_data!(sgrs, sga_data, sga_categories, scanline_data, scanline_categories,  remaining_r, (r_tiles)*row_chunk_size-1)
+  end
+  println()
+  GDAL.gdalclose(dataset_data)
+  GDAL.gdalclose(dataset_categories)
+end
+
+function read_geotiff_data_filtered!(sgr :: SparseGeoArray{DT, IT}, filename :: String, f :: Function, band :: Integer = 1, row_chunk_size :: Integer = 1) where {DT <: Real, IT <: Integer} 
+  read_geotiff_header!(sgr, filename, band)
+  dataset = GDAL.gdalopen(filename, GDAL.GA_ReadOnly)
+  band = GDAL.gdalgetrasterband(dataset, band)
+  
+  r_tiles = sgr.ysize ÷ row_chunk_size
+  remaining_r = sgr.ysize % row_chunk_size
+  scanline = fill(0.0f0, row_chunk_size * sgr.xsize)
+
+  print("read progress: 0 ")
+  p = 0
+
+  for r in 1:(r_tiles) 
+    GDAL.gdalrasterio(band,GDAL.GF_Read,0,(r-1)*row_chunk_size,sgr.xsize,row_chunk_size,scanline,sgr.xsize,row_chunk_size,GDAL.GDT_Float32,0,0)
+    for i in eachindex(scanline) 
+      if (!f(scanline[i])) scanline[i]=sgr.nodatavalue end
+    end
+    private_insert_data!(sgr, scanline, 1, sgr.xsize, (r-1)*row_chunk_size+1, r*row_chunk_size)
+    if (((r*row_chunk_size)*100 ÷ sgr.ysize) ÷ 10)>p
+      p=(((r*row_chunk_size)*100 ÷ sgr.ysize) ÷ 10)
+      print("$(p*10) ")
+    end
+  end
+  
+  if (remaining_r != 0) 
+    GDAL.gdalrasterio(band,GDAL.GF_Read,0,(r_tiles)*row_chunk_size-1,sgr.xsize,remaining_r,scanline,sgr.xsize,remaining_r,GDAL.GDT_Float32,0,0)
+    for i in eachindex(scanline) 
+      if (!f(scanline[i])) scanline[i]=sgr.nodatavalue end
+    end
+    (sgr, scanline, 1, sgr.xsize, (r_tiles)*row_chunk_size+1, (r_tiles)*row_chunk_size + 1 + remaining_r)
+  end
+  println()
+  GDAL.gdalclose(dataset)
+end
+
 function private_insert_data!(sgr :: SparseGeoArray{DT, IT}, data :: Vector{Float32}, ysize :: Integer, r_offset :: Integer) where {DT <: Real, IT <: Integer}
   for j in 1:sgr.xsize
     for i in 1:ysize
@@ -199,49 +278,5 @@ function private_insert_categorised_data!(sgrs :: Dict{CT,SparseGeoArray{DT, IT}
   end
 end
 
-
-function read_geotiff_data_categorised!(sgrs :: Dict{CT, SparseGeoArray{DT, IT}}, filename_data :: String, filename_categories :: String, band :: Integer = 1, row_chunk_size :: Integer = 1) where {CT <: Integer, DT <: Real, IT <: Integer}
-  sga_data = SparseGeoArray{DT,IT}()
-  read_geotiff_header!(sga_data, filename_data, band)
-  dataset_data = GDAL.gdalopen(filename_data, GDAL.GA_ReadOnly)
-  band_data = GDAL.gdalgetrasterband(dataset_data, band)
-
-  sga_categories = SparseGeoArray{DT,IT}()
-  read_geotiff_header!(sga_categories, filename_categories, band)
-  dataset_categories = GDAL.gdalopen(filename_categories, GDAL.GA_ReadOnly)
-  band_categories = GDAL.gdalgetrasterband(dataset_categories, band)
-
-  if (sga_data.xsize != sga_categories.xsize) error("DimensionError: attempt categorized read of $filename_data ($(sga_data.xsize)×$(sga_data.ysize)) and $filename_categories ($(sga_categories.xsize)×$(sga_categories.ysize))") end
-  if (sga_data.ysize != sga_categories.ysize) error("DimensionError: attempt categorized read of $filename_data ($(sga_data.xsize)×$(sga_data.ysize)) and $filename_categories ($(sga_categories.xsize)×$(sga_categories.ysize))") end
-  if (sga_data.projref != sga_categories.projref) error("ProjRefError: attempt categorized read of $filename_data ($(sga_data.projref)) and $filename_categories ($(sga_categories.projref))") end
-  if (sga_data.f != sga_categories.f) error("GeoTransfomError: attempt categorized read of $filename_data ($(sga_data.f)) and $filename_categories ($(sga_categories.f))") end
-
-  r_tiles = sga_data.ysize ÷ convert(IT,row_chunk_size)
-  remaining_r = sga_data.ysize % convert(IT,row_chunk_size)
-  scanline_data = fill(0.0f0, row_chunk_size * sga_data.xsize)
-  scanline_categories = fill(0.0f0, row_chunk_size * sga_data.xsize)
-  print("read progress: 0 ")
-  p = 0
-
-  for r in 1:(r_tiles) 
-    GDAL.gdalrasterio(band_data,GDAL.GF_Read,0,(r-1)*row_chunk_size,sga_data.xsize,row_chunk_size,scanline_data,sga_data.xsize,row_chunk_size,GDAL.GDT_Float32,0,0)
-    GDAL.gdalrasterio(band_categories,GDAL.GF_Read,0,(r-1)*row_chunk_size,sga_data.xsize,row_chunk_size,scanline_categories,sga_data.xsize,row_chunk_size,GDAL.GDT_Float32,0,0)
-
-    private_insert_categorised_data!(sgrs, sga_data, sga_categories, scanline_data, scanline_categories, row_chunk_size, (r-1)*row_chunk_size)
-    if (((r*row_chunk_size)*100 ÷ sga_data.ysize) ÷ 10)>p
-      p=(((r*row_chunk_size)*100 ÷ sga_data.ysize) ÷ 10)
-      print("$(p*10) ")
-    end
-  end
-  
-  if (remaining_r != 0) 
-    GDAL.gdalrasterio(band_data,GDAL.GF_Read,0,(r_tiles)*row_chunk_size-1,sga_data.xsize,remaining_r,scanline_data,sga_data.xsize,remaining_r,GDAL.GDT_Float32,0,0)
-    GDAL.gdalrasterio(band_categories,GDAL.GF_Read,0,(r_tiles)*row_chunk_size-1,sga_data.xsize,remaining_r,scanline_categories,sga_data.xsize,remaining_r,GDAL.GDT_Float32,0,0)
-    private_insert_categorised_data!(sgrs, sga_data, sga_categories, scanline_data, scanline_categories,  remaining_r, (r_tiles)*row_chunk_size-1)
-  end
-  println()
-  GDAL.gdalclose(dataset_data)
-  GDAL.gdalclose(dataset_categories)
-end
 
 

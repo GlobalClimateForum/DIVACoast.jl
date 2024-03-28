@@ -1,8 +1,8 @@
-docs:
-  image: julia:1.8.5
+documentation:
+  image: julia:1.10.2
   stage: deploy
   script:
-    - julia --project=. -e 'using Pkg ; Pkg.activate("./docs/Project.toml")'
+    - julia --project=. -e 'using Pkg; Pkg.instantiate()'
     - julia --project=. ./docs/make.jl
     - mkdir .public
     - cp -r docs/build/* .public
@@ -12,3 +12,5 @@ docs:
         - public
   only:
     - development
+
+  
