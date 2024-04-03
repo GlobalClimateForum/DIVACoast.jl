@@ -15,5 +15,6 @@ include("./algorithms/coastal/coastplain.jl")
 include("./io/nc/HSPs_nc_load.jl")
 include("./io/nc/HSPs_nc_save.jl")
 include("./tools/geotiff_tools.jl")
+include("./scenario/ssp_wrapper.jl")
 
 end
