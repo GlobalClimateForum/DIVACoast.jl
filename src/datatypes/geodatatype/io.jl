@@ -158,7 +158,7 @@ function save_data_complete_csv(sgr::SparseGeoArray{DT,IT}, filename::String, lo
 
   open(filename, "w") do f
     for i in 1:6
-      write(f, "$(affine_to_geotransform(sgr.f)[i])")
+      write(f, "$(convert(Float32,affine_to_geotransform(sgr.f)[i]))")
       if i != 6
         write(f, ",")
       end
@@ -173,7 +173,7 @@ function save_data_complete_csv(sgr::SparseGeoArray{DT,IT}, filename::String, lo
       if lonlat
         write(f, "$(coords(sga_florida_dtm,indices)[1]),$(coords(sga_florida_dtm,indices)[2]),$data\n")
       else
-        write(f, "$(indices[1]),$(indices[2]),$data\n")
+        write(f, "$(indices[1]-1),$(indices[2]-1),$data\n")
       end
     end
   end
