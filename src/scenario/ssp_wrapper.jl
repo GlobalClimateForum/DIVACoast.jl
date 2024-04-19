@@ -40,6 +40,9 @@ function ssp_get_growth_factor(wrapped_ssp::SSPWrapper{T}, variable::String, cou
     ind_y2 = searchsortedfirst(years_available, year2)
 
     filtered_df = filter([:Variable, :Region, :Scenario] => flt, wrapped_ssp.df_ssp)
+    if (nrow(filtered_df)==0)
+        println("$variable, $country, $ssp_scenario")
+    end
 
     ret = 1.0
     if (year1 <= years_available[1])

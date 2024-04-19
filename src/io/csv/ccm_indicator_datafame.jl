@@ -94,8 +94,8 @@ function ccm_indicators_dataframes!(dfs::Dict{String,DataFrame}, indicators_data
   ccm_indicators_dataframes!(dfs, (indicators_data[1], indicators_data[2], indicators_data[3]), extractor, indicator_names, time)
 end
 
-function standardize_output!(dfs_output::Dict{String,DataFrame})
+function standardize_output!(dfs_output::Dict{String,DataFrame}, initial_columns)
   for (level, outputdata) in dfs_output
-    select!(outputdata, :locationid, :time, sort(names(outputdata)))
+    select!(outputdata, initial_columns, sort(names(outputdata)))
   end
 end

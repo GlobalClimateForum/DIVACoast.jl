@@ -49,7 +49,6 @@ function apply_accumulate_record(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::F
   # better: ret = Dict{IT1,accumulate::Result_type} 
   ret = 
   if length(ccm.children)>0
-    # Dict(first(ccm.children)[1] => (ccm.level, apply_accumulate_record(first(ccm.children)[2], f, accumulate)))
     Dict(first(ccm.children)[1] => apply_accumulate_record(first(ccm.children)[2], f, accumulate))
   else
     Dict()

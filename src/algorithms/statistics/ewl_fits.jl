@@ -13,25 +13,65 @@ frechet_model(x, p) = if (any(((x .- p[1]) / p[2]) .<= -1/p[3])) map(x -> 0, x) 
 weibull_model(x, p) = if (any(((x .- p[1]) / p[2]) .>= 1/abs(p[3]))) map(x -> 1, x) else @. exp(-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3])) end
 
 function estimate_gumbel_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
-    fit = curve_fit(gumbel_model, x_data, y_data, [0.0, 1.0], lower=[-Inf, 0.001])
-    return GeneralizedExtremeValue(fit.param[1], fit.param[2], 0)
+    try
+        fit = curve_fit(gumbel_model, x_data, y_data, [0.0, 1.0], lower=[-Inf, 0.001])
+        return GeneralizedExtremeValue(fit.param[1], fit.param[2], 0)
+    catch
+        return GeneralizedExtremeValue(0.0, 1.0, 0)
+    end
 end
 
 function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
-    fit = curve_fit(frechet_model, x_data, y_data, [0.0, 1.0, 1.0], lower=[-Inf, 0.001, 0.001])
-    return GeneralizedExtremeValue(fit.param[1], fit.param[2], fit.param[3])
+    try
+        fit = curve_fit(frechet_model, x_data, y_data, [0.0, 1.0, 1.0], lower=[-Inf, 0.001, 0.001])
+        return GeneralizedExtremeValue(fit.param[1], fit.param[2], fit.param[3])
+    catch
+        return GeneralizedExtremeValue(0.0, 1.0, 1.0)
+    end
 end
 
 function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
-    fit = curve_fit(weibull_model, x_data, y_data, [0.0, 1.0, -1.0], lower=[-Inf, 0.001, -Inf], upper = [Inf,Inf,-0.001])
-    return GeneralizedExtremeValue(fit.param[1], fit.param[2], fit.param[3])
+    try
+        fit = curve_fit(weibull_model, x_data, y_data, [0.0, 1.0, -1.0], lower=[-Inf, 0.001, -Inf], upper = [Inf,Inf,-0.001])
+        return GeneralizedExtremeValue(fit.param[1], fit.param[2], fit.param[3])
+    catch
+        return GeneralizedExtremeValue(0.0, 1.0, -1.0)
+    end
 end
 
 function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
-    fit_gumbel  = curve_fit(gumbel_model, x_data, y_data, [0.0, 1.0], lower=[-Inf, 0.001])
-    fit_frechet = curve_fit(frechet_model, x_data, y_data, [0.0, 1.0, 1.0], lower=[-Inf, 0.001, 0.001])
-    fit_weibull = curve_fit(weibull_model, x_data, y_data, [0.0, 1.0, -1.0], lower=[-Inf, 0.001, -Inf], upper = [Inf,Inf,-0.001])
+    fit_gumbel  = 
+    try
+        curve_fit(gumbel_model, x_data, y_data, [0.0, 1.0], lower=[-Inf, 0.001])
+    catch
+        missing
+    end
     
+    fit_frechet = 
+    try
+        curve_fit(frechet_model, x_data, y_data, [0.0, 1.0, 1.0], lower=[-Inf, 0.001, 0.001])
+    catch
+        missing
+    end
+    
+    fit_weibull = 
+    try
+        curve_fit(weibull_model, x_data, y_data, [0.0, 1.0, -1.0], lower=[-Inf, 0.001, -Inf], upper = [Inf,Inf,-0.001])
+    catch
+        missing
+    end
+
+    if fit_gumbel === missing && fit_frechet === missing && fit_weibull === missing
+        return GeneralizedExtremeValue(0.0, 1.0, 0)
+    end
+    
+    if (fit_gumbel  === missing && fit_frechet !== missing) fit_gumbel = fit_frechet end
+    if (fit_frechet === missing && fit_gumbel !== missing)  fit_frechet = fit_gumbel end
+    if (fit_weibull === missing && fit_gumbel !== missing)  fit_weibull = fit_gumbel end
+    if (fit_gumbel  === missing && fit_frechet === missing && fit_weibull !== missing) fit_gumbel = fit_weibull end
+    if (fit_frechet === missing && fit_gumbel  === missing && fit_weibull !== missing) fit_frechet = fit_weibull end
+    if (fit_weibull === missing && fit_gumbel  === missing && fit_frechet !== missing) fit_weibull = fit_frechet end
+
     sqrt_sum_sq_res_gumbel  = sqrt(sum(fit_gumbel.resid.^2))
     sqrt_sum_sq_res_frechet = sqrt(sum(fit_frechet.resid.^2))
     sqrt_sum_sq_res_weibull = sqrt(sum(fit_weibull.resid.^2))
