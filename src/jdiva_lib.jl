@@ -19,5 +19,6 @@ include("./io/nc/HSPs_nc_save.jl")
 include("./io/csv/ccm_indicator_datafame.jl")
 include("./tools/geotiff_tools.jl")
 include("./scenario/ssp_wrapper.jl")
+include("./scenario/slr_wrapper.jl")
 
 end
