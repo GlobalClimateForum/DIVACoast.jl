@@ -1,4 +1,4 @@
-export extract_coastline, find_coastline
+export extract_coastline, find_coastline, find_waterline
 
 function find_coastline(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
     s = starting_point(sga)
@@ -18,16 +18,38 @@ function find_coastline(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where
     return ret
 end
 
-function propagate(sga::SparseGeoArray{DT,IT}, ret::SparseGeoArray{DT,IT}, curr::SparseGeoArray{DT,IT}, last::SparseGeoArray{DT,IT}) where {DT<:Real,IT<:Integer}
+function find_waterline(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
+    s = starting_point(sga)
+    if s == (-1, -1)
+        return boundary(sga)
+    end
+
+    ret = empty_copy(sga)
+    curr = empty_copy(sga)
+    last = empty_copy(sga)
+    curr[s] = 1
+    while (length(curr.data) > 0)
+        propagate(sga, ret, curr, last, false)
+    end
+    println()
+
+    return ret
+end
+
+function propagate(sga::SparseGeoArray{DT,IT}, ret::SparseGeoArray{DT,IT}, curr::SparseGeoArray{DT,IT}, last::SparseGeoArray{DT,IT}, coastline :: Bool = true) where {DT<:Real,IT<:Integer}
     next = empty_copy(curr)
     nh = Array{Tuple{IT,IT}}(undef, 8) 
     for d in curr.data
         n = nh8(curr, d[1], nh)
         for i in 1:n
             if sga[nh[i]] != sga.nodatavalue
-                ret[nh[i]] = sga[nh[i]]
+                if (coastline)
+                  ret[nh[i]] = sga[nh[i]]
+                else
+                  ret[d[1]] = 1
+                end
                 if (length(ret.data) % 10000 == 0) 
-                    println("found coastline points: $(length(ret.data))")
+                    println("found points: $(length(ret.data))")
                 end            
             elseif last[nh[i]] == last.nodatavalue && curr[nh[i]] == curr.nodatavalue
                 next[nh[i]] = 1
@@ -117,10 +139,4 @@ function extract_coastline(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} wh
     return ret
 end
 
-function extract_coastline_fast(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
-    ret = empty_copy(sga)
-#    extract_cl(ret) = function(sga,x,y);
-#    end
-#    nh8_function_application(sga::SparseGeoArray{DT,IT}, x::Integer, y::Integer, f::Function)
-end
 

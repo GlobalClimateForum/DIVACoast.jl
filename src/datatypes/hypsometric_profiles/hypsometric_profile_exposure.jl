@@ -31,9 +31,9 @@ function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real) where {DT
       return (ea, es, ed)
     end
     @inbounds r = (e - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
-    @inbounds ea = hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1]) * r)
-    @inbounds es = (size(hspf.cummulativeStaticExposure, 1) > 0) ? hspf.cummulativeStaticExposure[ind-1, :] + ((hspf.cummulativeStaticExposure[ind, :] - hspf.cummulativeStaticExposure[ind-1, :]) * r) : Array{DT,2}(undef, 0, 0)
-    @inbounds ed = (size(hspf.cummulativeDynamicExposure, 1) > 0) ? hspf.cummulativeDynamicExposure[ind-1, :] + ((hspf.cummulativeDynamicExposure[ind, :] - hspf.cummulativeDynamicExposure[ind-1, :]) * r) : Array{DT,2}(undef, 0, 0)
+    @inbounds ea = convert(DT,hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1]) * r))
+    @inbounds es = convert(Array{DT},(size(hspf.cummulativeStaticExposure, 1) > 0) ? hspf.cummulativeStaticExposure[ind-1, :] + ((hspf.cummulativeStaticExposure[ind, :] - hspf.cummulativeStaticExposure[ind-1, :]) * r) : Array{DT,2}(undef, 0, 0))
+    @inbounds ed = convert(Array{DT},(size(hspf.cummulativeDynamicExposure, 1) > 0) ? hspf.cummulativeDynamicExposure[ind-1, :] + ((hspf.cummulativeDynamicExposure[ind, :] - hspf.cummulativeDynamicExposure[ind-1, :]) * r) : Array{DT,2}(undef, 0, 0))
     return (ea, es, ed)
   end
 end
@@ -57,13 +57,13 @@ function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real, s::Symbol
     return exposure[ind]
   else
     if (ind == 1)
-      return exposure[ind]
+      return convert(DT,exposure[ind])
     end
     if (ind > size(hspf.elevation, 1))
-      return exposure[size(hspf.elevation, 1)]
+      return convert(DT,exposure[size(hspf.elevation, 1)])
     end
     @inbounds r = (e - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
-    return exposure[ind-1] + ((exposure[ind] - exposure[ind-1]) * r)
+    return convert(DT,exposure[ind-1] + ((exposure[ind] - exposure[ind-1]) * r))
   end
 end
 
