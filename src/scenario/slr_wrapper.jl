@@ -1,16 +1,16 @@
-export SLRWrapper
-#, SSPType, AnnualGrowthPercentage, AnnualGrowth, GrowthFactor, SSPWrapper
+export SLRWrapper, get_slr_value
 
 using NCDatasets
 
+
 mutable struct SLRWrapper
-    data :: Dataset
-    lon  :: Array{Real}
-    lat  :: Array{Real}
-    time :: Array{Real}
-    quantiles :: Array{Real}
-    data      :: Array{Real}
-    variable_loaded :: String
+    dataset::Dataset
+    lon::Array{Real}
+    lat::Array{Real}
+    time::Array{Real}
+    quantiles::Array{Real}
+    data::Array{Real}
+    variable_loaded::String
 end
 
 function SLRWrapper(file_name::String, lon_name::String, lat_name::String, time_name::String, quantile_name::String)
@@ -32,7 +32,7 @@ function SLRWrapper(file_name::String, lon_name::String, lat_name::String, time_
     if (!issorted(ds[lon_name]))
         error("dimension variable $(lon_name) in $filename should be sorted increasingly.")
     end
-    if (!issorted(ds[lat_name], by = x -> -x))
+    if (!issorted(ds[lat_name], by=x -> -x))
         error("dimension variable $(lat_name) in $filename should be sorted decreasingly.")
     end
     if (!issorted(ds[time_name]))
@@ -42,70 +42,36 @@ function SLRWrapper(file_name::String, lon_name::String, lat_name::String, time_
         error("dimension variable $(quantile_name) in $filename should be sorted increasingly.")
     end
 
-    SLRWrapper(ds, ds[lon_name], ds[lat_name], ds[time_name], ds[quantile_name], Array{Float64}(undef, 0, 0))
+    SLRWrapper(ds, ds[lon_name], ds[lat_name], ds[time_name], ds[quantile_name], Array{Float32}(undef, 0), "")
 end
 
-#=
-# function 
-ssp_get_growth(sw::SSPWrapper{AnnualGrowthPercentage}, g::Real) = g / 100
-ssp_get_growth(sw::SSPWrapper{AnnualGrowth}, g::Real) = g
-ssp_get_growth(sw::SSPWrapper{GrowthFactor}, g::Real) = g - 1
 
-function ssp_get_growth_factor(wrapped_ssp::SSPWrapper{T}, variable::String, country::String, ssp_scenario::String, year1::Int, year2::Int) where {T<:SSPType}
-
-    function flt(v, r, s)
-        v_filter = !ismissing(v) && v == variable
-        r_filter = !ismissing(r) && r == country
-        s_filter = !ismissing(s) && s == ssp_scenario
-        return (v_filter && r_filter && s_filter)
+function get_slr_value(slrw::SLRWrapper, variable::String, lon::Real, lat::Real, quantile::Real, time)::Float32
+    if (variable == "")
+        return 0.0
     end
 
-    if (year2 < year1)
-        year2, year1 = year1, year2
+    if (slrw.variable_loaded != variable)
+        slrw.variable_loaded = variable
+        slrw.data = slrw.dataset[variable][:, :, :, :]
     end
 
-    ny = year2 - year1
-    if (ny == 0)
-        return 1.0
-    end
+    index_lon = searchsortedfirst(slrw.lon, lon) <= size(slrw.lon, 1) ? searchsortedfirst(slrw.lon, lon) : size(slrw.lon, 1)
+    index_lat = searchsortedfirst(slrw.lat, lat, rev=true) <= size(slrw.lat, 1) ? searchsortedfirst(slrw.lat, lat, rev=true) : size(slrw.lat, 1)
+    index_qtl = searchsortedfirst(slrw.quantiles, quantile) <= size(slrw.quantiles, 1) ? searchsortedfirst(slrw.quantiles, quantile) : size(slrw.quantiles, 1)
 
-    years_available = sort(unique(wrapped_ssp.df_ssp.year))
-    ind_y1 = searchsortedfirst(years_available, year1)
-    ind_y2 = searchsortedfirst(years_available, year2)
-
-    filtered_df = filter([:Variable, :Region, :Scenario] => flt, wrapped_ssp.df_ssp)
-    if (nrow(filtered_df)==0)
-        println("$variable, $country, $ssp_scenario")
-    end
-
-    ret = 1.0
-    if (year1 <= years_available[1])
-        if (year2 <= years_available[2])
-            return ret * (1 + ssp_get_growth(wrapped_ssp, filtered_df[1, :].growth))^(ny)
-        else
-            ret = ret * (1 + ssp_get_growth(wrapped_ssp, filtered_df[1, :].growth))^(years_available[1] - year1)
-        end
-    end
-
-    if (ind_y1 == ind_y2)
-        return ret * (1 + ssp_get_growth(wrapped_ssp, filtered_df[ind_y1-1, :].growth))^(ny)
+    if time in slrw.time
+        index_time = searchsortedfirst(slrw.time, time) <= size(slrw.time, 1) ? searchsortedfirst(slrw.time, time) : size(slrw.time, 1)
+        return slrw.data[index_lon, index_lat, index_time, index_qtl]
     else
-        if (ind_y1 > 1)
-            ret = ret * (1 + ssp_get_growth(wrapped_ssp, filtered_df[ind_y1-1, :].growth))^(years_available[ind_y1] - year1)
-        end
-        for ind in (ind_y1+1):ind_y2
-            if ind <= size(years_available, 1)
-                y2 = years_available[ind]
-                if y2 <= year2
-                    ret = ret * (1 + ssp_get_growth(wrapped_ssp, filtered_df[ind-1, :].growth))^(years_available[ind] - years_available[ind-1])
-                else
-                    return ret * (1 + ssp_get_growth(wrapped_ssp, filtered_df[ind-1, :].growth))^(year2 - years_available[ind-1])
-                end
-            else
-                return ret * (1 + ssp_get_growth(wrapped_ssp, filtered_df[ind-1, :].growth))^(year2 - years_available[ind-1])
-            end
+        index_time_after = searchsortedfirst(slrw.time, time) <= size(slrw.time, 1) ? searchsortedfirst(slrw.time, time) : size(slrw.time, 1)
+        if (index_time_after<=1)
+            return 0.0
+        else 
+            Δ_time = slrw.time[index_time_after] - slrw.time[index_time_after-1]
+            r = (time - slrw.time[index_time_after-1])/Δ_time
+            Δ_slr = slrw.data[index_lon, index_lat, index_time_after, index_qtl] - slrw.data[index_lon, index_lat, index_time_after-1, index_qtl]
+            return slrw.data[index_lon, index_lat, index_time_after-1, index_qtl] + r * Δ_slr 
         end
     end
-    return ret
 end
-=#
