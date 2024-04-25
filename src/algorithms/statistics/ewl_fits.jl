@@ -12,6 +12,10 @@ using Distributions
 frechet_model(x, p) = if (any(((x .- p[1]) / p[2]) .<= -1/p[3])) map(x -> 0, x) else @. exp(-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3])) end
 weibull_model(x, p) = if (any(((x .- p[1]) / p[2]) .>= 1/abs(p[3]))) map(x -> 1, x) else @. exp(-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3])) end
 
+"""
+This function fits a Gumbel Distribution to the inserted data. y should be the return 
+period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV) with the third shape parameter being zero.
+"""
 function estimate_gumbel_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
         fit = curve_fit(gumbel_model, x_data, y_data, [0.0, 1.0], lower=[-Inf, 0.001])
@@ -21,6 +25,10 @@ function estimate_gumbel_distribution(x_data::Array{T}, y_data::Array{T}) where 
     end
 end
 
+"""
+This function fits a Frechet Distribution to the inserted data. y should be the return 
+period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV).
+"""
 function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
         fit = curve_fit(frechet_model, x_data, y_data, [0.0, 1.0, 1.0], lower=[-Inf, 0.001, 0.001])
@@ -30,6 +38,10 @@ function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) where
     end
 end
 
+"""
+This function fits a Weibull Distribution to the inserted data. y should be the return 
+period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV).
+"""
 function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
         fit = curve_fit(weibull_model, x_data, y_data, [0.0, 1.0, -1.0], lower=[-Inf, 0.001, -Inf], upper = [Inf,Inf,-0.001])
@@ -39,6 +51,11 @@ function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where
     end
 end
 
+"""
+This function fits an extreme value distribution to the inserted data. y should be the return 
+period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV) and uses the best fit 
+out of the Gumbel, Frechet and Weibull model based on the summed squared residuals.
+"""
 function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     fit_gumbel  = 
     try
