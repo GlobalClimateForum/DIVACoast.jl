@@ -99,18 +99,22 @@ function load_hsps_nc(::Type{IT}, ::Type{DT}, filename::String)::Dict{IT,Hypsome
       end
     end
   end
+ 
+  # reading all data at once is memory intense but much quicker
+  area_all::Array{DT} = area_nc[:, :]
+  s_exposure_all :: Array{DT,3} = Array{DT,3}(undef, size(ids, 1), size(el, 1), size(static_exp, 1))
+  d_exposure_all :: Array{DT,3} = Array{DT,3}(undef, size(ids, 1), size(el, 1), size(dynamic_exp, 1))
+
+  for j in 1:size(static_exp, 1)
+    s_exposure_all[:,:,j] = static_exp[j][:, :]    
+  end
+  for j in 1:size(dynamic_exp, 1)
+    d_exposure_all[:,:,j] = dynamic_exp[j][:, :]
+    #d_exposure[:, j] = convert(Array{DT}, dynamic_exp[j][i, :])      
+  end
 
   for i in 1:size(ids, 1)
-    area::Array{DT} = convert(Array{DT}, area_nc[i, :])
-    s_exposure::Array{DT,2} = Array{DT,2}(undef, size(el, 1), size(static_exp, 1))
-    d_exposure::Array{DT,2} = Array{DT,2}(undef, size(el, 1), size(dynamic_exp, 1))
-    for j in 1:size(static_exp, 1)
-      s_exposure[:, j] = convert(Array{DT}, static_exp[j][i, :])
-    end
-    for j in 1:size(dynamic_exp, 1)
-      d_exposure[:, j] = convert(Array{DT}, dynamic_exp[j][i, :])
-    end
-    hpsf_data[ids[i]] = HypsometricProfile(width[i], width_unit, copy(el), el_unit, area, area_unit, s_exposure, static_exp_names, static_exp_units, d_exposure, dynamic_exp_names, dynamic_exp_units)
+    hpsf_data[ids[i]] = HypsometricProfile(width[i], width_unit, copy(el), el_unit, area_all[i,:], area_unit, s_exposure_all[i,:,:], static_exp_names, static_exp_units, d_exposure_all[i,:,:], dynamic_exp_names, dynamic_exp_units)
   end
 
   close(ds)

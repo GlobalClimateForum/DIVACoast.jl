@@ -54,11 +54,9 @@ function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd::
   exposure = zeros(DT, size(hspf.elevation, 1))
   if (pos[1] == 1)
     exposure = hspf.cummulativeArea
-  end
-  if (pos[1] == 2)
+  elseif (pos[1] == 2)
     exposure = hspf.cummulativeStaticExposure[:, pos[2]]
-  end
-  if (pos[1] == 3)
+  elseif (pos[1] == 3)
     exposure = hspf.cummulativeDynamicExposure[:, pos[2]]
   end
 
@@ -73,14 +71,13 @@ function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd::
       Δ_exp = (hspf.elevation[ind+1] <= wl) ? exposure[ind+1] - exposure[ind] : exposure_below_bathtub(hspf, wl_high, s) - exposure[ind]
       Δ_area = (hspf.elevation[ind+1] <= wl) ? hspf.cummulativeArea[ind+1] - hspf.cummulativeArea[ind] : exposure_below_bathtub(hspf, wl_high, :area) - hspf.cummulativeArea[ind]
 
-      if (Δ_area != 0 && Δ_exp != 0)
+      if (Δ_area != 0 && Δ_exp != 0 && sl != 0)
         ρ_exp = (Δ_exp / (Δ_area / hspf.width)) / 1000
         Δ_elevation1 = wl - wl_high
         Δ_elevation2 = wl - wl_low
         Δ_elevation3 = wl_high - wl_low
-        factor = (hdd > 0) ? hdd * log((hdd + Δ_elevation1) / (hdd + Δ_elevation2)) + Δ_elevation3 : sl / ρ_exp * Δ_exp
+        factor = (hdd > 0) ? hdd * log((hdd + Δ_elevation1) / (hdd + Δ_elevation2)) + Δ_elevation3 : ((ρ_exp > 0) ? sl / ρ_exp * Δ_exp : 0)
         dam += factor * ρ_exp / sl
-        if isnan(dam) println("$factor * $(ρ_exp) / $sl") end
       end
     end
   end

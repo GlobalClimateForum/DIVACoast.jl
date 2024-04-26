@@ -334,12 +334,6 @@ function private_complete_zero(exposure)
   return true
 end
 
-(0.9f0, 0.0052929604f0)
-(1.0f0, 0.0052929604f0)
-(1.1f0, 0.058225032f0)
-
-
-
 function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, i3::Int64, check_zero::Bool)::Bool
   ex1 = exposure_below_bathtub(hspf, hspf.elevation[i1])
   ex2 = exposure_below_bathtub(hspf, hspf.elevation[i2])
