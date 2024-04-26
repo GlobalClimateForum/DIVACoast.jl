@@ -59,6 +59,43 @@ function read_geotiff_data_partial!(sgr :: SparseGeoArray{DT, IT}, x_start :: In
   GDAL.gdalclose(dataset)
 end
 
+# function get_radial_kernel(sga::SparseGeoArray{DT,IT}, radius::Real, lon_min::Real, lon_max::Real, lat_max::Real, lat_min::Real) where {DT<:Real,IT<:Integer}
+#   indexSpanX = convert(Int32, round(radius / pixelsizeX, RoundNearest))
+#   indexSpanY = convert(Int32, round(radius / pixelsizeY, RoundNearest))
+#   kernel = falses(indexSpanX + 1, indexSpanY + 1)
+#   for x in 0:indexSpanX
+#       for y in 0:indexSpanY
+#           distance = sqrt(((x * pixelsizeX)^2) + ((y * pixelsizeY)^2))
+#           if distance <= radius
+#               kernel[x+1, y+1] = true
+#           end
+#       end
+#   end
+#   kernel = hcat([reverse(kernel, dims=(1, 2)); reverse(kernel, dims=2)], [reverse(kernel, dims=1); kernel])
+#   #display(kernel)
+#   return (kernel)
+# end
+
+function extract_box_around(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, y_chunk_size=1, f=identity) where {DT <: Real, IT <: Integer}
+  if (radius>=earth_circumference_km/2) 
+    return read_geotiff_data_complete!(sga,sga.filename)
+  else
+    
+    sgat = SparseGeoArray{DT,IT}(Dict{Tuple{IT,IT},DT}(), sga.nodatavalue, sga.f, sga.crs, sga.metadata, sga.xsize, sga.ysize, sga.projref, sga.circular, sga.filename)
+
+    p_east = go_direction(p, radius, East())
+    p_west = go_direction(p, radius, West())
+    p_north = go_direction(p, radius, North())
+    p_south = go_direction(p, radius, South())
+
+    bb = bounding_boxes(sga, p_east[1],p_west[1],p_south[2],p_north[2])
+
+    for b in bb
+      read_geotiff_data_partial!(sgat, b[1], b[3], b[2], b[4], y_chunk_size = y_chunk_size)
+    end
+    return sgat
+  end
+end
 
 function partial_read_around!(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, y_chunk_size=1, f=identity) where {DT <: Real, IT <: Integer}
         
