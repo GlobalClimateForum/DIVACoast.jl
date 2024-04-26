@@ -86,6 +86,50 @@ function find(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, level_to_find::String, 
   end
 end
 
+function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,LocalCoastalImpactModel}, outputs, metadata, metadatanames::Array{String}, collect_children::Bool) where {IT1,IT2,DATA}
+  if (ccm.level in keys(outputs))
+    row = [ccm.id; metadata]
+    for n in fieldnames(DATA)
+      push!(row, getfield(ccm.data, n))
+    end
+    rownames = copy(metadatanames)
+    for name in fieldnames(DATA)
+      push!(rownames, String(name))
+    end
+    if (ncol(outputs[ccm.level]) == 0)
+      outputs[ccm.level] = DataFrame(Dict(rownames .=> row))
+    else
+      outputs[ccm.level] = [outputs[ccm.level]; DataFrame(Dict(rownames .=> row))]
+    end
+  end
+end
+
+function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs, metadata, metadatanames::Array{String}) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
+  if (ccm.level in keys(outputs))
+    row = [ccm.id; metadata]
+    for n in fieldnames(DATA)
+      push!(row, getfield(ccm.data, n))
+    end
+    rownames = copy(metadatanames)
+    for name in fieldnames(DATA)
+      push!(rownames, String(name))
+    end
+    if (ncol(outputs[ccm.level]) == 0)
+      outputs[ccm.level] = DataFrame(Dict(rownames .=> row))
+    else
+      outputs[ccm.level] = [outputs[ccm.level]; DataFrame(Dict(rownames .=> row))]
+    end
+  end
+    for (child_id, child) in ccm.children
+      collect_data(child, outputs, metadata, metadatanames)
+    end
+end
+
+
+
+
+
+#=
 function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs, metadata, metadatanames::Array{String}, collect_children::Bool=true) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
   if (ccm.level in keys(outputs))
     row = [ccm.id; metadata]
@@ -104,7 +148,7 @@ function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs, metada
   end
   if collect_children
     for (child_id, child) in ccm.children
-      collect_data(child, outputs, metadata, metadatanames)
+      collect_data(child, outputs, metadata, metadatanames, collect_children)
     end
   end
 end
@@ -112,3 +156,4 @@ end
 function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,LocalCoastalImpactModel}, outputs, metadata, metadatanames::Array{String}, collect_children::Bool) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
   collect_data(ccm, outputs, metadata, metadatanames, false)
 end
+=#
