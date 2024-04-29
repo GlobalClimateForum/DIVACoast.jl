@@ -106,14 +106,17 @@ function apply_accumulate_store(lm :: LocalCoastalImpactModel{DT, DATA}, f :: Fu
   return res
 end
 
+@inline
 function apply(lm :: LocalCoastalImpactModel{DT, DATA}, f :: Function) where {DT<:Real, DATA}
   f(lm)
 end
 
+@inline
 function find(lm :: LocalCoastalImpactModel{DT, DATA}, level::String, id :: IT3) where {DT<:Real, DATA, IT3} 
   return false
 end
 
-function collect_data(lm :: LocalCoastalImpactModel{DT, DATA}, outputs, metadata, metadatanames) where {DT<:Real, DATA} 
+@inline
+function collect_data(lm :: LocalCoastalImpactModel{DT, DATA}, outputs, output_row_names, output_rows, metadata, metadatanames) where {DT<:Real, DATA} 
   # do nothing
 end

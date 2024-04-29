@@ -84,10 +84,19 @@ julia> sga[2:3,2:3]
 """
 function Base.getindex(sga :: SparseGeoArray{DT, IT}, xrange::AbstractRange, yrange::AbstractRange) :: SparseGeoArray{DT, IT} where {DT <: Real, IT <: Integer} 
   data :: Dict{Tuple{IT,IT}, DT} = Dict{Tuple{IT,IT}, DT}()
-  for y in yrange
-    for x in xrange
-      v :: DT = get(sga.data, (x,y), sga.nodatavalue)
-      if (v != sga.nodatavalue) data[(x-first(xrange)+1,y-first(yrange)+1)]=sga[x,y] end
+  # choose the method that is faster for the given data
+  if (size(xrange)[1]*size(yrange)[1] < length(sga.data))
+    for y in yrange
+      for x in xrange
+        v :: DT = get(sga.data, (x,y), sga.nodatavalue)
+        if (v != sga.nodatavalue) data[(x-first(xrange)+1,y-first(yrange)+1)]=v end
+      end
+    end
+  else
+    for (ind, v) in sga.data
+      if (first(xrange)<ind[1] && ind[1]<last(xrange) && first(yrange)<ind[2] && ind[2]<last(yrange))
+        data[(ind[1]-first(xrange)+1,ind[1]-first(yrange)+1)]=v
+      end
     end
   end
   x, y = first(xrange) - 1, first(yrange) - 1

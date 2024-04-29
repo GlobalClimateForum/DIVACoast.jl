@@ -88,7 +88,7 @@ end
 #   return (kernel)
 # end
 
-function extract_box_around(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, y_chunk_size=1, f=identity) where {DT <: Real, IT <: Integer}
+function read_box_around!(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, y_chunk_size=1, f=identity) where {DT <: Real, IT <: Integer}
   if (radius>=earth_circumference_km/2) 
     return read_geotiff_data_complete!(sga,sga.filename)
   else

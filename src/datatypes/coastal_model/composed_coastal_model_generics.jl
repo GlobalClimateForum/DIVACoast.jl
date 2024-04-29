@@ -1,6 +1,8 @@
 export apply_accumulate, apply_accumulate_record, apply, apply_break, apply_accumulate_store,
   find, collect_data
 
+using DataFrames
+
 function apply(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
   foreach(x -> apply(x, f), values(ccm.children))
 end
@@ -86,47 +88,51 @@ function find(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, level_to_find::String, 
   end
 end
 
-function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,LocalCoastalImpactModel}, outputs, metadata, metadatanames::Array{String}, collect_children::Bool) where {IT1,IT2,DATA}
+
+function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs::Dict{String,DataFrame},
+  output_row_names :: Dict{String,Array{String}}, output_rows :: Dict{String,Array{Any}}, metadata, 
+  metadatanames::Array{String}) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
   if (ccm.level in keys(outputs))
-    row = [ccm.id; metadata]
-    for n in fieldnames(DATA)
-      push!(row, getfield(ccm.data, n))
+    if !(ccm.level in keys(output_rows))
+      row = [ccm.id; metadata]
+      for n in fieldnames(DATA)
+        push!(row, getfield(ccm.data, n))
+      end
+      output_rows[ccm.level]=row
+    else
+      i = 1
+      for m in metadata
+        output_rows[ccm.level][i] = m
+        i += 1
+      end
+      for n in fieldnames(DATA)
+        output_rows[ccm.level][i] = getfield(ccm.data, n)
+        i += 1
+      end
     end
-    rownames = copy(metadatanames)
-    for name in fieldnames(DATA)
-      push!(rownames, String(name))
+    if !(ccm.level in keys(output_row_names))
+      rownames = copy(metadatanames)
+      for name in fieldnames(DATA)
+        push!(rownames, String(name))
+      end
+      output_row_names[ccm.level]=rownames
     end
     if (ncol(outputs[ccm.level]) == 0)
-      outputs[ccm.level] = DataFrame(Dict(rownames .=> row))
+      outputs[ccm.level] = DataFrame(Dict(output_row_names[ccm.level] .=> output_rows[ccm.level]))
     else
-      outputs[ccm.level] = [outputs[ccm.level]; DataFrame(Dict(rownames .=> row))]
+      outputs[ccm.level] = [outputs[ccm.level]; DataFrame(Dict(output_row_names[ccm.level] .=> output_rows[ccm.level]))]
     end
+  end
+  for (child_id, child) in ccm.children
+    collect_data(child, outputs, output_row_names, output_rows, metadata, metadatanames)
   end
 end
 
-function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs, metadata, metadatanames::Array{String}) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
-  if (ccm.level in keys(outputs))
-    row = [ccm.id; metadata]
-    for n in fieldnames(DATA)
-      push!(row, getfield(ccm.data, n))
-    end
-    rownames = copy(metadatanames)
-    for name in fieldnames(DATA)
-      push!(rownames, String(name))
-    end
-    if (ncol(outputs[ccm.level]) == 0)
-      outputs[ccm.level] = DataFrame(Dict(rownames .=> row))
-    else
-      outputs[ccm.level] = [outputs[ccm.level]; DataFrame(Dict(rownames .=> row))]
-    end
-  end
-    for (child_id, child) in ccm.children
-      collect_data(child, outputs, metadata, metadatanames)
-    end
+function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs::Dict{String,DataFrame}, metadata, metadatanames::Array{String}) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
+  output_row_names = Dict{String,Array{String}}()
+  output_rows = Dict{String,Array{Any}}()
+  collect_data(ccm, outputs, output_row_names, output_rows, metadata, metadatanames)
 end
-
-
-
 
 
 #=

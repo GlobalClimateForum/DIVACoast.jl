@@ -72,7 +72,7 @@ function sga_union(sgaArray::Array{SparseGeoArray{DT,IT}})::SparseGeoArray{DT,IT
     return union
 end
 
-sga_union(sga1, sga2) = sga_union([sga1,sga2])
+sga_union(sga1, sga2) = sga_union([sga1, sga2])
 
 
 # as before, but instead of constructing a new sga store the result in place in sga1 and delete all values from sga2 after they have been processed (one by one)
@@ -234,7 +234,7 @@ function minumum_mean(sort_list, value_list)
     return (mean(values))
 end
 
-# for small datasets only
+# should be used for small datasets only
 function get_closest_value(sga, p)
 
     i_x, i_y = indices(sga, p)
@@ -289,4 +289,13 @@ function get_closest_value(sga, p)
         end
 
     end
+end
+
+function get_box_around(sga::SparseGeoArray{DT,IT}, p::Tuple{Real,Real}, radius::Real)::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
+    p_east = go_direction(p, radius, East())
+    p_west = go_direction(p, radius, West())
+    p_north = go_direction(p, radius, North())
+    p_south = go_direction(p, radius, South())
+    bb = bounding_boxes(sga, p_east[1], p_west[1], p_south[2], p_north[2])
+    return sga[bb[1][1]:bb[1][3],bb[1][2]:bb[1][4]]    
 end
