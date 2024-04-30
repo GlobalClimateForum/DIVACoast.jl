@@ -95,7 +95,7 @@ function Base.getindex(sga :: SparseGeoArray{DT, IT}, xrange::AbstractRange, yra
   else
     for (ind, v) in sga.data
       if (first(xrange)<ind[1] && ind[1]<last(xrange) && first(yrange)<ind[2] && ind[2]<last(yrange))
-        data[(ind[1]-first(xrange)+1,ind[1]-first(yrange)+1)]=v
+        data[(ind[1]-first(xrange)+1,ind[2] -first(yrange)+1)]=v
       end
     end
   end
