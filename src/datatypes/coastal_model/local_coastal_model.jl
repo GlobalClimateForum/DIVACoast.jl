@@ -7,7 +7,8 @@ using QuadGK
 
 abstract type CoastalImpactUnit end
 
-mutable struct LocalCoastalImpactModel{DT<:Real, DATA} <: CoastalImpactUnit
+mutable struct LocalCoastalImpactModel{DT<:Real, IDT, DATA} <: CoastalImpactUnit
+  id :: IDT
   surge_model::Distribution
   coastal_plain_model::HypsometricProfile{DT}
   data::DATA

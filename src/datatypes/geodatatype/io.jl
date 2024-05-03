@@ -28,7 +28,9 @@ function read_geotiff_data_complete!(sgr::SparseGeoArray{DT,IT}, filename::Strin
   GDAL.gdalclose(dataset)
 end
 
-
+#
+# Double check.
+#
 function read_geotiff_data_partial!(sgr::SparseGeoArray{DT,IT}, x_start::Integer, x_end::Integer, y_start::Integer, y_end::Integer, band::Integer=1; y_chunk_size::Integer=1) where {DT<:Real,IT<:Integer}
 
   dataset = GDAL.gdalopen(sgr.filename, GDAL.GA_ReadOnly)
@@ -59,14 +61,15 @@ function read_geotiff_data_partial!(sgr::SparseGeoArray{DT,IT}, x_start::Integer
   scanline = fill(0.0f0, y_chunk_size * (x_end - x_start + 1))
 
   for r in 1:(r_tiles)
+    #println("read: $(x_start - 1), $((r - 1) * y_chunk_size + (y_start - 1)), $((x_end - x_start + 1)), $y_chunk_size,")
     GDAL.gdalrasterio(band, GDAL.GF_Read, x_start - 1, (r - 1) * y_chunk_size + (y_start - 1), (x_end - x_start + 1), y_chunk_size, scanline, (x_end - x_start + 1), y_chunk_size, GDAL.GDT_Float32, 0, 0)
     private_insert_data!(sgr, scanline, x_start, x_end, (r - 1) * y_chunk_size + y_start, (r - 1) * y_chunk_size + y_start + y_chunk_size - 1)
   end
 
   if (remaining_r != 0)
-    #    println("GDAL.gdalrasterio(band,GDAL.GF_Read,$(x_start-1),$((r_tiles)*y_chunk_size+y_start),$(x_end - x_start + 1),$y_chunk_size,scanline,$(x_end - x_start + 1),$remaining_r,GDAL.GDT_Float32,0,0)")
-    GDAL.gdalrasterio(band, GDAL.GF_Read, x_start - 1, (r_tiles) * y_chunk_size + y_start, (x_end - x_start + 1), remaining_r, scanline, (x_end - x_start + 1), remaining_r, GDAL.GDT_Float32, 0, 0)
-    private_insert_data!(sgr, scanline, x_start, x_end, (r_tiles) * y_chunk_size + y_start + 1, y_end)
+    #println("GDAL.gdalrasterio(band,GDAL.GF_Read,$(x_start-1),$((r_tiles)*y_chunk_size+y_start),$(x_end - x_start + 1),$remaining_r,scanline,$(x_end - x_start + 1),$remaining_r,GDAL.GDT_Float32,0,0)")
+    GDAL.gdalrasterio(band, GDAL.GF_Read, x_start - 1, (r_tiles) * y_chunk_size + y_start - 1, (x_end - x_start + 1), remaining_r, scanline, (x_end - x_start + 1), remaining_r, GDAL.GDT_Float32, 0, 0)
+    private_insert_data!(sgr, scanline, x_start, x_end, (r_tiles) * y_chunk_size + y_start, y_end)
   end
   GDAL.gdalclose(dataset)
 end
