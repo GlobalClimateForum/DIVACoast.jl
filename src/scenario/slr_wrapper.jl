@@ -68,41 +68,96 @@ function get_slr_value(slrw::SLRWrapper, lon::Real, lat::Real, quantile::Real, t
     end
 end
 
-function fill_missing_values!(slrw::SLRWrapper)
-    # fill all missing values at all timesteps/percentiles
+function cursor(index, width, b)
 
-    # first: collect all values, divide in missing and data values
-    # we can use the first timestep and the first quantile to obtain the data/no-data grid
-    # maybe: check if there is at least one timestep/quantile
-    grid = slrw.data[:, :, 1, 1]
-    data_gridcells = Array{Tuple{Float32,Float32}}(undef, 0)
-    nodata_gridcells = Array{Tuple{Float32,Float32}}(undef, 0)
-
-    for lon_index in 1:size(slrw.lon, 1)
-        for lat_index in 1:size(slrw.lat, 1)
-            if grid[lon_index, lat_index] === missing
-            else
-                push!(data_gridcells, (slrw.lon[lon_index], slrw.lat[lat_index]))
+    function bound(v, bound, infinite)
+        if v > bound || v <= 0
+            if infinite
+                v = v > bound ? (v - bound) : (bound + v)
+            else 
+                v = v > bound ? bound : 1
             end
+            return v
+        else
+            return v
         end
     end
 
+    # function weight(kx, ky)
+    #     max_dist = maximum([abs(kx), abs(ky)])
+    #     return max_dist == 0 ? 1 : 1 / max_dist
+    # end
+
+    xbound, ybound = b
+    bounded = (x, y) -> (bound(x, xbound, true), bound(y, ybound, false))
+    x, y = index
+    # weights = []
+    result = []
+    for (kx, ky) in Iterators.product((width *-1):width, (width *-1):width)
+        i_bounded = bounded((x + kx), (y + ky))
+        if !(i_bounded in result)
+            push!(result, i_bounded)
+            # push!(weights, weight(kx, ky)) 
+        end
+    end
+    return result #,weights
+end
+
+
+function fill_missing_values!(slrw::SLRWrapper)
+
+    ilon, ilat, itime, iquant = size(slrw.data)
+    # Iterate every dimension in slrw.data
+    for lon in 1:ilon, lat in 1:ilat, time in 1:itime, quant in 1:iquant
+
+        # If value is missing -> calculate value
+        if ismissing(slrw.data[lon, lat, time, quant]) # add constraining coord list?
+            
+            calc_value = nothing
+            cursor_width = 1
+            
+            while isnothing(calc_value) 
+                
+                cursor_ = cursor((lon, lat), cursor_width, (ilon, ilat)) #,weights
+                values = []
+
+                for (lon_, lat_) in cursor_
+                    value = slrw.data[lon_, lat_, time, quant]
+                    if !ismissing(value)
+                        push!(values, value)
+                    end
+                end
+
+                if isempty(values)
+                    cursor_width += 1
+                else
+                    slrw.data[lon, lat, time, quant] =  mean(values)
+                end            
+            end
+
+            println(slrw.data[lon, lat, time, quant])
+
+        end
+
+    end
+  
     # NN matching as we have done for surges ...
     # ...
 
+   
     # and fill up missing data
-    for lon_index in 1:size(slrw.lon, 1)
-        for lat_index in 1:size(slrw.lat, 1)
-            for time_index in 1:size(slrw.time, 1)
-                for qtl_index in 1:size(slrw.quantiles, 1)
-                    if slrw.data[lon_index, lat_index, time_index, qtl_index] === missing
-                        # fill up the data
-                        # check if missing data is in the set of matched grid cells?
-                        # the missing values should be the same for each quantile/timestep combination, but we cannot be sure?
-                    end
-                end
-            end
-        end
-    end
+    # for lon_index in 1:size(slrw.lon, 1)
+    #     for lat_index in 1:size(slrw.lat, 1)
+    #         for time_index in 1:size(slrw.time, 1)
+    #             for qtl_index in 1:size(slrw.quantiles, 1)
+    #                 if slrw.data[lon_index, lat_index, time_index, qtl_index] === missing
+    #                     # fill up the data
+    #                     # check if missing data is in the set of matched grid cells?
+    #                     # the missing values should be the same for each quantile/timestep combination, but we cannot be sure?
+    #                 end
+    #             end
+    #         end
+    #     end
+    # end
 
 end
