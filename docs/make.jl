@@ -16,3 +16,8 @@ makedocs(
 #        repolink="https://globalclimateforum.gitlab.io/diva_library/",)
         repolink="https://gitlab.com/globalclimateforum/diva_library",)
     )
+
+HTML(
+    collapselevel = 1,
+    description = "$sitename is a julia library for economic modelling of coastal sea-level rise impacts and adaptation. It provides a complete tool chain from geodatatypes to datatypes that allow different approaches of coasplain modelling to algorithms that compute flood impacts, erosion and wetland change."
+)
