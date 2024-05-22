@@ -239,7 +239,8 @@ indices(sga::SparseGeoArray, p::AbstractVector{<:Real}) = indices(sga, SVector{2
 indices(sga::SparseGeoArray, p::Tuple{<:Real,<:Real}) = indices(sga, SVector{2}(p))
 indices(sga::SparseGeoArray, i :: R, j :: R, strategy::AbstractStrategy=Center()) where {R <: Real} = indices(sga, SVector{2}(i,j))
 
-
+"""
+"""
 function area(sga :: SparseGeoArray, i :: I, j :: I) where {I <: Integer} 
   ul = coords(sga,i,j,UpperLeft())
   lr = coords(sga,i,j,LowerRight())

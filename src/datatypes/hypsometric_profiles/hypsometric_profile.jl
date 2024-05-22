@@ -9,7 +9,15 @@ export HypsometricProfile,
   damage_bathtub_standard_ddf, damage_bathtub,
   compress!
 
+"""
+    HypsometricProfile(w::DT, width_unit::String,
+    elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
+    s_exposure::StructArray{T1}, s_exposure_units::Array{String},
+    d_exposure::StructArray{T2}, d_exposure_units::Array{String},
+    logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real,T1,T2}
 
+A HypsometricProfile represents the variation in elevation from the coastline to inland areas. It can be constructed manually or by using `load_hsps_nc()` and a NetCDF-file.
+"""
 mutable struct HypsometricProfile{DT<:Real}
   width::DT
   width_unit::String

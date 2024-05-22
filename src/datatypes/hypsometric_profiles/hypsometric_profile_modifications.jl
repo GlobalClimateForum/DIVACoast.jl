@@ -1,3 +1,6 @@
+"""
+Adds static exposure to a HypsometricProfile.
+"""
 function add_static_exposure!(hspf::HypsometricProfile, elevation::Array{DT}, s_exposure::Array{DT}, s_exposure_name::String, s_exposure_units::String) where {DT<:Real}
   # resample hspf.elevation to elevation 
   resample!(hspf, elevation) 
@@ -17,6 +20,9 @@ function add_static_exposure!(hspf::HypsometricProfile, elevation::Array{DT}, s_
   compress!(hspf)
 end
 
+"""
+Adds dynamic exposure to a HypsometricProfile.
+"""
 function add_dynamic_exposure!(hspf::HypsometricProfile, elevation::Array{DT}, d_exposure::Array{DT}, d_exposure_name::String, d_exposure_units::String) where {DT<:Real}
   resample!(hspf, elevation) 
 
@@ -35,6 +41,9 @@ function add_dynamic_exposure!(hspf::HypsometricProfile, elevation::Array{DT}, d
   compress!(hspf)
 end
 
+"""
+Removes static exposure from a HypsometricProfile
+"""
 function remove_static_exposure!(hspf::HypsometricProfile, ind :: Integer)
   if (1<=ind && ind<=size(hspf.staticExposureUnits,1))
     hspf.staticExposureSymbols = (hspf.staticExposureSymbols[1:ind-1]...,hspf.staticExposureSymbols[ind+1:size(hspf.staticExposureUnits,1)]...)
@@ -43,6 +52,9 @@ function remove_static_exposure!(hspf::HypsometricProfile, ind :: Integer)
   end
 end
 
+"""
+Removes dynamic exposure from a HypsometricProfile
+"""
 function remove_dynamic_exposure!(hspf::HypsometricProfile, ind :: Integer)
   if (1<=ind && ind<=size(hspf.dynamicExposureUnits,1))
     hspf.dynamicExposureSymbols = (hspf.dynamicExposureSymbols[1:ind-1]...,hspf.dynamicExposureSymbols[ind+1:size(hspf.dynamicExposureUnits,1)]...)

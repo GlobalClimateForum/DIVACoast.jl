@@ -3,6 +3,10 @@ export SLRWrapper, get_slr_value, fill_missing_values!
 using NCDatasets
 
 # SLRReader?
+"""
+Creates a SLR-Wrapper around a dataset (NetCDF) using dataset specific variable names for variable (e.g., "SeaLevelRise"), latitude, longitude, time, and quantile
+After the Wrapper structure was initialized dataset specific functions can be used (e.g, get_slr_value)
+"""
 mutable struct SLRWrapper
     dataset::Dataset
     lon::Array{Real}
@@ -45,7 +49,9 @@ function SLRWrapper(file_name::String, variable::String, lon_name::String, lat_n
     SLRWrapper(ds, ds[lon_name], ds[lat_name], ds[time_name], ds[quantile_name], variable, ds[variable][:, :, :, :])
 end
 
-
+"""
+Gets the Sea Level Rise value at a specific location (lon, lat) in a specific quantile at a specific time.
+"""
 function get_slr_value(slrw::SLRWrapper, lon::Real, lat::Real, quantile::Real, time)
 
     index_lon = searchsortedfirst(slrw.lon, lon) <= size(slrw.lon, 1) ? searchsortedfirst(slrw.lon, lon) : size(slrw.lon, 1)
@@ -83,11 +89,6 @@ function cursor(index, width, b)
         end
     end
 
-    # function weight(kx, ky)
-    #     max_dist = maximum([abs(kx), abs(ky)])
-    #     return max_dist == 0 ? 1 : 1 / max_dist
-    # end
-
     xbound, ybound = b
     bounded = (x, y) -> (bound(x, xbound, true), bound(y, ybound, false))
     x, y = index
@@ -102,7 +103,6 @@ function cursor(index, width, b)
     end
     return result #,weights
 end
-
 
 function fill_missing_values!(slrw::SLRWrapper)
 

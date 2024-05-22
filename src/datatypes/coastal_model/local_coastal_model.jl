@@ -7,6 +7,10 @@ using QuadGK
 
 abstract type CoastalImpactUnit end
 
+"""
+    LocalCoastalImpactModel{DT<:Real, IDT, DATA} <: CoastalImpactUnit
+A `LocalCoastalImpactModel` combines a surge model (distribution) and a coastal plain model (`HypsometricProfile`).
+"""
 mutable struct LocalCoastalImpactModel{DT<:Real, IDT, DATA} <: CoastalImpactUnit
   id :: IDT
   surge_model::Distribution

@@ -65,8 +65,8 @@ julia> nh4(sga, 2, 4)
 
 ```
 """
-# Todo: circularity!
 function nh4(sga::SparseGeoArray{DT,IT}, x::Integer, y::Integer)::Array{Tuple{IT,IT}} where {DT<:Real,IT<:Integer}
+  # TODO: circularity!
   ret::Array{Tuple{IT,IT},1} = []
   if ((x < 1) || (x > sga.xsize))
     return ret
@@ -139,7 +139,9 @@ end
 
 nh4(sga::SparseGeoArray{DT,IT}, p::Tuple{Integer,Integer}, nh::Array{Tuple{IT,IT}}) where {DT<:Real,IT<:Integer} = nh4(sga, p[1], p[2], nh)
 
-
+"""
+same as nh4 but accounting for al 8 neighbours of a pixel with index (x,y)
+"""
 function nh8(sga::SparseGeoArray{DT,IT}, x::Integer, y::Integer)::Array{Tuple{IT,IT}} where {DT<:Real,IT<:Integer}
   ret::Array{Tuple{IT,IT},1} = []
   if ((x < 1) || (x > sga.xsize))

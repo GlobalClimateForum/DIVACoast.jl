@@ -1,4 +1,6 @@
-"Get the WKT of an Integer EPSG code"
+"""
+Get the WKT of an Integer EPSG code
+"""
 function epsg2wkt(epsgcode::Int)
     srs = GDAL.osrnewspatialreference(C_NULL)
     GDAL.osrimportfromepsg(srs, epsgcode)
@@ -7,7 +9,9 @@ function epsg2wkt(epsgcode::Int)
     return unsafe_string(wkt_ptr[])
 end
 
-"Get the WKT of an Proj string"
+"""
+Get the WKT (WellKnownText) of an Proj string
+"""
 function proj2wkt(projstring::AbstractString)
     srs = GDAL.osrnewspatialreference(C_NULL)
     GDAL.osrimportfromproj4(srs, projstring)
@@ -24,7 +28,9 @@ function wkt2wkt(wktstring::AbstractString)
     return unsafe_string(wkt_ptr[])
 end
 
-"""Parse CRS string into WKT."""
+"""
+Parse CRS string into WKT.
+"""
 function str2wkt(crs_string::AbstractString)
     if startswith(crs_string, "+proj=")
         return proj2wkt(crs_string)
@@ -38,7 +44,9 @@ function str2wkt(crs_string::AbstractString)
     end
 end
 
-"Set CRS on SparseGeoArray by epsgcode"
+"""
+Set CRS on SparseGeoArray by epsgcode
+"""
 epsg!(sga::SparseGeoArray, epsgcode::Int) = crs!(sga, GFT.EPSG(epsgcode))
 epsg!(sga::SparseGeoArray, epsgstring::AbstractString) = crs!(sga, GFT.EPSG(epsgstring))
 

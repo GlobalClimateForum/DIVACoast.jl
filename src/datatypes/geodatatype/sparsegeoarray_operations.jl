@@ -5,6 +5,12 @@ using Statistics
 # if a grid cell is present in both but with different values the value of sga1 should be used
 # (thus union does not commute, we can have union(x,y)!=union(y,x)
 # take into account different dimensions (coordinates, sizes adf transformation), we can reject sga's with different projections
+
+"""
+emptySGAfromSGA(orgSGA::SparseGeoArray{DT,IT}, extentNew)
+
+Creates an empty SparseGeoArray from an existing SGA (orgSGA) with same projection / specifications.
+"""
 function emptySGAfromSGA(orgSGA::SparseGeoArray{DT,IT}, extentNew) where {DT<:Real,IT<:Integer}
     newSGA = empty_copy(orgSGA)
     t = SVector(extentNew.uppL[1], extentNew.uppL[2])
@@ -15,6 +21,9 @@ function emptySGAfromSGA(orgSGA::SparseGeoArray{DT,IT}, extentNew) where {DT<:Re
     return (newSGA)
 end
 
+"""
+Get the extent of an SparseGeoArray.
+"""
 function get_extent(sga)
     if !(typeof(sga) <: AbstractArray)
         sga = [sga]
@@ -32,6 +41,10 @@ function get_extent(sga)
     )
 end
 
+"""
+sga_union(sgaArray::Array{SparseGeoArray{DT,IT}})
+Get the union of multiple SparseGeoArrays.
+"""
 function sga_union(sgaArray::Array{SparseGeoArray{DT,IT}})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
 
     if isempty(sgaArray)
@@ -96,6 +109,9 @@ function getOverlapExtent(sgaArray)
     )
 end
 
+"""
+Get the intersetct of multiple SparseGeoArrays.
+"""
 function sga_intersect(sgaArray::Array{SparseGeoArray{DT,IT}})::Array{SparseGeoArray{DT,IT}} where {DT<:Real,IT<:Integer}
 
     intersectExtent = getOverlapExtent(sgaArray)
@@ -120,7 +136,9 @@ function sga_intersect(sgaArray::Array{SparseGeoArray{DT,IT}})::Array{SparseGeoA
     return [translateValues(sga) for sga in sgaArray]
 end
 
-
+"""
+Get the difference of multiple SparseGeoArrays.
+"""
 function sga_diff(sgaArray::Array{SparseGeoArray{DT,IT}})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
     #diff = overlap - intersect
     overlapExtent = get_extent(sgaArray)
@@ -198,6 +216,9 @@ sga_summarize(sga::SparseGeoArray{DT,IT}, sumryFunction::Function) where {DT<:Re
 
 
 # a function to get data within a defined radius (given in KM)
+"""
+Summarize data within a certain radius around a point p using a summarize function.
+"""
 function sga_summarize_within(sga::SparseGeoArray{DT,IT}, p::Tuple{Real,Real}, radius::Real, sumryFunction::Function, valueTransformation) where {DT<:Real,IT<:Integer}
 
     if (radius >= earth_circumference_km / 2)
@@ -227,14 +248,18 @@ end
 
 sga_summarize_within(sga::SparseGeoArray{DT,IT}, p::Tuple{Real,Real}, radius::Real, sumryFunction::Function) where {DT<:Real,IT<:Integer} = sga_summarize_within(sga, p, radius, sumryFunction, (s, x, y) -> s[x, y])
 
-# Function to get the mean of all minimum values according to sort_list in value_list
+"""
+Function to get the mean of all minimum values according to sort_list in value_list
+"""
 function minumum_mean(sort_list, value_list)
     min_indices = findall(x -> x == minimum(sort_list), sort_list)
     values = value_list[min_indices]
     return (mean(values))
 end
 
-# should be used for small datasets only
+"""
+Get the closest value to a point p. Should be used for small datasets only
+"""
 function get_closest_value(sga, p)
 
     i_x, i_y = indices(sga, p)
@@ -291,6 +316,9 @@ function get_closest_value(sga, p)
     end
 end
 
+"""
+Crop a SGA to an extent defined by a radius around a point p.
+"""
 function get_box_around(sga::SparseGeoArray{DT,IT}, p::Tuple{Real,Real}, radius::Real)::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
     p_east = go_direction(p, radius, East())
     p_west = go_direction(p, radius, West())
