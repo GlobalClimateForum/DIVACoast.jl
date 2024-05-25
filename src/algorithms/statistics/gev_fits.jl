@@ -8,13 +8,17 @@ using Distributions
 #@. frechet_model(x, p) = if (any(((x .- p[1]) / p[2]) .<= -1/p[3])) map(x -> 0, x) else exp(-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3])) end
 #@. weibull_model(x, p) = if (any(((x .- p[1]) / p[2]) .>= 1/abs(p[3]))) map(x -> 1, x) else exp(-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3])) end
 
-@. gumbel_model(x, p) = exp(-exp(-(x - p[1]) / p[2]))
+# the cdf of the three cases. Note: in frechet and weibull case domain restriction has to be taken into account
+gumbel_model(x, p) = @. exp(-exp(-(x - p[1]) / p[2]))
 frechet_model(x, p) = if (any(((x .- p[1]) / p[2]) .<= -1/p[3])) map(x -> 0, x) else @. exp(-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3])) end
 weibull_model(x, p) = if (any(((x .- p[1]) / p[2]) .>= 1/abs(p[3]))) map(x -> 1, x) else @. exp(-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3])) end
 
 """
-This function fits a Gumbel Distribution to the inserted data. y should be the return 
-period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV) with the third shape parameter being zero.
+This function tries to fit a gumbel distribution to given data. 
+    x is the actual data (e.g. water level).
+    y are the cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
+The funtion returns a GeneralizedExtremeValue (GEV) with the third (shape, ξ) parameter being zero. If the cdf fit fails for any reason, 
+the standard gumbel distribution (μ=0.0, σ=1.0, ξ=0.0) is returned
 """
 function estimate_gumbel_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
@@ -28,6 +32,12 @@ end
 """
 This function fits a Frechet Distribution to the inserted data. y should be the return 
 period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV).
+
+This function tries to fit a Frechet distribution to given data. 
+    x is the actual data (e.g. water level).
+    y are the cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
+The funtion returns a GeneralizedExtremeValue (GEV) with the third (shape, ξ) parameter being bigger than zero. If the cdf fit fails for any reason, 
+a standard Frechet distribution (μ=0.0, σ=1.0, ξ=1.0) is returned
 """
 function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
@@ -40,7 +50,13 @@ end
 
 """
 This function fits a Weibull Distribution to the inserted data. y should be the return 
-period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV).
+    period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV).
+    
+    This function tries to fit a Weibull distribution to given data. 
+        x is the actual data (e.g. water level).
+        y are the cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
+    The funtion returns a GeneralizedExtremeValue (GEV) with the third (shape, ξ) parameter being smaller than zero. If the cdf fit fails for any reason, 
+    a standard Weibull distribution (μ=0.0, σ=1.0, ξ=-1.0) is returned
 """
 function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
