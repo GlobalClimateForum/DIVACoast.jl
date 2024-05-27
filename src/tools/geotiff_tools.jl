@@ -35,8 +35,8 @@ function geotiff_connect(infilename1::String, infilename2::String, outfilename::
         GDAL.gdalrasterio(band_in2_data, GDAL.GF_Read, 0, (r - 1), sga_in2.xsize, 1, scanline2, sga_in2.xsize, 1, GDAL.GDT_Float32, 0, 0)
 
         for i in 1:size(scanline1, 1)
-            outline[i] = f(scanline1[i], scanline2[i])
-#            if (scanline2[i]!=sga_in2.nodatavalue) println("transform: $(scanline1[i]) and $(scanline2[i]) to $(outline[i])") end
+            # f should also take the SGAs in order to handle no data 
+            outline[i] = f(scanline1[i], scanline2[i], sga_in1, sga_in2)
         end
         GDAL.gdalrasterio(band_out_data, GDAL.GF_Write, 0, (r - 1), sga_in1.xsize, 1, outline, sga_in1.xsize, 1, GDAL.GDT_Float32, 0, 0)
         if ((r * 100 ÷ sga_in1.ysize) ÷ 10) > p
