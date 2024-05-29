@@ -78,7 +78,7 @@ function estimate_gp_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:
     end
 
     if fit_exponential === missing && fit_gdp_positive === missing && fit_gdp_negative === missing
-        return GeneralizedExtremeValue(0.0, 1.0, 0)
+        return GeneralizedPareto(0.0, 1.0, 0)
     end
     
     if (fit_exponential  === missing && fit_gdp_positive !== missing) fit_exponential = fit_gdp_positive end
@@ -93,12 +93,12 @@ function estimate_gp_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:
     sqrt_sum_sq_res_gdp_negative = sqrt(sum(fit_gdp_negative.resid.^2))
 
     if (sqrt_sum_sq_res_gdp_positive  <= sqrt_sum_sq_res_gdp_negative) && (sqrt_sum_sq_res_gdp_positive  < sqrt_sum_sq_res_exponential)
-        return GeneralizedExtremeValue(fit_gdp_positive.param[1], fit_gdp_positive.param[2], fit_gdp_positive.param[3])
+        return GeneralizedPareto(fit_gdp_positive.param[1], fit_gdp_positive.param[2], fit_gdp_positive.param[3])
     end
 
     if (sqrt_sum_sq_res_gdp_negative <= sqrt_sum_sq_res_gdp_positive ) && (sqrt_sum_sq_res_gdp_negative < sqrt_sum_sq_res_exponential)
-        return GeneralizedExtremeValue(fit_gdp_negative.param[1], fit_gdp_negative.param[2], fit_gdp_negative.param[3])
+        return GeneralizedPareto(fit_gdp_negative.param[1], fit_gdp_negative.param[2], fit_gdp_negative.param[3])
     end
 
-    return GeneralizedExtremeValue(fit_exponential.param[1], fit_exponential.param[2], 0)
+    return GeneralizedPareto(fit_exponential.param[1], fit_exponential.param[2], 0)
 end
