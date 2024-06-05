@@ -1,0 +1,22 @@
+{
+    "about": {
+        "target_id": "about",
+        "type": "markdown",
+        "content": ["about.md", "concept.md", "projects.md"]
+    },
+    "gettingstarted": {
+        "target_id" : "gettingstarted",
+        "type" : "markdown",
+        "content" : ["download.md"]
+    },
+    "docs":  {
+        "target_id" : "docs",
+        "type" : "html",
+        "content" : []
+    },
+    "examples": {
+        "target_id" : "examples", 
+        "type" : "ipynb",
+        "content" : ["gitlab.com/globalclimateforum/diva_library/-/raw/development/docs/demoscript_07_hypsometric_profile_damages.ipynb"]
+    }
+}

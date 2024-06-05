@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jDIVA</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="scripts.js"></script>
+</head>
+
+<body>
+    <!-- <img src="./assets/diva_bakground.svg" class="backgroundImage"> -->
+    <header>
+        <div class="headerWrapper">
+            <img src="./assets/diva_logo_pos_white.svg">
+            <nav>
+                <a data-index="0">Documentation</a>
+                <a data-index="1">About</a>
+                <a data-index="2">Getting Started</a>
+                <a data-index="3">Examples</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="carousel-slider">
+
+            <!-- Documentation -->
+            <section class="carousel-item">
+
+                <embed type="text/html" src="./templates/docs/index_docs.html" class="docs_embed">
+
+            </section>
+
+            <!-- About -->
+            <section class="carousel-item">
+                <div class="container_wrapper">
+                    <span id="about"></span>
+                </div>
+            </section>
+
+            <!-- Getting Started -->
+            <section class="carousel-item">
+                <div class="container_wrapper">
+                    <span id="gettingstarted">
+
+                    </span>
+                </div>
+            </section>
+
+            <!-- Examples -->
+            <section class="carousel-item">
+                <div class="container_wrapper">
+                    <span id="examples"></span>
+                </div>
+            </section>
+
+        </div>
+    </main>
+    <!-- <footer>
+        &copy; 2024 My Website
+    </footer> -->
+    <script src="scripts.js"></script>
+</body>
+
+</html>
