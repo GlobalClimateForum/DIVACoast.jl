@@ -9,7 +9,7 @@ struct AnnualGrowth <: SSPType end
 struct GrowthFactor <: SSPType end
 
 """
-Wraps SSP Dataset (NetCDF).
+Wraps SSP Dataset (CSV file).
 """
 mutable struct SSPWrapper{T<:SSPType}
     df_ssp::DataFrame
