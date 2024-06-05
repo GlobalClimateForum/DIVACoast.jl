@@ -1,6 +1,6 @@
 export extract_coastline, find_coastline, find_waterline
 
-function find_coastline(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
+function find_coastline(sga::SparseGeoArray{DT,IT}, land_border_is_coastline :: Bool)::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
     s = starting_point(sga)
     if s == (-1, -1)
         return boundary(sga)
@@ -14,6 +14,10 @@ function find_coastline(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where
         propagate(sga, ret, curr, last)
     end
     println()
+
+    if (land_border_is_coastline)
+        merge!(ret.data,boundary(sga).data)
+    end
 
     return ret
 end
@@ -85,12 +89,12 @@ end
 function boundary(sga::SparseGeoArray{DT,IT})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
     r = empty_copy(sga)
     for x in 1:size(sga, 1)
-        r[x, 1] = sga[x, 1]
-        r[x, size(sga, 2)] = sga[x, size(sga, 2)]
+        if (sga[x, 1]!=sga.nodatavalue) r[x, 1] = sga[x, 1] end
+        if (sga[x, size(sga, 2)]!=sga.nodatavalue) r[x, size(sga, 2)] = sga[x, size(sga, 2)] end
     end
     for y in 1:size(sga, 2)
-        r[1, y] = sga[1, y]
-        r[size(sga, 1), y] = sga[size(sga, 1), y]
+        if (sga[1,y]!=sga.nodatavalue) r[1, y] = sga[1, y] end
+        if (sga[size(sga, 1), y]!=sga.nodatavalue) r[size(sga, 1), y] = sga[size(sga, 1), y] end
     end
     return r
 end
