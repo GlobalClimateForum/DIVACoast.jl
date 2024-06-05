@@ -7,7 +7,7 @@ using Documenter
 
 makedocs(
     authors="Daniel Lincke et al <daniel.lincke@globalclimateforum.org>",
-    sitename = "jdiva",
+    # sitename = "jdiva",
     modules  = [jdiva],
     remotes = nothing,
     pages=["Home" => "index.md"],
