@@ -1,7 +1,7 @@
 pages:
   script:
     - mkdir .public
-    - cp -r documentation/* . public
+    - cp -r documentation/* .public
     - cp -r docs/build/* .public/templates/docs
     - mv .public public
   artifacts:
