@@ -17,8 +17,8 @@
         <div class="headerWrapper">
             <img src="./assets/diva_logo_pos_white.svg">
             <nav>
-                <a data-index="0">Documentation</a>
-                <a data-index="1">About</a>
+                <a data-index="0">About</a>
+                <a data-index="1">Documentation</a>
                 <a data-index="2">Getting Started</a>
                 <a data-index="3">Examples</a>
             </nav>
@@ -28,17 +28,19 @@
     <main>
         <div class="carousel-slider">
 
-            <!-- Documentation -->
-            <section class="carousel-item">
-
-                <embed type="text/html" src="./templates/docs/index_docs.html" class="docs_embed">
-
-            </section>
-
             <!-- About -->
             <section class="carousel-item">
                 <div class="container_wrapper">
                     <span id="about"></span>
+                </div>
+            </section>
+
+            <!-- Documentation -->
+            <section class="carousel-item">
+                <div class="container_wrapper">
+                    <div class="container container_embed">
+                        <embed type="text/html" src="./templates/docs/index_docs.html" class="docs_embed">
+                    </div>
                 </div>
             </section>
 
@@ -54,7 +56,9 @@
             <!-- Examples -->
             <section class="carousel-item">
                 <div class="container_wrapper">
-                    <span id="examples"></span>
+                    <div class="container container_embed">
+                        <span id="examples"></span>
+                    </div>
                 </div>
             </section>
 

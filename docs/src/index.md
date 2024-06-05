@@ -1,5 +1,4 @@
 # Data structures
-
 ## Impact Model
 ```@docs
 Main.jdiva.ComposedImpactModel
@@ -69,6 +68,11 @@ Main.jdiva.estimate_gumbel_distribution
 Main.jdiva.estimate_frechet_distribution
 Main.jdiva.estimate_gev_distribution
 Main.jdiva.estimate_weibull_distribution
+
+Main.jdiva.estimate_gd_negative_distribution
+Main.jdiva.estimate_gd_positive_distribution
+Main.jdiva.estimate_gp_distribution
+Main.jdiva.estimate_exponential_distribution
 ```
 
 ## SparseGeoArray (SGA)

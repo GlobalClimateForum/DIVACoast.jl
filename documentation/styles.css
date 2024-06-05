@@ -16,7 +16,8 @@ body {
     box-sizing: border-box;
     background-color: #f4f4f4;
     color: var(--main-dark-color);
-    overflow: hidden;
+    /* height: calc(100vh - var(--header-height)); 
+    overflow: hidden; */
 }
 
 .backgroundImage{
@@ -27,8 +28,8 @@ body {
 }
 
 main{
-    height: calc(100vh - var(--header-height)); /* Adjust the height based on the header and footer */
-    overflow-y: scroll; /* Allows scrolling within the main element */
+    /* height: calc(100vh - var(--header-height)); Adjust the height based on the header and footer */
+    /* overflow-y: scroll; Allows scrolling within the main element */
     overflow-x: hidden;
 }
 
@@ -112,10 +113,19 @@ footer {
 }
 
 .container_wrapper{
-    align-self: center !important;
     width: var( --def-wrapper-width);
-    gap: 20px;
     max-width: var(--max-wrapper-width);
+    height: calc(100vh - var(--header-height));
+    max-height: calc(100vh - var(--header-height));
+
+    /* height: auto;  */
+
+    display: flex;
+    flex-direction: column;
+    justify-content:flex-start;
+    gap: 20px;
+
+    align-self: center !important;
 }
 
 .container {
@@ -123,9 +133,14 @@ footer {
     padding: 20px;
     /* border-radius:15px; */
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    margin: 10px 0px 0px 0px;
+    /* margin: 10px 0px 0px 0px; */
     min-width: 100%;
     overflow: hidden;
+}
+
+.container_embed{
+    height: 100%;
+    padding: 0px !important;
 }
 
 .container h1, h2, h3, h4{
@@ -133,7 +148,7 @@ footer {
 }
 
 .container img{
-    max-width: 60%;
+    max-width: 50%;
     align-self: center;
 }
 
@@ -151,7 +166,6 @@ footer {
 .carousel-item {
     min-width: 100%;
     box-sizing: border-box;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
     justify-items: center;
