@@ -3,6 +3,7 @@ stages:
   - create_docs
 
 create_public:
+  stage: create_public
   script:
     - rm -rf public/*
     - mkdir .public
@@ -13,6 +14,7 @@ create_public:
     - development
 
 create_docs:
+  stage: create_docs
   script:
     - cp -r documentation/* .public
     - rm -rf .public/templates/docs
