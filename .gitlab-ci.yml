@@ -1,21 +1,10 @@
 stages:
-  - create_public
   - create_docs
-
-create_public:
-  stage: create_public
-  script:
-    - rm -rf public/*
-    - mkdir .public
-  artifacts:
-    paths:
-      - public
-  only:
-    - development
-
+  
 create_docs:
   stage: create_docs
   script:
+    - mkdir .public
     - cp -r documentation/* .public
     - rm -rf .public/templates/docs
     - cp -r docs/build/* .public/templates/docs
