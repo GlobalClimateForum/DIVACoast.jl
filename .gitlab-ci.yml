@@ -1,7 +1,21 @@
-pages:
+stages:
+  - create_public
+  - create_docs
+
+create_public:
   script:
+    - rm -rf public/*
     - mkdir .public
+  artifacts:
+    paths:
+      - public
+  only:
+    - development
+
+create_docs:
+  script:
     - cp -r documentation/* .public
+    - rm -rf .public/templates/docs
     - cp -r docs/build/* .public/templates/docs
     - mv .public public
   artifacts:
