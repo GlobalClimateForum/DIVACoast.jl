@@ -7,6 +7,7 @@ create_docs:
     - mkdir .public
     - cp -r documentation/* .public
     - rm -rf .public/templates/docs
+    - mkdir .public/templates/docs
     - cp -r docs/build/* .public/templates/docs
     - mv .public public
   artifacts:
