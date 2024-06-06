@@ -100,7 +100,8 @@ function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs::Dict{S
       end
       output_rows[ccm.level]=row
     else
-      i = 1
+      output_rows[ccm.level][1] = ccm.id
+      i = 2
       for m in metadata
         output_rows[ccm.level][i] = m
         i += 1
@@ -159,7 +160,7 @@ function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs, metada
   end
 end
 
-function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,LocalCoastalImpactModel}, outputs, metadata, metadatanames::Array{String}, collect_children::Bool) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
-  collect_data(ccm, outputs, metadata, metadatanames, false)
-end
+#function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,LocalCoastalImpactModel}, outputs, metadata, metadatanames::Array{String}) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
+#  collect_data(ccm, outputs, metadata, metadatanames, false)
+#end
 =#
