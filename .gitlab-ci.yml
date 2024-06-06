@@ -1,8 +1,8 @@
 stages:
-  - create_docs
+  - deploy
   
-create_docs:
-  stage: create_docs
+pages:
+  stage: deploy
   script:
     - mkdir .public
     - cp -r documentation/* .public
