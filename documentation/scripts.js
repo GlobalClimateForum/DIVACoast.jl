@@ -1,5 +1,7 @@
+// Global Variables
 let content_loaded = false;
 let currentIndex = 0;
+
 // Execute when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     carousel(); // Creates and updates the section carousel
@@ -7,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
         buildBlueprint();
     }
 })
-
 
 // Blueprint 
 function addMDTemplate(directory, targetID) {
@@ -36,8 +37,6 @@ function addHTMLEmbed(html_path, targetID) {
     target.insertAdjacentHTML("beforebegin", converted);
 }
 
-
-// Blueprint
 function buildBlueprint() {
     $.ajax({ url: './blueprint.json', method: 'GET', dataType: 'json' }).done(bp => {
         

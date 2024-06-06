@@ -1,33 +1,63 @@
 :root {
-    /* --main-diva-color: #097374; #2b3d4f */
+
     --main-diva-color: #2b3d4f;
-    --main-dark-color: #043043;
-    --main-light-color: #e8e1d3;
+
+    --main-dark-color: #3F474F;
+    --main-dark_contrast: #5C6B73;
+
+    --main-light-color: #f5f5f5;
+    --main-light_contrast: white;
+
     --max-wrapper-width: 1600px;
     --def-wrapper-width: 80%;
     --header-height: 80px;
-  }
+
+    /* --main-diva-color: #097374; #2b3d4f */
+    /* --main-diva-color: #2b3d4f; */
+}
+
+
+
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: var(--main-dark-color);
+        color: var(--main-light-color);
+    }
+
+    .container {
+        background-color: var(--main-dark_contrast);
+    }
+
+
+    svg {
+        -webkit-filter: invert(100%);
+        /* safari 6.0 - 9.0 */
+        filter: invert(100%);
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    body {
+        background-color: var(--main-light-color);
+        color: var(--main-dark-color);
+    }
+
+    .container {
+        background-color: var(--main-light_contrast);
+    }
+}
+
+
 
 body {
     font-family: Arial, sans-serif;
-    /* font-size: x-large; */
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    background-color: #f4f4f4;
-    color: var(--main-dark-color);
-    /* height: calc(100vh - var(--header-height)); 
-    overflow: hidden; */
 }
 
-.backgroundImage{
-    position: absolute;
-    width: 100vw;
-    height: 100vh;
-    z-index: -10;
-}
-
-main{
+main {
     /* height: calc(100vh - var(--header-height)); Adjust the height based on the header and footer */
     /* overflow-y: scroll; Allows scrolling within the main element */
     overflow-x: hidden;
@@ -40,16 +70,16 @@ header {
     text-align: left;
     max-height: var(--header-height);
     height: var(--header-height);
-    
+
     display: flex;
-    justify-content:center;
+    justify-content: center;
     align-items: center;
     gap: 20px;
-    box-shadow: 0px 0px 10px 10px rgba(0,0,0,0.1);
+    box-shadow: 0px 0px 10px 10px rgba(0, 0, 0, 0.1);
 }
 
-.headerWrapper{
-    width: var( --def-wrapper-width);
+.headerWrapper {
+    width: var(--def-wrapper-width);
     max-width: var(--max-wrapper-width);
     height: 100%;
     display: flex;
@@ -58,7 +88,7 @@ header {
     justify-content: left;
 }
 
-header img{
+header img {
     height: var(--header-height);
 }
 
@@ -67,12 +97,14 @@ nav {
     display: flex;
     justify-content: left;
 }
+
 nav a {
     color: white;
     padding: 14px 20px;
     text-decoration: none;
     text-align: center;
 }
+
 nav a:hover {
     /* border-radius: 0px 0px 15px 15px; */
     font-weight: bold;
@@ -80,7 +112,7 @@ nav a:hover {
     cursor: pointer;
 }
 
-nav a .selected{
+nav a .selected {
     font-weight: bold;
     border-bottom: 2px solid white;
 }
@@ -95,7 +127,7 @@ footer {
     bottom: 0;
 }
 
-.example{
+.example {
     width: 100%;
     height: 100%;
     min-height: 800px;
@@ -103,17 +135,17 @@ footer {
     flex-direction: column;
 }
 
-.example iframe{
+.example iframe {
     display: flex;
 }
 
-#docs_embed{
+#docs_embed {
     min-height: 1200px;
     width: var(--def-wrapper-width);
 }
 
-.container_wrapper{
-    width: var( --def-wrapper-width);
+.container_wrapper {
+    width: var(--def-wrapper-width);
     max-width: var(--max-wrapper-width);
     height: calc(100vh - var(--header-height));
     max-height: calc(100vh - var(--header-height));
@@ -122,32 +154,34 @@ footer {
 
     display: flex;
     flex-direction: column;
-    justify-content:flex-start;
+    justify-content: flex-start;
     gap: 20px;
 
     align-self: center !important;
 }
 
 .container {
-    background: white;
     padding: 20px;
     /* border-radius:15px; */
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     /* margin: 10px 0px 0px 0px; */
     min-width: 100%;
     overflow: hidden;
 }
 
-.container_embed{
+.container_embed {
     height: 100%;
     padding: 0px !important;
 }
 
-.container h1, h2, h3, h4{
+.container h1,
+h2,
+h3,
+h4 {
     padding-bottom: 10px;
 }
 
-.container img{
+.container img {
     max-width: 50%;
     align-self: center;
 }
@@ -159,10 +193,12 @@ footer {
     width: 100%;
     height: 100%;
 }
+
 .carousel-slider {
     display: flex;
     transition: transform 0.5s ease;
 }
+
 .carousel-item {
     min-width: 100%;
     box-sizing: border-box;
@@ -173,16 +209,15 @@ footer {
 
 
 
-.docs_embed{
+.docs_embed {
     width: 100%;
-    min-height: 100%; 
+    min-height: 100%;
 }
 
-.docs-package-name{
+.docs-package-name {
     visibility: hidden;
 }
 
-.docs-sidebar{
+.docs-sidebar {
     visibility: hidden !important;
 }
-

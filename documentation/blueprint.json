@@ -2,7 +2,7 @@
     "about": {
         "target_id": "about",
         "type": "markdown",
-        "content": ["about.md", "concept.md"]
+        "content": ["about.md"]
     },
     "gettingstarted": {
         "target_id" : "gettingstarted",
