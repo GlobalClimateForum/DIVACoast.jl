@@ -11,8 +11,8 @@
     },
     "docs":  {
         "target_id" : "docs",
-        "type" : "html",
-        "content" : []
+        "type" : "html_embed",
+        "content" : ["./templates/docs/index.html"]
     },
     "examples": {
         "target_id" : "examples", 

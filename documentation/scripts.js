@@ -5,8 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     carousel(); // Creates and updates the section carousel
     if (!content_loaded) {
         buildBlueprint();
-        document.getElementById("docs_embed").height = "calc(100vh - var(--header-height))";
-        document.getElementById("docs_embed").width = "var(--def-wrapper-width)";
     }
 })
 
@@ -28,7 +26,13 @@ function addNBTemplate(nburl, targetID) {
     const target = document.getElementById(targetID);
     const htmlurl = 'https://nbviewer.org/urls/' + nburl 
     const  converted = '<div class="container notebook"><iframe frameborder="0" class="example" src="' + htmlurl + '"></iframe></div>'
-    console.log(converted)
+    target.insertAdjacentHTML("beforebegin", converted);
+}
+
+function addHTMLEmbed(html_path, targetID) {
+    console.log(html_path)
+    const target = document.getElementById(targetID);
+    const converted = '<embed type="text/html" src="' + html_path +'" class="docs_embed">'
     target.insertAdjacentHTML("beforebegin", converted);
 }
 
@@ -48,12 +52,16 @@ function buildBlueprint() {
                 if (content_type == "markdown"){
                     content.forEach(file => {
                         let md_path = './templates/' + section + '/' + file
-                        addMDTemplate(md_path, content_target)
+                        addMDTemplate(md_path, content_target);
                     })
                 } else if (content_type == "ipynb"){
                     content.forEach(nb_url => {
-                        addNBTemplate(nb_url, content_target)
+                        addNBTemplate(nb_url, content_target);
                     });
+                } else if (content_type == "html_embed"){
+                    content.forEach(html_path => {
+                        addHTMLEmbed(html_path, content_target);
+                    }); 
                 }
             };
         })
