@@ -25,8 +25,8 @@ function addMDTemplate(directory, targetID) {
 
 function addNBTemplate(nburl, targetID) {
     const target = document.getElementById(targetID);
-    const htmlurl = 'https://nbviewer.org/urls/' + nburl 
-    const  converted = '<div class="container notebook"><iframe frameborder="0" class="example" src="' + htmlurl + '"></iframe></div>'
+    const htmlurl = 'https://nbviewer.org/urls/' + nburl;
+    const  converted = '<div class="container" style="display:flex; height: 100%"><iframe class="nbembed" frameborder="0" src="' + htmlurl + '"></iframe></div>'
     target.insertAdjacentHTML("beforebegin", converted);
 }
 
