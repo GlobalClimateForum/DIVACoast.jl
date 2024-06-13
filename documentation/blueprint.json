@@ -7,7 +7,7 @@
     "gettingstarted": {
         "target_id" : "gettingstarted",
         "type" : "markdown",
-        "content" : ["download.md"]
+        "content" : ["setup.md"]
     },
     "docs":  {
         "target_id" : "docs",

@@ -12,7 +12,7 @@
     --def-wrapper-width: 80%;
     --header-height: 80px;
 
-    --max-containertext-width: 70%;
+    --max-containertext-width: 60%;
 
     /* --main-diva-color: #097374; #2b3d4f */
     /* --main-diva-color: #2b3d4f; */
@@ -174,9 +174,13 @@ code {
 }
 
 .container {
-    padding: 20px;
+    padding: 40px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     height: 100em;
+    margin: 20px 0px 20px 0px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
 }
 
 
@@ -211,7 +215,7 @@ h4 {
     width: var(--max-containertext-width);
     max-width: 1000px;
     margin: auto;
-    font-size: larger;
+    font-size:medium;
 }
 
 /* section carousel */

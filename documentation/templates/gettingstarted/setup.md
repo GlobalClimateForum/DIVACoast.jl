@@ -25,3 +25,17 @@
 > `include(<path_to_jdvia_lib.jl>)`
 
 > `using .jdiva`
+
+### 6. Set Data Directory as Enviroment Variable
+
+> Setting the DIVA_DATA environment variable is crucial for the proper functioning of the jdiva library. This variable defines the specific directory where the library looks for its required data files. By setting DIVA_DATA, you ensure that jdiva can consistently locate and access the data it needs, avoiding errors related to missing or misplaced files.
+
+> #### 1. Linux & MacOS
+> `export DIVA_DATA="<path_to_folder>/diva_data"` (current session)
+
+> `export DIVA_DATA="<path_to_folder>/diva_data"` `source ~/.bashrc` (add permanent to bash profile)
+
+> #### 2. Windows
+> `setx DIVA_DATA "<path_to_folder>/diva_data"` (permanent)
+
+> `set DIVA_DATA "<path_to_folder>/diva_data"` (current session)
