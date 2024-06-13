@@ -5,3 +5,5 @@ exercises/test.tif
 .gitignore
 diva_library.code-workspace
 testdata/.~lock.osm_gadm1.csv#
+src/scenario/ssp_wrapper.jl
+src/scenario/ssp_wrapper.jl

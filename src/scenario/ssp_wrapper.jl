@@ -44,7 +44,8 @@ function ssp_get_growth_factor(wrapped_ssp::SSPWrapper{T}, variable::String, cou
 
     filtered_df = filter([:Variable, :Region, :Scenario] => flt, wrapped_ssp.df_ssp)
     if (nrow(filtered_df)==0)
-        println("$variable, $country, $ssp_scenario")
+        println("WARNING: $variable for $country in $ssp_scenario not found!")
+        return 1.0
     end
 
     ret = 1.0
