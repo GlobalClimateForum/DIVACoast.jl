@@ -256,7 +256,7 @@ function compress!(hspf::HypsometricProfile{DT}) where {DT<:Real}
     keep = ones(Bool, size(hspf.elevation, 1))
     nzlf = false
 
-    if (private_complete_zero(exposure_below_bathtub(hspf, hspf.elevation[1])))
+    if (complete_zero(exposure_below_bathtub(hspf, hspf.elevation[1])))
       keep[1] = false
       d = d + 1
     end
@@ -325,7 +325,7 @@ end
 unit(hspf::HypsometricProfile, n::String) = unit(hspf, Symbol(n))
 
 
-function private_complete_zero(exposure)
+function complete_zero(exposure)
   if (exposure[1] != 0)
     return false
   end
@@ -348,7 +348,7 @@ function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, 
   ex3 = exposure_below_bathtub(hspf, hspf.elevation[i3])
   r = (hspf.elevation[i2] - hspf.elevation[i1]) / (hspf.elevation[i3] - hspf.elevation[i1])
   # hack to capture special case that makes problems (if e3 is very small)
-  if (check_zero && private_complete_zero(ex2) && !private_complete_zero(ex3))
+  if (check_zero && complete_zero(ex2) && !complete_zero(ex3))
     return false
   end
   return isapprox(ex2[1], ex1[1] + r * (ex3[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex3[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex3[3] - ex1[3]))

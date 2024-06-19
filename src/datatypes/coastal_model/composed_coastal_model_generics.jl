@@ -1,7 +1,9 @@
 export apply_accumulate, apply_accumulate_record, apply, apply_break, apply_accumulate_store,
+  apply_accumulate_store_multithread,
   find, collect_data
 
 using DataFrames
+using ThreadTools
 
 function apply(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
   foreach(x -> apply(x, f), values(ccm.children))
@@ -50,14 +52,20 @@ function apply_accumulate_record(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::F
     end
 
   for (id, child) in ccm.children
-    #println("$(typeof(apply_accumulate_record(child, f, accumulate)))")
-    ret[id] = apply_accumulate_record(child, f, accumulate)
+    if (!haskey(ccm.children, id))
+      ret[id] = apply_accumulate_record(child, f, accumulate)
+    end
   end
 
   return (ccm.level, ccm.id, reduce(accumulate, map(x -> x[3], values(ret))), ret)
 end
 
 function apply_accumulate_store(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, accumulate::Function, store::Function) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
+  child_res = map(child -> apply_accumulate_store(child, f, accumulate, store), values(ccm.children))
+  res = reduce(accumulate, child_res)
+  store(res, ccm)
+  return res
+#=
   ret =
     if length(ccm.children) > 0
       #println(first(ccm.children)[1])
@@ -67,10 +75,24 @@ function apply_accumulate_store(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Fu
     end
 
   for (id, child) in ccm.children
-    #println(id)
-    ret[id] = apply_accumulate_store(child, f, accumulate, store)
+    if (!haskey(ret, id))
+      ret[id] = apply_accumulate_store(child, f, accumulate, store)
+    end
   end
   res = reduce(accumulate, values(ret))
+  store(res, ccm)
+  return res
+=#
+end
+
+function apply_accumulate_store_multithread(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, accumulate::Function, store::Function, mtlevel :: String) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
+  child_res = 
+  if (ccm.level == mtlevel)
+    tmap(child -> apply_accumulate_store_multithread(child, f, accumulate, store, mtlevel), values(ccm.children))
+  else 
+    map(child -> apply_accumulate_store_multithread(child, f, accumulate, store, mtlevel), values(ccm.children))
+  end
+  res = reduce(accumulate, child_res)
   store(res, ccm)
   return res
 end
@@ -90,7 +112,7 @@ end
 
 
 function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs::Dict{String,DataFrame},
-  output_row_names :: Dict{String,Array{String}}, output_rows :: Dict{String,Array{Any}}, metadata, 
+  output_row_names::Dict{String,Array{String}}, output_rows::Dict{String,Array{Any}}, metadata,
   metadatanames::Array{String}) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
   if (ccm.level in keys(outputs))
     if !(ccm.level in keys(output_rows))
@@ -98,7 +120,7 @@ function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs::Dict{S
       for n in fieldnames(DATA)
         push!(row, getfield(ccm.data, n))
       end
-      output_rows[ccm.level]=row
+      output_rows[ccm.level] = row
     else
       output_rows[ccm.level][1] = ccm.id
       i = 2
@@ -116,7 +138,7 @@ function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs::Dict{S
       for name in fieldnames(DATA)
         push!(rownames, String(name))
       end
-      output_row_names[ccm.level]=rownames
+      output_row_names[ccm.level] = rownames
     end
     if (ncol(outputs[ccm.level]) == 0)
       outputs[ccm.level] = DataFrame(Dict(output_row_names[ccm.level] .=> output_rows[ccm.level]))

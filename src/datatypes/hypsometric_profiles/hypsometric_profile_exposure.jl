@@ -73,7 +73,7 @@ end
 
 function exposure_below_bathtub_named(hspf::HypsometricProfile, e::Real)
   ex = exposure_below_bathtub(hspf, e)
-  @inbounds return (ex[1], NamedTuple{hspf.staticExposureSymbols}(ex[2]), NamedTuple{hspf.dynamicExposureSymbols}(ex[3]))
+  @inbounds return (NamedTuple{Symbol("area")}(ex[1]), NamedTuple{hspf.staticExposureSymbols}(ex[2]), NamedTuple{hspf.dynamicExposureSymbols}(ex[3]))
 end
 
 """

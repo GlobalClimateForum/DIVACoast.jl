@@ -1,6 +1,8 @@
 export LocalCoastalImpactModel, CoastalImpactUnit,
   expected_damage_bathtub_standard_ddf, expected_damage_bathtub, exposure_below_bathtub,
-  apply_accumulate, apply_accumulate_record, apply, apply_accumulate_store, collect_data
+  apply_accumulate, apply_accumulate_record, apply, apply_accumulate_store, 
+  apply_accumulate_store_multithread,
+  collect_data
   
 using Distributions
 using QuadGK
@@ -106,6 +108,12 @@ function apply_accumulate_record(lm :: LocalCoastalImpactModel{DT, DATA}, f :: F
 end
 
 function apply_accumulate_store(lm :: LocalCoastalImpactModel{DT, DATA}, f :: Function, accumulate :: Function, store :: Function) where {DT<:Real, DATA}
+  res = f(lm)
+  store(res,lm)
+  return res
+end
+
+function apply_accumulate_store_multithread(lm :: LocalCoastalImpactModel{DT, DATA}, f :: Function, accumulate :: Function, store :: Function, mtlevel :: String) where {DT<:Real, DATA}
   res = f(lm)
   store(res,lm)
   return res
