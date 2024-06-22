@@ -165,13 +165,6 @@ mutable struct HypsometricProfile{DT<:Real}
   end
 end
 
-include("hypsometric_profile_exposure.jl")
-include("hypsometric_profile_damage_arbitrary_ddf.jl")
-include("hypsometric_profile_damage_standard_ddf.jl")
-include("hypsometric_profile_sed.jl")
-include("hypsometric_profile_modifications.jl")
-include("hypsometric_profile_plot.jl")
-
 
 """
    distance(hspf::HypsometricProfile, e::Real)
@@ -354,3 +347,9 @@ function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, 
   return isapprox(ex2[1], ex1[1] + r * (ex3[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex3[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex3[3] - ex1[3]))
 end
 
+include("hypsometric_profile_exposure.jl")
+include("hypsometric_profile_damage_arbitrary_ddf.jl")
+include("hypsometric_profile_damage_standard_ddf.jl")
+include("hypsometric_profile_sed.jl")
+include("hypsometric_profile_modifications.jl")
+include("hypsometric_profile_plot.jl")
