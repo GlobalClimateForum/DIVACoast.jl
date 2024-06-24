@@ -2,9 +2,10 @@ using QuadGK
 
 # General case
 function damage_bathtub(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_static::Vector{Function}, ddfs_dynamic::Vector{Function}) where {DT<:Real}
-  dam = exposure_below_bathtub(hspf, first(hspf.elevation))
+  dam = exposure_below_bathtub(hspf, wl)
   if complete_zero(dam) return dam end
 
+  dam = exposure_below_bathtub(hspf, first(hspf.elevation))
   dam_area = dam[1]
   dam_static = dam[2]
   dam_dynamic = dam[3]
