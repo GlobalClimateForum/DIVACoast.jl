@@ -1,8 +1,6 @@
 using Logging
 using Dates
 
-export DIVALogger, LogIter, LogFunc
-
 # DIVA Logger struct
 struct DIVALogger <: Logging.AbstractLogger
     io::IO
@@ -111,3 +109,5 @@ function Base.iterate(iter::LogIter, state...)
         @logmsg iter.lvl "Iteration '$(iter.name)' ended." caller = trace[3]
     end
 end
+
+global_logger(DIVALogger())

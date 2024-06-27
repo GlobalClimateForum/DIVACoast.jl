@@ -1,7 +1,5 @@
-include("../../../diva_library/src/jdiva_lib.jl")
-
-# Main
-global_logger(DIVALogger())
+include("./jdiva_lib.jl")
+using jdiva 
 
 function secretfunction(from::Int, to::Int)
     return "SECRET"
