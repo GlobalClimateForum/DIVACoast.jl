@@ -32,7 +32,7 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
 
     if lvl != Logging.Info
         runtime = Dates.canonicalize(Dates.CompoundPeriod(Dates.DateTime(time) - Dates.DateTime(logger.stime)))
-        caller = kwargs[:caller]
+        #caller = kwargs[:caller]
     end
 
     if lvl == Logging.Info
@@ -40,15 +40,18 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
         color = :cyan
         bold = true
     elseif lvl == Logging.Debug
-        header = "[ $(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller.line) in file $(caller.file).jl:\n "
+        #header = "[ $(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller.line) in file $(caller.file).jl:\n "\
+        header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :green
         bold = true
     elseif lvl == Logging.Error
-        header = "[ $(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller.line) in file $(caller.file).jl:\n"
+        #header = "[ $(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller.line) in file $(caller.file).jl:\n"
+        header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :red
         bold = true
     elseif lvl == Logging.Warn
-        header = "[ $(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller.line) in file $(caller.file).jl:\n"
+        #header = "[ $(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller.line) in file $(caller.file).jl:\n"
+        header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :red
         bold = true
     else
