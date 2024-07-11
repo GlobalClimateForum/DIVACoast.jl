@@ -1,24 +1,44 @@
 using Logging
 using Dates
 
+export DIVALogger, LogFunc, LogIter, set_loglvl!
+
 # DIVA Logger struct
-struct DIVALogger <: Logging.AbstractLogger
+mutable struct DIVALogger <: Logging.AbstractLogger
     io::IO
-    msg_header::String
     lvl::Logging.LogLevel
+    msg_header::String
     stime::Dates.DateTime
 end
 
 ## Constructor
-DIVALogger() = DIVALogger(stderr, "JDIVA", Logging.Info, now())
-DIVALogger(path) = DIVALogger(open(path, "w"), "JDIVA", Logging.Info, now())
+DIVALogger() = DIVALogger(stderr,Logging.Info, "JDIVA", now())
+DIVALogger(path::String) = DIVALogger(open(path, "w"), Logging.Info, "JDIVA", now())
+DIVALogger(lvl::Logging.LogLevel) = DIVALogger(stderr, lvl , "JDIVA", now())
+
+# Method to change the minimum loglevel of a DIVALogger
+function set_loglvl!(level::Logging.LogLevel)
+    if isa(global_logger(), DIVALogger)
+        clogger = current_logger()
+        global_logger(DIVALogger(clogger.io, level, clogger.msg_header, clogger.stime))
+    else
+        @error "Global Logger is not DIVALogger."
+    end
+end
+
 
 ## Disable min log level
-Logging.min_enabled_level(logger::DIVALogger) = Logging.BelowMinLevel
+Logging.min_enabled_level(logger::DIVALogger) = logger.lvl
 
-## Logger should always log
+# LogLevels
+# -1000 Debug 
+# 0     Info
+# 1000  Warn
+# 2000  Error
+
+## Logger should log when called from Main Module and LogMsg Level is larger then set min lvl
 function Logging.shouldlog(logger::DIVALogger, level, _module, group, id)
-    return true
+    return (_module == Main.jdiva || _module == Main) && level >= logger.lvl
 end
 
 ## Logger should catch exceptions
@@ -30,28 +50,34 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
     time = now()
     time_f = Dates.format(time, "HH:MM:SS")
 
+    if haskey(kwargs, :caller)
+        caller = kwargs[:caller]
+        caller = Dict(:line => caller.line, :file => caller.file)
+    else
+        caller = Dict(:line => line, :file => file)
+    end
+
     if lvl != Logging.Info
         runtime = Dates.canonicalize(Dates.CompoundPeriod(Dates.DateTime(time) - Dates.DateTime(logger.stime)))
-        #caller = kwargs[:caller]
     end
 
     if lvl == Logging.Info
-        header = "[ $(logger.msg_header)|$lvl @$time_f: "
+        header = "$(logger.msg_header)|$lvl @$time_f: "
         color = :cyan
         bold = true
     elseif lvl == Logging.Debug
-        #header = "[ $(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller.line) in file $(caller.file).jl:\n "\
-        header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
+        header = "$(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller[:line]) in file $(caller[:file]).jl"
+#       header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :green
         bold = true
     elseif lvl == Logging.Error
-        #header = "[ $(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller.line) in file $(caller.file).jl:\n"
-        header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
+        header = "[ $(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller[:line]) in file $(caller[:file]).jl"
+#       header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :red
         bold = true
     elseif lvl == Logging.Warn
-        #header = "[ $(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller.line) in file $(caller.file).jl:\n"
-        header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
+        header = "$(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller[:line]) in file $(caller[:file]).jl"
+#      header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :red
         bold = true
     else
@@ -61,8 +87,11 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
     end
 
     if logger.io == stderr
-        printstyled("$header", color=color, bold=bold)
+        printstyled("[$header", color=color, bold=bold)
         print("$msg\n")
+    
+    
+    
     else
         write(logger.io, "$header$msg\n")
         flush(logger.io)
@@ -70,14 +99,24 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
 end
 
 # Wrapper Structures for Logging
+
 ## Function Logging
 struct LogFunc{F}
     func::F
 end
 
 function LogFunc(func::F, args...; logLevel=nothing, kwargs...) where {F}
+    
+    # Check if global logger is a DIVA logger and retrieve logging level
+    if isa(global_logger(), DIVALogger)
+        lvl = isnothing(logLevel) ? current_logger().lvl : logLevel
+    else
+        @error "LogFunc() is only available when global logger is type of DIVALogger."
+        return
+    end
+
     trace = stacktrace()
-    lvl = isnothing(logLevel) ? DIVALogger.lvl : logLevel
+    # lvl = isnothing(logLevel) ? DIVALogger.lvl : logLevel
     fname = String(Symbol(func))
     @logmsg lvl "$(fname)(args$args, kwargs$kwargs) called." caller = trace[3]
     result = func(args...; kwargs...)  # Call the function with args and kwargs
