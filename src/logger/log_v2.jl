@@ -26,7 +26,6 @@ function set_loglvl!(level::Logging.LogLevel)
     end
 end
 
-
 ## Disable min log level
 Logging.min_enabled_level(logger::DIVALogger) = logger.lvl
 
@@ -62,38 +61,35 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
     end
 
     if lvl == Logging.Info
-        header = "$(logger.msg_header)|$lvl @$time_f: "
+        header = "$(logger.msg_header)|$lvl @$time_f"
         color = :cyan
         bold = true
     elseif lvl == Logging.Debug
-        header = "$(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller[:line]) in file $(caller[:file]).jl"
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line])\nin file $(caller[:file])"
 #       header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :green
         bold = true
     elseif lvl == Logging.Error
-        header = "[ $(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller[:line]) in file $(caller[:file]).jl"
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line])\nin file $(caller[:file])"
 #       header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :red
         bold = true
     elseif lvl == Logging.Warn
-        header = "$(logger.msg_header)|$lvl @$time_f($runtime) @line:$(caller[:line]) in file $(caller[:file]).jl"
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line])\nin file $(caller[:file])"
 #      header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :red
         bold = true
     else
-        header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
+        header = "$(logger.msg_header)|$lvl @$time_f($runtime):"
         color = :grey
         bold = false
     end
 
     if logger.io == stderr
-        printstyled("[$header", color=color, bold=bold)
+        printstyled("[ $header: ", color=color, bold=bold)
         print("$msg\n")
-    
-    
-    
     else
-        write(logger.io, "$header$msg\n")
+        write(logger.io, "[$header]\n$msg\n")
         flush(logger.io)
     end
 end
@@ -151,5 +147,3 @@ function Base.iterate(iter::LogIter, state...)
         @logmsg iter.lvl "Iteration '$(iter.name)' ended." caller = trace[3]
     end
 end
-
-global_logger(DIVALogger())
