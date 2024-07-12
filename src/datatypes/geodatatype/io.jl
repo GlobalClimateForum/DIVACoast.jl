@@ -74,23 +74,6 @@ function read_geotiff_data_partial!(sgr::SparseGeoArray{DT,IT}, x_start::Integer
   GDAL.gdalclose(dataset)
 end
 
-# function get_radial_kernel(sga::SparseGeoArray{DT,IT}, radius::Real, lon_min::Real, lon_max::Real, lat_max::Real, lat_min::Real) where {DT<:Real,IT<:Integer}
-#   indexSpanX = convert(Int32, round(radius / pixelsizeX, RoundNearest))
-#   indexSpanY = convert(Int32, round(radius / pixelsizeY, RoundNearest))
-#   kernel = falses(indexSpanX + 1, indexSpanY + 1)
-#   for x in 0:indexSpanX
-#       for y in 0:indexSpanY
-#           distance = sqrt(((x * pixelsizeX)^2) + ((y * pixelsizeY)^2))
-#           if distance <= radius
-#               kernel[x+1, y+1] = true
-#           end
-#       end
-#   end
-#   kernel = hcat([reverse(kernel, dims=(1, 2)); reverse(kernel, dims=2)], [reverse(kernel, dims=1); kernel])
-#   #display(kernel)
-#   return (kernel)
-# end
-
 function read_box_around!(sga :: SparseGeoArray{DT, IT}, p :: Tuple{Real, Real}, radius :: Real, y_chunk_size=1, f=identity) where {DT <: Real, IT <: Integer}
   if (radius>=earth_circumference_km/2) 
     return read_geotiff_data_complete!(sga,sga.filename)
@@ -308,7 +291,7 @@ function read_geotiff_data_filtered!(sgr::SparseGeoArray{DT,IT}, filename::Strin
   for r in 1:(r_tiles)
     GDAL.gdalrasterio(band, GDAL.GF_Read, 0, (r - 1) * row_chunk_size, sgr.xsize, row_chunk_size, scanline, sgr.xsize, row_chunk_size, GDAL.GDT_Float32, 0, 0)
     for i in eachindex(scanline)
-      if (!f(scanline[i]))
+      if (!f(scanline[i], convert(Int32,((i-1) % sgr.xsize) + 1), convert(Int32,(r-1) * row_chunk_size + ((i-1) ÷ sgr.xsize + 1))))
         scanline[i] = sgr.nodatavalue
       end
     end
@@ -322,7 +305,7 @@ function read_geotiff_data_filtered!(sgr::SparseGeoArray{DT,IT}, filename::Strin
   if (remaining_r != 0)
     GDAL.gdalrasterio(band, GDAL.GF_Read, 0, (r_tiles) * row_chunk_size - 1, sgr.xsize, remaining_r, scanline, sgr.xsize, remaining_r, GDAL.GDT_Float32, 0, 0)
     for i in eachindex(scanline)
-      if (!f(scanline[i]))
+      if (!f(scanline[i], convert(Int32,((i-1) % sgr.xsize) + 1), convert(Int32,(r_tiles - 1) * row_chunk_size + ((i-1) ÷ sgr.xsize + 1))))
         scanline[i] = sgr.nodatavalue
       end
     end
@@ -331,6 +314,7 @@ function read_geotiff_data_filtered!(sgr::SparseGeoArray{DT,IT}, filename::Strin
   println()
   GDAL.gdalclose(dataset)
 end
+
 
 function private_insert_data!(sgr::SparseGeoArray{DT,IT}, data::Vector{Float32}, ysize::Integer, r_offset::Integer) where {DT<:Real,IT<:Integer}
   for j in 1:sgr.xsize
