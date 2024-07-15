@@ -65,17 +65,17 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
         color = :cyan
         bold = true
     elseif lvl == Logging.Debug
-        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line])\nin file $(caller[:file])"
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
 #       header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :green
         bold = true
     elseif lvl == Logging.Error
-        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line])\nin file $(caller[:file])"
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
 #       header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :red
         bold = true
     elseif lvl == Logging.Warn
-        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line])\nin file $(caller[:file])"
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
 #      header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :red
         bold = true
@@ -89,7 +89,7 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
         printstyled("[ $header: ", color=color, bold=bold)
         print("$msg\n")
     else
-        write(logger.io, "[$header]\n$msg\n")
+        write(logger.io, "[$header]  $msg\n")
         flush(logger.io)
     end
 end
