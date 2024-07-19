@@ -61,22 +61,19 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
     end
 
     if lvl == Logging.Info
-        header = "$(logger.msg_header)|$lvl @$time_f"
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
         color = :cyan
         bold = true
     elseif lvl == Logging.Debug
         header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
-#       header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :green
         bold = true
     elseif lvl == Logging.Error
         header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
-#       header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :red
         bold = true
     elseif lvl == Logging.Warn
         header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
-#      header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
         color = :red
         bold = true
     else
