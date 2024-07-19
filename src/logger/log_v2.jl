@@ -56,9 +56,9 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
         caller = Dict(:line => line, :file => file)
     end
 
-    if lvl != Logging.Info
+#    if lvl != Logging.Info
         runtime = Dates.canonicalize(Dates.CompoundPeriod(Dates.DateTime(time) - Dates.DateTime(logger.stime)))
-    end
+#    end
 
     if lvl == Logging.Info
         header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
