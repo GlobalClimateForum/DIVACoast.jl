@@ -61,7 +61,7 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
 #    end
 
     if lvl == Logging.Info
-        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime)"
         color = :cyan
         bold = true
     elseif lvl == Logging.Debug
