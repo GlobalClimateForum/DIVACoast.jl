@@ -16,7 +16,7 @@ weibull_model(x, p) = if (any(((x .- p[1]) / p[2]) .>= 1/abs(p[3]))) map(x -> 1,
 """
 This function tries to fit a gumbel distribution to given data. 
     x is the actual data (e.g. water level).
-    y are the cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
+    y are the empirical cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
 The funtion returns a GeneralizedExtremeValue (GEV) with the third (shape, ξ) parameter being zero. If the cdf fit fails for any reason, 
 the standard gumbel distribution (μ=0.0, σ=1.0, ξ=0.0) is returned
 """
@@ -35,7 +35,7 @@ period and x the corresponding water level height. The funtion returns a General
 
 This function tries to fit a Frechet distribution to given data. 
     x is the actual data (e.g. water level).
-    y are the cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
+    y are the empirical cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
 The funtion returns a GeneralizedExtremeValue (GEV) with the third (shape, ξ) parameter being bigger than zero. If the cdf fit fails for any reason, 
 a standard Frechet distribution (μ=0.0, σ=1.0, ξ=1.0) is returned
 """
@@ -54,7 +54,7 @@ This function fits a Weibull Distribution to the inserted data. y should be the 
     
     This function tries to fit a Weibull distribution to given data. 
         x is the actual data (e.g. water level).
-        y are the cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
+        y are the cempirical df values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
     The funtion returns a GeneralizedExtremeValue (GEV) with the third (shape, ξ) parameter being smaller than zero. If the cdf fit fails for any reason, 
     a standard Weibull distribution (μ=0.0, σ=1.0, ξ=-1.0) is returned
 """
@@ -97,7 +97,7 @@ function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<
     if fit_gumbel === missing && fit_frechet === missing && fit_weibull === missing
         return GeneralizedExtremeValue(0.0, 1.0, 0)
     end
-    
+
     if (fit_gumbel  === missing && fit_frechet !== missing) fit_gumbel = fit_frechet end
     if (fit_frechet === missing && fit_gumbel !== missing)  fit_frechet = fit_gumbel end
     if (fit_weibull === missing && fit_gumbel !== missing)  fit_weibull = fit_gumbel end
