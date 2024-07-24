@@ -99,7 +99,6 @@ end
 
 nh4(sga::SparseGeoArray{DT,IT}, p::Tuple{Integer,Integer}) where {DT<:Real,IT<:Integer} = nh4(sga, p[1], p[2])
 
-# Todo: circularity!
 function nh4(sga::SparseGeoArray{DT,IT}, x::Integer, y::Integer, nh::Array{Tuple{IT,IT}})::Integer where {DT<:Real,IT<:Integer}
   ret::Integer = 0
   if ((x < 1) || (x > sga.xsize))
