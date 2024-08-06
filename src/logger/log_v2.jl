@@ -124,23 +124,46 @@ mutable struct LogIter{T}
     step_width::Int
     lvl::Logging.LogLevel
     step::Int
+    step_counter::Int
 end
 
-LogIter(I, n::String) = LogIter(I, n, 1, Logging.Info, 1)
-LogIter(I, n::String, w::Integer) = LogIter(I, n, w, Logging.Info, 1)
-LogIter(I, n::String, w::Integer, lvl::Logging.LogLevel) = LogIter(I, n, w, lvl, 1)
+LogIter(I, n::String) = LogIter(I, n, 1, Logging.Info,0,0)
+LogIter(I, n::String, w::Integer) = LogIter(I, n, w, Logging.Info, 0,0)
+LogIter(I, n::String, w::Integer, lvl::Logging.LogLevel) = LogIter(I, n, w, lvl, 0,0)
+
+# function Base.iterate(iter::LogIter, state...)
+#     trace = stacktrace()
+#     next = isempty(state) ? iterate(iter.iter) : iterate(iter.iter, state...)
+#     if next !== nothing
+#         (val, new_state) = next
+#         if mod(iter.step, iter.step_width) == 0 || iter.step == 1
+#             @logmsg iter.lvl "Iteration '$(iter.name)' @[$(iter.step)]" caller = trace[3]
+#         end
+#         iter.step = iter.step + 1
+#         return (val, new_state)
+#     else
+#         @logmsg iter.lvl "Iteration '$(iter.name)' ended." caller = trace[3]
+#     end
+# end
 
 function Base.iterate(iter::LogIter, state...)
-    trace = stacktrace()
+    
+    iter.step += 1
+    iter.step_counter += 1
+
     next = isempty(state) ? iterate(iter.iter) : iterate(iter.iter, state...)
-    if next !== nothing
-        (val, new_state) = next
-        if mod(iter.step, iter.step_width) == 0 || iter.step == 1
-            @logmsg iter.lvl "Iteration '$(iter.name)' @[$(iter.step)]" caller = trace[3]
-        end
-        iter.step = iter.step + 1
-        return (val, new_state)
+    logstep = (iter.step_counter == iter.step_width) || iter.step == 1
+    ended =  isnothing(next)
+
+    if !ended && !logstep
+        return next
+    elseif !ended && logstep
+        trace = stacktrace()
+        iter.step_counter = 0
+        @logmsg iter.lvl "Iteration '$(iter.name)' @[$(iter.step)]" caller = trace[3]
+        return next
     else
+        trace = stacktrace()
         @logmsg iter.lvl "Iteration '$(iter.name)' ended." caller = trace[3]
     end
 end
