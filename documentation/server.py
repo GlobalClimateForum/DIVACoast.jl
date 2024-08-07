@@ -1,8 +1,15 @@
 # Python-Script to start an HTTPs Server for Development
 from http.server import SimpleHTTPRequestHandler
 import time
+import os
+import shutil
 
 PORT = 8000
+
+def provide_dev_templates():
+    if os.path.isdir("./templates/docs"):
+        os.rmdir("./templates/docs")
+    shutil.copytree("../docs/build", "./templates/docs")
 
 class NoCacheHTTPRequestHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -16,4 +23,5 @@ if __name__ == '__main__':
     server_address = ('', PORT)
     httpd = HTTPServer(server_address, NoCacheHTTPRequestHandler)
     print(f"Development Server running at http://localhost:{PORT}/")
+    provide_dev_templates()
     httpd.serve_forever()

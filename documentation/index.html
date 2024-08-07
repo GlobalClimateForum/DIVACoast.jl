@@ -6,66 +6,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>jDIVA</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="modest_markdown_theme.css">
+
+
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"> -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="scripts.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
     <!-- <img src="./assets/diva_bakground.svg" class="backgroundImage"> -->
-    <header>
-        <div class="headerWrapper">
+    <header class="z-depth-2">
+        <div class="header_container header_wrapper">
             <img src="./assets/diva_logo_pos_white.svg">
             <nav>
-                <a data-index="0">About</a>
-                <a data-index="1">Documentation</a>
-                <a data-index="2">Getting Started</a>
-                <a data-index="3">Examples</a>
+                <a   data-index-number="0">About</a>
+                <a   data-index-number="1">Documentation</a>
+                <a   data-index-number="2">Getting Started</a>
+                <a   data-index-number="3">Examples</a>
             </nav>
         </div>
+
     </header>
 
     <main>
-        <div class="carousel-slider">
-
-            <!-- About -->
-            <section class="carousel-item">
-                <div class="container_wrapper">
-                    <span id="about"></span>
+        <div class="section_slider">
+            <section>
+                <div class="wrapper z-depth-1">
+                    <div class="textcontent" id="about"></div>
                 </div>
             </section>
 
-            <!-- Documentation -->
-            <section class="carousel-item">
-                <div class="container_wrapper">
-                    <div class="container container_embed">
-                        <span id="docs"></span>
-                    </div>
+            <section>
+                <div class="wrapper z-depth-1">
+                    <div class="embededcontent" id="docs"></div>
                 </div>
             </section>
 
-            <!-- Getting Started -->
-            <section class="carousel-item">
-                <div class="container_wrapper">
-                    <span id="gettingstarted">
-
-                    </span>
+            <section>
+                <div class="wrapper z-depth-1">
+                    <div class="textcontent" id="gettingstarted"></div>
                 </div>
             </section>
 
-            <!-- Examples -->
-            <section class="carousel-item">
-                <div class="container_wrapper">
-                    <div class="container">
-                        <span id="examples"></span>
-                    </div>
+            <section>
+                <div class="wrapper z-depth-1">
+                    <div class="embededcontent" id="examples"></div>
                 </div>
             </section>
-
         </div>
     </main>
+
+
+
+
+
+
+
+
+
     <!-- <footer>
-        &copy; 2024 My Website
+        &copy; 2024 <a href="https://www.globalclimateforum.org">Global Climate Forum, Berlin</a>
     </footer> -->
     <script src="scripts.js"></script>
 </body>

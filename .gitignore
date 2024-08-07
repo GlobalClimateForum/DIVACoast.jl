@@ -1,3 +1,4 @@
+documentation/templates/docs
 dev/test/scratch.jl
 exercises/test.tif
 .vscode/settings.json
