@@ -56,27 +56,24 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
         caller = Dict(:line => line, :file => file)
     end
 
-    if lvl != Logging.Info
+#    if lvl != Logging.Info
         runtime = Dates.canonicalize(Dates.CompoundPeriod(Dates.DateTime(time) - Dates.DateTime(logger.stime)))
-    end
+#    end
 
     if lvl == Logging.Info
-        header = "$(logger.msg_header)|$lvl @$time_f"
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime)"
         color = :cyan
         bold = true
     elseif lvl == Logging.Debug
-        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line])\nin file $(caller[:file])"
-#       header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
         color = :green
         bold = true
     elseif lvl == Logging.Error
-        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line])\nin file $(caller[:file])"
-#       header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
         color = :red
         bold = true
     elseif lvl == Logging.Warn
-        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line])\nin file $(caller[:file])"
-#      header = "$(logger.msg_header)|$lvl @$time_f($runtime): "
+        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
         color = :red
         bold = true
     else
@@ -89,7 +86,7 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
         printstyled("[ $header: ", color=color, bold=bold)
         print("$msg\n")
     else
-        write(logger.io, "[$header]\n$msg\n")
+        write(logger.io, "[$header]  $msg\n")
         flush(logger.io)
     end
 end
@@ -127,23 +124,46 @@ mutable struct LogIter{T}
     step_width::Int
     lvl::Logging.LogLevel
     step::Int
+    step_counter::Int
 end
 
-LogIter(I, n::String) = LogIter(I, n, 1, Logging.Info, 1)
-LogIter(I, n::String, w::Integer) = LogIter(I, n, w, Logging.Info, 1)
-LogIter(I, n::String, w::Integer, lvl::Logging.LogLevel) = LogIter(I, n, w, lvl, 1)
+LogIter(I, n::String) = LogIter(I, n, 1, Logging.Info,0,0)
+LogIter(I, n::String, w::Integer) = LogIter(I, n, w, Logging.Info, 0,0)
+LogIter(I, n::String, w::Integer, lvl::Logging.LogLevel) = LogIter(I, n, w, lvl, 0,0)
+
+# function Base.iterate(iter::LogIter, state...)
+#     trace = stacktrace()
+#     next = isempty(state) ? iterate(iter.iter) : iterate(iter.iter, state...)
+#     if next !== nothing
+#         (val, new_state) = next
+#         if mod(iter.step, iter.step_width) == 0 || iter.step == 1
+#             @logmsg iter.lvl "Iteration '$(iter.name)' @[$(iter.step)]" caller = trace[3]
+#         end
+#         iter.step = iter.step + 1
+#         return (val, new_state)
+#     else
+#         @logmsg iter.lvl "Iteration '$(iter.name)' ended." caller = trace[3]
+#     end
+# end
 
 function Base.iterate(iter::LogIter, state...)
-    trace = stacktrace()
+    
+    iter.step += 1
+    iter.step_counter += 1
+
     next = isempty(state) ? iterate(iter.iter) : iterate(iter.iter, state...)
-    if next !== nothing
-        (val, new_state) = next
-        if mod(iter.step, iter.step_width) == 0 || iter.step == 1
-            @logmsg iter.lvl "Iteration '$(iter.name)' @[$(iter.step)]" caller = trace[3]
-        end
-        iter.step = iter.step + 1
-        return (val, new_state)
+    logstep = (iter.step_counter == iter.step_width) || iter.step == 1
+    ended =  isnothing(next)
+
+    if !ended && !logstep
+        return next
+    elseif !ended && logstep
+        trace = stacktrace()
+        iter.step_counter = 0
+        @logmsg iter.lvl "Iteration '$(iter.name)' @[$(iter.step)]" caller = trace[3]
+        return next
     else
+        trace = stacktrace()
         @logmsg iter.lvl "Iteration '$(iter.name)' ended." caller = trace[3]
     end
 end
