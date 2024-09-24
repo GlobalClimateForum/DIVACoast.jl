@@ -1,4 +1,5 @@
-export geotiff_connect, geotiff_transform
+export geotiff_connect, geotiff_transform, geotiff_collect
+
 
 function geotiff_connect(infilename1::String, infilename2::String, outfilename::String, f::Function)
 
@@ -95,4 +96,59 @@ function geotiff_transform(infilename1::String, outfilename::String, f::Function
     println()
     GDAL.gdalclose(dataset_in1_data)
     GDAL.gdalclose(dataset_out)
+end
+
+
+function geotiff_collect(maskfilename::String, infilenames::Array{String}, f::Function)
+
+    sga_mask = SparseGeoArray{Float32,Int32}()
+    read_geotiff_header!(sga_mask, maskfilename, 1)
+    dataset_mask_data = GDAL.gdalopen(maskfilename, GDAL.GA_ReadOnly)
+    band_mask_data = GDAL.gdalgetrasterband(dataset_mask_data, 1)
+
+    sga_ins = Array{SparseGeoArray{Float32,Int32}}(undef, size(infilenames, 1))
+    for i in 1:size(infilenames, 1)
+        sga_ins[i] = SparseGeoArray{Float32,Int32}()
+        read_geotiff_header!(sga_ins[i], infilenames[i], 1)
+    end
+
+    datasets_indata = map(fn -> GDAL.gdalopen(fn, GDAL.GA_ReadOnly), infilenames)
+    bands_indata = map(ds -> GDAL.gdalgetrasterband(ds, 1), datasets_indata)
+    #bands_indata = map(fn -> GDAL.gdalgetrasterband(GDAL.gdalopen(fn, GDAL.GA_ReadOnly),1),infilenames)
+
+    r_tiles = sga_mask.ysize ÷ 1
+    remaining_r = sga_mask.ysize % 1
+    scanline_mask = fill(0.0f0, sga_mask.xsize)
+    scanlines_inp = fill(fill(0.0f0, sga_mask.xsize), size(infilenames, 1))
+    vals = fill(0.0f0, size(infilenames, 1))
+
+    print("processesing progress: 0 ")
+    p = 0
+
+    for r in 1:(r_tiles)
+        GDAL.gdalrasterio(band_mask_data, GDAL.GF_Read, 0, (r - 1), sga_mask.xsize, 1, scanline_mask, sga_mask.xsize, 1, GDAL.GDT_Float32, 0, 0)
+
+        for i in 1:size(infilenames, 1)
+            GDAL.gdalrasterio(bands_indata[i], GDAL.GF_Read, 0, (r - 1), sga_mask.xsize, 1, scanlines_inp[i], sga_mask.xsize, 1, GDAL.GDT_Float32, 0, 0)
+        end
+
+        for i in 1:size(scanline_mask, 1)
+            for j in 1:size(infilenames, 1)
+                vals[j] = scanlines_inp[j][i]
+            end
+            f(scanline_mask[i], vals, sga_mask, sga_ins)
+        end
+
+        if ((r * 100 ÷ sga_mask.ysize) ÷ 10) > p
+            p = ((r * 100 ÷ sga_mask.ysize) ÷ 10)
+            print("$(p*10) ")
+        end
+    end
+
+    println()
+
+    GDAL.gdalclose(dataset_mask_data)
+    for i in 1:size(infilenames, 1)
+        GDAL.gdalclose(datasets_indata[i])
+    end
 end

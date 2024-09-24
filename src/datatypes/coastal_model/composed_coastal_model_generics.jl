@@ -65,24 +65,6 @@ function apply_accumulate_store(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Fu
   res = reduce(accumulate, child_res)
   store(res, ccm)
   return res
-#=
-  ret =
-    if length(ccm.children) > 0
-      #println(first(ccm.children)[1])
-      Dict(first(ccm.children)[1] => apply_accumulate_store(first(ccm.children)[2], f, accumulate, store))
-    else
-      Dict()
-    end
-
-  for (id, child) in ccm.children
-    if (!haskey(ret, id))
-      ret[id] = apply_accumulate_store(child, f, accumulate, store)
-    end
-  end
-  res = reduce(accumulate, values(ret))
-  store(res, ccm)
-  return res
-=#
 end
 
 function apply_accumulate_store_multithread(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, accumulate::Function, store::Function, mtlevel :: String) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
@@ -156,33 +138,3 @@ function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs::Dict{S
   output_rows = Dict{String,Array{Any}}()
   collect_data(ccm, outputs, output_row_names, output_rows, metadata, metadatanames)
 end
-
-
-#=
-function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs, metadata, metadatanames::Array{String}, collect_children::Bool=true) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
-  if (ccm.level in keys(outputs))
-    row = [ccm.id; metadata]
-    for n in fieldnames(DATA)
-      push!(row, getfield(ccm.data, n))
-    end
-    rownames = copy(metadatanames)
-    for name in fieldnames(DATA)
-      push!(rownames, String(name))
-    end
-    if (ncol(outputs[ccm.level]) == 0)
-      outputs[ccm.level] = DataFrame(Dict(rownames .=> row))
-    else
-      outputs[ccm.level] = [outputs[ccm.level]; DataFrame(Dict(rownames .=> row))]
-    end
-  end
-  if collect_children
-    for (child_id, child) in ccm.children
-      collect_data(child, outputs, metadata, metadatanames, collect_children)
-    end
-  end
-end
-
-#function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,LocalCoastalImpactModel}, outputs, metadata, metadatanames::Array{String}) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
-#  collect_data(ccm, outputs, metadata, metadatanames, false)
-#end
-=#
