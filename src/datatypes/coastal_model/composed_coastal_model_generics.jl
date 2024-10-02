@@ -1,5 +1,5 @@
 export apply_accumulate, apply_accumulate_record, apply, apply_break, apply_accumulate_store,
-  apply_accumulate_store_multithread,
+  apply_accumulate_store_multithread, apply_store, apply_store_multithread,
   find, collect_data
 
 using DataFrames
@@ -77,6 +77,20 @@ function apply_accumulate_store_multithread(ccm::ComposedImpactModel{IT1,IT2,DAT
   res = reduce(accumulate, child_res)
   store(res, ccm)
   return res
+end
+
+function apply_store(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, store::Function) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
+  foreach(x -> apply_store(x, f, store), values(ccm.children))
+  store(ccm)
+end
+
+function apply_store_multithread(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, store::Function, mtlevel :: String) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
+  if (ccm.level == mtlevel)
+    tforeach(child -> apply_store_multithread(child, f, store, mtlevel), values(ccm.children))
+  else 
+    foreach(child -> apply_store_multithread(child, f, store, mtlevel), values(ccm.children))
+  end
+  store(res, ccm)
 end
 
 function find(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, level_to_find::String, id_to_find::IT3) where {IT1,IT2,DATA,CM<:CoastalImpactUnit,IT3}
