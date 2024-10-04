@@ -12,6 +12,7 @@ abstract type CoastalImpactUnit end
 """
     LocalCoastalImpactModel{DT<:Real, IDT, DATA} <: CoastalImpactUnit
 A `LocalCoastalImpactModel` combines a surge model (distribution) and a coastal plain model (`HypsometricProfile`).
+It also holds the current protection level.
 """
 mutable struct LocalCoastalImpactModel{DT<:Real, IDT, DATA} <: CoastalImpactUnit
   id :: IDT

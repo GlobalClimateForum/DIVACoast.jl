@@ -1,21 +1,27 @@
-export apply_accumulate, apply_accumulate_record, apply, apply_break, apply_accumulate_store,
-  apply_accumulate_store_multithread, apply_store, apply_store_multithread,
+export apply_accumulate, apply_accumulate_record, apply, apply_break, apply_break_store,
+  apply_accumulate_store, apply_accumulate_store_multithread, apply_store, apply_store_multithread,
   find, collect_data
 
 using DataFrames
-using ThreadTools
+using ThreadPools
 
 function apply(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
   foreach(x -> apply(x, f), values(ccm.children))
 end
 
 function apply_break(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
-  if (f(ccm))
-    return
-  else
+  if (!f(ccm))
     foreach(x -> apply_break(x, f), values(ccm.children))
   end
 end
+
+function apply_break_store(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, store::Function) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
+  if (!f(ccm))
+    foreach(x -> apply_break_store(x, f, store), values(ccm.children))
+  end
+  store(ccm)
+end
+
 
 function apply_accumulate(ccm::ComposedImpactModel{IT1,IT2,DATA,CIU}, f::Function, accumulate::Function) where {IT1,IT2,DATA,CIU<:CoastalImpactUnit}
   appacc(f, acc) = function (ccm)
@@ -67,13 +73,13 @@ function apply_accumulate_store(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Fu
   return res
 end
 
-function apply_accumulate_store_multithread(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, accumulate::Function, store::Function, mtlevel :: String) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
-  child_res = 
-  if (ccm.level == mtlevel)
-    tmap(child -> apply_accumulate_store_multithread(child, f, accumulate, store, mtlevel), values(ccm.children))
-  else 
-    map(child -> apply_accumulate_store_multithread(child, f, accumulate, store, mtlevel), values(ccm.children))
-  end
+function apply_accumulate_store_multithread(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, accumulate::Function, store::Function, mtlevel::String) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
+  child_res =
+    if (ccm.level == mtlevel)
+      tmap(child -> apply_accumulate_store_multithread(child, f, accumulate, store, mtlevel), values(ccm.children))
+    else
+      map(child -> apply_accumulate_store_multithread(child, f, accumulate, store, mtlevel), values(ccm.children))
+    end
   res = reduce(accumulate, child_res)
   store(res, ccm)
   return res
@@ -84,13 +90,13 @@ function apply_store(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, sto
   store(ccm)
 end
 
-function apply_store_multithread(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, store::Function, mtlevel :: String) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
+function apply_store_multithread(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, store::Function, mtlevel::String) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
   if (ccm.level == mtlevel)
     tforeach(child -> apply_store_multithread(child, f, store, mtlevel), values(ccm.children))
-  else 
+  else
     foreach(child -> apply_store_multithread(child, f, store, mtlevel), values(ccm.children))
   end
-  store(res, ccm)
+  store(ccm)
 end
 
 function find(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, level_to_find::String, id_to_find::IT3) where {IT1,IT2,DATA,CM<:CoastalImpactUnit,IT3}
