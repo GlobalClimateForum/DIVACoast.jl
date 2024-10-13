@@ -20,7 +20,7 @@ ssp_get_growth(sw::SSPWrapper{AnnualGrowthPercentage}, g::Real) = g / 100
 ssp_get_growth(sw::SSPWrapper{AnnualGrowth}, g::Real) = g
 ssp_get_growth(sw::SSPWrapper{GrowthFactor}, g::Real) = g - 1
 
-function ssp_get_growth_factor(wrapped_ssp::SSPWrapper{T}, variable::String, country::String, ssp_scenario::String, year1::Int, year2::Int) where {T<:SSPType}
+function ssp_get_growth_factor(wrapped_ssp::SSPWrapper{T}, variable::String, country::String, ssp_scenario::String, year1::Int, year2::Int, do_warn = true) where {T<:SSPType}
 
     function flt(v, r, s)
         v_filter = !ismissing(v) && v == variable
@@ -44,7 +44,7 @@ function ssp_get_growth_factor(wrapped_ssp::SSPWrapper{T}, variable::String, cou
 
     filtered_df = filter([:Variable, :Region, :Scenario] => flt, wrapped_ssp.df_ssp)
     if (nrow(filtered_df)==0)
-        println("WARNING: $variable for $country in $ssp_scenario not found!")
+        if (do_warn) println("WARNING: $variable for $country in $ssp_scenario not found!") end
         return 1.0
     end
 

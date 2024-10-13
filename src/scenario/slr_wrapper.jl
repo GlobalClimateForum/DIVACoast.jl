@@ -60,7 +60,9 @@ function get_slr_value(slrw::SLRWrapper, lon::Real, lat::Real, quantile::Real, t
 
     if time in slrw.time
         index_time = searchsortedfirst(slrw.time, time) <= size(slrw.time, 1) ? searchsortedfirst(slrw.time, time) : size(slrw.time, 1)
-        return slrw.data[index_lon, index_lat, index_time, index_qtl]
+        slr_result = slrw.data[index_lon, index_lat, index_time, index_qtl]
+        if slr_result===missing slr_result=0.0 end
+        return slr_result
     else
         index_time_after = searchsortedfirst(slrw.time, time) <= size(slrw.time, 1) ? searchsortedfirst(slrw.time, time) : size(slrw.time, 1)
         if (index_time_after <= 1)
@@ -69,7 +71,9 @@ function get_slr_value(slrw::SLRWrapper, lon::Real, lat::Real, quantile::Real, t
             Δ_time = slrw.time[index_time_after] - slrw.time[index_time_after-1]
             r = (time - slrw.time[index_time_after-1]) / Δ_time
             Δ_slr = slrw.data[index_lon, index_lat, index_time_after, index_qtl] - slrw.data[index_lon, index_lat, index_time_after-1, index_qtl]
-            return slrw.data[index_lon, index_lat, index_time_after-1, index_qtl] + r * Δ_slr
+            slr_result = slrw.data[index_lon, index_lat, index_time_after-1, index_qtl] + r * Δ_slr
+            if slr_result===missing slr_result=0.0 end
+            return slr_result
         end
     end
 end
