@@ -214,8 +214,8 @@ function to_hypsometric_profiles(
 
   for y in 1:size(category_data, 2)
     if ((y * 100 ÷ size(category_data, 2)) ÷ 10) > p
-      p = (y * 100 ÷ size(category_data, 2)) ÷ 10
-      print("$(p*10) ")
+     p = (y * 100 ÷ size(category_data, 2)) ÷ 10
+     print("$(p*10) ")
     end
     clear_data!(category_data)
     read_geotiff_data_partial!(category_data, 1, size(category_data, 1), y, y)
