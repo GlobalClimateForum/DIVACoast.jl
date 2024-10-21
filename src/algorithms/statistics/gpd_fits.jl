@@ -4,9 +4,9 @@ export estimate_gd_positive_distribution, estimate_gp_distribution
 using LsqFit
 using Distributions
 
-exponential_model(x, p) = if (any(x .< p[1])) map(x -> 0, x) else @. 1-exp(-(x - p[1]) / p[2]) end
-gdp_positive_model(x, p) = if (any(x .< p[1])) map(x -> 0, x) else @. 1 - (1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3]) end
-gdp_negative_model(x, p) = if (any(x .< p[1])) map(x -> 0, x) elseif (any(((x .- p[1]) / p[2]) .>= 1/abs(p[3]))) map(x -> 1, x) else @. 1 - (1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3]) end
+exponential_model(x, p) = map(x -> (x >= p[1]) ? 1-exp(-(x - p[1]) / p[2]) : 0, x)
+gdp_positive_model(x, p) = map(x -> (x >= p[1]) ? 1-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3]) : 0, x)
+gdp_negative_model(x, p) = map(x -> ((x >= p[1]) &&  (x <= p[1] - p[2]/p[3])) ? 1-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3]) : (x >= p[1]) ? 1 : 0, x)
 
 """
 This function tries to fit an exponential distribution to given data. 
@@ -65,14 +65,14 @@ function estimate_gp_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:
     
     fit_gdp_positive = 
     try
-        curve_fit(gdp_positive_model, x_data, y_data, [0.0, 1.0, 0.5], lower=[-Inf, 0.001, 0.001])
+        curve_fit(gdp_positive_model, x_data, y_data, [0.0, 1.0, 0.5], lower=[-Inf, 0.001, 0.05])
     catch
         missing
     end
     
     fit_gdp_negative = 
     try
-        curve_fit(gdp_negative_model, x_data, y_data, [0.0, 1.0, -0.5], lower=[-Inf, 0.001, -Inf], upper = [Inf,Inf,-0.001])
+        curve_fit(gdp_negative_model, x_data, y_data, [0.0, 1.0, -0.5], lower=[-Inf, 0.001, -Inf], upper = [Inf,Inf,-0.05])
     catch
         missing
     end

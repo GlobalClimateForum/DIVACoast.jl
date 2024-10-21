@@ -204,18 +204,15 @@ function to_hypsometric_profiles(
     sgas_exp_dyn[i] = SparseGeoArray{Float32,Int32}()
     read_geotiff_header!(sgas_exp_dyn[i], exposure_dynamic_file_names[i])
     sga_dimension_match_log(category_data, sgas_exp_dyn[i])
-    #    exp_dyn_data[i] = Dict()
   end
 
-  #  st = Array{SparseGeoArray{DT, IT}}(undef,size(sgas_exp_st,1))
-  #  dy = Array{SparseGeoArray{DT, IT}}(undef,size(sgas_exp_dyn,1))
   print("construction progress: 0 ")
   p = 0
 
   for y in 1:size(category_data, 2)
     if ((y * 100 ÷ size(category_data, 2)) ÷ 10) > p
-     p = (y * 100 ÷ size(category_data, 2)) ÷ 10
-     print("$(p*10) ")
+      p = (y * 100 ÷ size(category_data, 2)) ÷ 10
+      print("$(p*10) ")
     end
     clear_data!(category_data)
     read_geotiff_data_partial!(category_data, 1, size(category_data, 1), y, y)
@@ -281,6 +278,7 @@ function to_hypsometric_profiles(
       # warning?
     end
   end
+
   return ret
 end
 
@@ -323,7 +321,6 @@ function attach_to_hypsometric_profiles!(
     sga_dimension_match_log(category_data, sgas_exp_dyn[i])
     #    exp_dyn_data[i] = Dict()
   end
-
 
   print("attach progress: 0 ")
   p = 0

@@ -122,7 +122,7 @@ function geotiff_collect(maskfilename::String, infilenames::Array{String}, f::Fu
     scanlines_inp = fill(fill(0.0f0, sga_mask.xsize), size(infilenames, 1))
     vals = fill(0.0f0, size(infilenames, 1))
 
-    print("processesing progress: 0 ")
+    #print("processesing progress: 0 ")
     p = 0
 
     for r in 1:(r_tiles)
@@ -136,6 +136,7 @@ function geotiff_collect(maskfilename::String, infilenames::Array{String}, f::Fu
             for j in 1:size(infilenames, 1)
                 vals[j] = scanlines_inp[j][i]
             end
+
             f(scanline_mask[i], vals, sga_mask, sga_ins)
         end
 

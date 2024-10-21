@@ -4,10 +4,6 @@ export estimate_weibull_distribution, estimate_gev_distribution
 using LsqFit
 using Distributions
 
-#@. gumbel_model(x::T, p::Array{T}) where {T<:Real} = exp(-exp(-(x - p[1]) / p[2]))
-#@. frechet_model(x, p) = if (any(((x .- p[1]) / p[2]) .<= -1/p[3])) map(x -> 0, x) else exp(-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3])) end
-#@. weibull_model(x, p) = if (any(((x .- p[1]) / p[2]) .>= 1/abs(p[3]))) map(x -> 1, x) else exp(-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3])) end
-
 # the cdf of the three cases. Note: in frechet and weibull case domain restriction has to be taken into account
 gumbel_model(x, p) = @. exp(-exp(-(x - p[1]) / p[2]))
 frechet_model(x, p) = map(x -> (p[1]-p[2]/p[3] <= x) ? exp(-(1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3])) : 0, x)
@@ -75,21 +71,21 @@ out of the Gumbel, Frechet and Weibull model based on the summed squared residua
 function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     fit_gumbel =
         try
-            curve_fit(gumbel_model, x_data, y_data, [mean(x_data), 1.0], lower=[-Inf, 0.001])
+            curve_fit(gumbel_model, x_data, y_data, [mean(x_data), 1.0], lower=[-Inf, 0.0001])
         catch
             missing
         end
 
     fit_frechet =
         try
-            curve_fit(frechet_model, x_data, y_data, [mean(x_data), 1.0, 1.0], lower=[-Inf, 0.001, 0.001])
+            curve_fit(frechet_model, x_data, y_data, [mean(x_data), 1.0, 1.0], lower=[-Inf, 0.0001, 0.05])
         catch
             missing
         end
 
     fit_weibull =
         try
-            curve_fit(weibull_model, x_data, y_data, [mean(x_data), 1.0, -1.0], lower=[-Inf, 0.001, -Inf], upper=[Inf, Inf, -0.001])
+            curve_fit(weibull_model, x_data, y_data, [mean(x_data), 1.0, -1.0], lower=[-Inf, 0.0001, -Inf], upper=[Inf, Inf, -0.05])
         catch
             missing
         end
@@ -120,6 +116,9 @@ function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<
     sqrt_sum_sq_res_gumbel = sqrt(sum(fit_gumbel.resid .^ 2))
     sqrt_sum_sq_res_frechet = sqrt(sum(fit_frechet.resid .^ 2))
     sqrt_sum_sq_res_weibull = sqrt(sum(fit_weibull.resid .^ 2))
+
+    #println("sqrt_sum_sq_res: ", sqrt_sum_sq_res_weibull, " ", sqrt_sum_sq_res_gumbel, " ", sqrt_sum_sq_res_frechet, " ")
+    #println("params: ", fit_weibull.param, " ", fit_gumbel.param, " ", fit_frechet.param, " ")
 
     if (sqrt_sum_sq_res_frechet <= sqrt_sum_sq_res_weibull) && (sqrt_sum_sq_res_frechet < sqrt_sum_sq_res_gumbel)
         return GeneralizedExtremeValue(fit_frechet.param[1], fit_frechet.param[2], fit_frechet.param[3])
