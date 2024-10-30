@@ -4,7 +4,7 @@ export HypsometricProfile,
   unit,
   exposure_below_bathtub, exposure_below_bathtub_named,
   exposure_below_attenuated, attenuate,
-  sed, sed_above, sed_below, remove_below, remove_below_named, add_above, add_between,
+  sed!, sed_above!, sed_below!, remove_below!, remove_below_named!, add_above!, add_between!,
   add_static_exposure!, add_dynamic_exposure!, remove_static_exposure!, remove_dynamic_exposure!,
   damage_bathtub_standard_ddf, damage_bathtub,
   compress!
@@ -31,7 +31,7 @@ mutable struct HypsometricProfile{DT<:Real}
   cummulativeDynamicExposure::Array{DT,2}
   dynamicExposureSymbols
   dynamicExposureUnits::Array{String}
-#  distances::Array{DT}
+  #  distances::Array{DT}
   logger::ExtendedLogger
 
   # Constructors
@@ -173,7 +173,9 @@ Compute the distance of elevation e (given in m) from the coastline in hspf. dis
 """
 function distance(hspf::HypsometricProfile{DT}, e::Real)::DT where {DT<:Real}
   # internal note: this might be inefficient - it would be more efficient 
-  if (e<= hspf.elevation[1]) return 0.0 end
+  if (e <= hspf.elevation[1])
+    return 0.0
+  end
 
   d = 0.0
   ind::Int64 = searchsortedfirst(hspf.elevation, e)
@@ -181,16 +183,16 @@ function distance(hspf::HypsometricProfile{DT}, e::Real)::DT where {DT<:Real}
     Δ_area = hspf.cummulativeArea[i] - hspf.cummulativeArea[i-1]
     @inbounds Δ_el = (hspf.elevation[i] - hspf.elevation[i-1]) / 1000
     #println("$e:  $(hspf.elevation[i]) $(hspf.elevation[i-1]) $(Δ_area) $(Δ_el)")
-    if (Δ_area != 0) && ((Δ_area/hspf.width)*(Δ_area/hspf.width) > (Δ_el * Δ_el))
-      d += sqrt((Δ_area/hspf.width)*(Δ_area/hspf.width) - (Δ_el * Δ_el))
+    if (Δ_area != 0) && ((Δ_area / hspf.width) * (Δ_area / hspf.width) > (Δ_el * Δ_el))
+      d += sqrt((Δ_area / hspf.width) * (Δ_area / hspf.width) - (Δ_el * Δ_el))
     end
   end
 
   @inbounds Δ_area = exposure_below_bathtub(hspf, e, :area) - hspf.cummulativeArea[ind-1]
   @inbounds Δ_el = (e - hspf.elevation[ind-1]) / 1000
   #println("$e:  $(hspf.elevation[ind-1]) $(Δ_el) $(Δ_area)")
-  if (Δ_area != 0) && ((Δ_area/hspf.width)*(Δ_area/hspf.width) > (Δ_el * Δ_el))
-    d += sqrt((Δ_area/hspf.width)*(Δ_area/hspf.width) - (Δ_el * Δ_el))
+  if (Δ_area != 0) && ((Δ_area / hspf.width) * (Δ_area / hspf.width) > (Δ_el * Δ_el))
+    d += sqrt((Δ_area / hspf.width) * (Δ_area / hspf.width) - (Δ_el * Δ_el))
   end
   return d
 end
@@ -249,38 +251,42 @@ function compress!(hspf::HypsometricProfile{DT}) where {DT<:Real}
     keep = ones(Bool, size(hspf.elevation, 1))
     nzlf = false
 
-    if (complete_zero(exposure_below_bathtub(hspf, hspf.elevation[1])))
-      keep[1] = false
-      d = d + 1
+    while i<size(hspf.elevation, 1) && !nzlf
+      if (complete_zero(exposure_below_bathtub(hspf, hspf.elevation[i-1])) && complete_zero(exposure_below_bathtub(hspf, hspf.elevation[i])))
+        keep[i-1] = false
+        d = d + 1
+      else
+        nzlf = true
+      end
+      i += 1
     end
 
-    for i in 2:size(hspf.elevation, 1)-1
-      if private_colinear_lines(hspf, i - 1, i, i + 1, !nzlf)
-        keep[i] = false
+    for j in i:size(hspf.elevation, 1)-1
+      if private_colinear_lines(hspf, j - 1, j, j + 1, !nzlf)
+        keep[j] = false
         d = d + 1
-      else 
-        nzlf = true
       end
     end
 
-    newElevation = zeros(DT, size(hspf.elevation, 1) - d)
-    newCummulativeArea = zeros(DT, size(hspf.elevation, 1) - d)
+    # OLD:
+    #newElevation = zeros(DT, size(hspf.elevation, 1) - d)
+    #newCummulativeArea = zeros(DT, size(hspf.elevation, 1) - d)
     newCummulativeStaticExposure = zeros(DT, size(hspf.cummulativeStaticExposure, 1) - d, size(hspf.cummulativeStaticExposure, 2))
     newCummulativeDynamicExposure = zeros(DT, size(hspf.cummulativeDynamicExposure, 1) - d, size(hspf.cummulativeDynamicExposure, 2))
 
     c = 1
     for i in 1:size(hspf.elevation, 1)
       if (keep[i])
-        newElevation[c] = hspf.elevation[i]
-        newCummulativeArea[c] = hspf.cummulativeArea[i]
+        hspf.elevation[c] = hspf.elevation[i]
+        hspf.cummulativeArea[c] = hspf.cummulativeArea[i]
         newCummulativeStaticExposure[c, :] = hspf.cummulativeStaticExposure[i, :]
         newCummulativeDynamicExposure[c, :] = hspf.cummulativeDynamicExposure[i, :]
         c += 1
       end
     end
 
-    hspf.elevation = newElevation
-    hspf.cummulativeArea = newCummulativeArea
+    resize!(hspf.elevation, c-1)
+    resize!(hspf.cummulativeArea, c-1)
     hspf.cummulativeStaticExposure = newCummulativeStaticExposure
     hspf.cummulativeDynamicExposure = newCummulativeDynamicExposure
   end

@@ -1,7 +1,7 @@
 """
 Applies factor to exposed assets / population. (socio-economic development)
 """
-function sed(hspf::HypsometricProfile, factors::Array{T}) where {T<:Real}
+function sed!(hspf::HypsometricProfile, factors::Array{T}) where {T<:Real}
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
     logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
   end
@@ -11,25 +11,25 @@ function sed(hspf::HypsometricProfile, factors::Array{T}) where {T<:Real}
   end
 end
 
-function sed(hspf::HypsometricProfile{DT}, factors) where {DT<:Real}
+function sed!(hspf::HypsometricProfile{DT}, factors) where {DT<:Real}
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
     logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
   end
 
   fac_array :: Array{DT} = private_match_factors(hspf, factors)
-  sed(hspf, fac_array)
+  sed!(hspf, fac_array)
 end
 
 """
 Applies socio-economic development (factor) above a certain elevation.
 """
-function sed_above(hspf::HypsometricProfile, above::Real, factors::Array{DT}) where {DT<:Real}
+function sed_above!(hspf::HypsometricProfile, above::Real, factors::Array{DT}) where {DT<:Real}
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
     logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
   end
 
   if (above < hspf.elevation[1])
-    sed(hspf, factors)
+    sed!(hspf, factors)
     return
   end
   if (above > hspf.elevation[size(hspf.elevation, 1)])
@@ -50,19 +50,19 @@ function sed_above(hspf::HypsometricProfile, above::Real, factors::Array{DT}) wh
 end
 
 
-function sed_above(hspf::HypsometricProfile, above::Real, factors)
+function sed_above!(hspf::HypsometricProfile, above::Real, factors)
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
     logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
   end
 
   fac_array::Array{DT} = private_match_factors(hspf, factors)
-  sed_above(hspf, above, fac_array)
+  sed_above!(hspf, above, fac_array)
 end
 
 """
 Applies socio-economic development (factor) below a certain elevation.
 """
-function sed_below(hspf::HypsometricProfile, below::Real, factors::Array{T}) where {T<:Real}
+function sed_below!(hspf::HypsometricProfile, below::Real, factors::Array{T}) where {T<:Real}
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
     logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
   end
@@ -71,7 +71,7 @@ function sed_below(hspf::HypsometricProfile, below::Real, factors::Array{T}) whe
     return
   end
   if (below > hspf.elevation[size(hspf.elevation, 1)])
-    sed(hspf, factors)
+    sed!(hspf, factors)
     return
   end
 
@@ -95,19 +95,19 @@ function sed_below(hspf::HypsometricProfile, below::Real, factors::Array{T}) whe
 end
 
 
-function sed_below(hspf::HypsometricProfile{DT}, below, factors) where {DT<:Real}
+function sed_below!(hspf::HypsometricProfile{DT}, below, factors) where {DT<:Real}
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
     logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
   end
 
   fac_array::Array{DT} = private_match_factors(hspf, factors)
-  sed_below(hspf, below, fac_array)
+  sed_below!(hspf, below, fac_array)
 end
 
 """
 Removes exposed assets / population below a certain elevation.
 """
-function remove_below(hspf::HypsometricProfile{DT}, below::Real) :: Array{DT}  where {DT<:Real}
+function remove_below!(hspf::HypsometricProfile{DT}, below::Real) :: Array{DT}  where {DT<:Real}
   if (below < hspf.elevation[1])
     return (hspf.cummulativeDynamicExposure[1, :])
   end
@@ -145,14 +145,14 @@ function remove_below(hspf::HypsometricProfile{DT}, below::Real) :: Array{DT}  w
 end
 
 
-function remove_below_named(hspf::HypsometricProfile, below::Real)
+function remove_below_named!(hspf::HypsometricProfile, below::Real)
   return NamedTuple{hspf.dynamicExposureSymbols}(remove_below(hspf, below))
 end
 
 """
 Adds assets / population above a certain elevation.
 """
-function add_above(hspf::HypsometricProfile, above::Real, values::Array{T}) where {T<:Real}
+function add_above!(hspf::HypsometricProfile, above::Real, values::Array{T}) where {T<:Real}
   if (size(hspf.cummulativeDynamicExposure, 2) != length(values))
     logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(values) as size($hspf.cummulativeDynamicExposure,2)!=length($values) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(values))")
   end
@@ -179,7 +179,7 @@ end
 """
 Adds assets / population between certain elevations.
 """
-function add_between(hspf::HypsometricProfile, above::Real, below::Real, values::Array{T}) where {T<:Real}
+function add_between!(hspf::HypsometricProfile, above::Real, below::Real, values::Array{T}) where {T<:Real}
   if (below < above)
     return
   end

@@ -18,10 +18,10 @@ the standard gumbel distribution (μ=0.0, σ=1.0, ξ=0.0) is returned
 """
 function estimate_gumbel_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
-        fit = curve_fit(gumbel_model, x_data, y_data, [mean(x_data), 1.0], lower=[-Inf, 0.001])
+        fit = curve_fit(gumbel_model, x_data, y_data, [mean(x_data), var(x_data)], lower=[-Inf, 0.001])
         return GeneralizedExtremeValue(fit.param[1], fit.param[2], 0)
     catch
-        return GeneralizedExtremeValue(0.0, 1.0, 0)
+        return GeneralizedExtremeValue(mean(x_data), var(x_data), 0)
     end
 end
 
@@ -37,10 +37,10 @@ a standard Frechet distribution (μ=0.0, σ=1.0, ξ=1.0) is returned
 """
 function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
-        fit = curve_fit(frechet_model, x_data, y_data, [mean(x_data), 1.0, 1.0], lower=[-Inf, 0.001, 0.001])
+        fit = curve_fit(frechet_model, x_data, y_data, [mean(x_data), var(x_data), 1.0], lower=[-Inf, 0.001, 0.001])
         return GeneralizedExtremeValue(fit.param[1], fit.param[2], fit.param[3])
     catch
-        return GeneralizedExtremeValue(0.0, 1.0, 1.0)
+        return GeneralizedExtremeValue(mean(x_data), var(x_data), 1.0)
     end
 end
 
@@ -56,10 +56,10 @@ This function fits a Weibull Distribution to the inserted data. y should be the 
 """
 function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
-        fit = curve_fit(weibull_model, x_data, y_data, [mean(x_data), 1.0, -1.0], lower=[-Inf, 0.001, -Inf], upper=[Inf, Inf, -0.001])
+        fit = curve_fit(weibull_model, x_data, y_data, [mean(x_data), var(x_data), -1.0], lower=[-Inf, 0.001, -Inf], upper=[Inf, Inf, -0.001])
         return GeneralizedExtremeValue(fit.param[1], fit.param[2], fit.param[3])
     catch
-        return GeneralizedExtremeValue(0.0, 1.0, -1.0)
+        return GeneralizedExtremeValue(mean(x_data), var(x_data), -1.0)
     end
 end
 
@@ -71,27 +71,27 @@ out of the Gumbel, Frechet and Weibull model based on the summed squared residua
 function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     fit_gumbel =
         try
-            curve_fit(gumbel_model, x_data, y_data, [mean(x_data), 1.0], lower=[-Inf, 0.0001])
+            curve_fit(gumbel_model, x_data, y_data, [mean(x_data), var(x_data)], lower=[-Inf, 0.0001])
         catch
             missing
         end
 
     fit_frechet =
         try
-            curve_fit(frechet_model, x_data, y_data, [mean(x_data), 1.0, 1.0], lower=[-Inf, 0.0001, 0.05])
+            curve_fit(frechet_model, x_data, y_data, [mean(x_data), var(x_data), 0.1], lower=[-Inf, 0.0001, 0.02])
         catch
             missing
         end
 
     fit_weibull =
         try
-            curve_fit(weibull_model, x_data, y_data, [mean(x_data), 1.0, -1.0], lower=[-Inf, 0.0001, -Inf], upper=[Inf, Inf, -0.05])
+            curve_fit(weibull_model, x_data, y_data, [mean(x_data), var(x_data), -0.1], lower=[-Inf, 0.0001, -Inf], upper=[Inf, Inf, -0.02])
         catch
             missing
         end
 
     if fit_gumbel === missing && fit_frechet === missing && fit_weibull === missing
-        return GeneralizedExtremeValue(0.0, 1.0, 0)
+        return GeneralizedExtremeValue(mean(x_data), var(x_data), 0)
     end
 
     if (fit_gumbel === missing && fit_frechet !== missing)
