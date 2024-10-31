@@ -8,14 +8,6 @@
 
     --main-dark-color: #3F474F;
     --main-dark_contrast: #5C6B73;
-
-
-    --max-wrapper-width: 1600px;
-    --def-wrapper-width: 80%;
-    --header-height: 125px;
-
-    --max-containertext-width: 60%;
-
 }
 
 #documenter .docs-main {

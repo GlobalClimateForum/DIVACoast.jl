@@ -12,7 +12,7 @@
 
     --max-wrapper-width: 1600px;
     --def-wrapper-width: 80%;
-    --header-height: 80px;
+    --header-height: 7vh;
 
     --max-containertext-width: 60%;
 
@@ -142,7 +142,7 @@ nav a:hover {
 }
 
 nav a .selected {
-    font-weight: bold;
+    /* font-weight: bold; */
     border-bottom: 2px solid white;
 }
 
