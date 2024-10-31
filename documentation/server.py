@@ -8,7 +8,10 @@ PORT = 8000
 
 def provide_dev_templates():
     if os.path.isdir("./templates/docs"):
-        os.rmdir("./templates/docs")
+        if len(os.listdir("./templates/docs")) > 0: 
+            shutil.rmtree("./templates/docs")
+        else:
+            os.rmdir("./templates/docs")
     shutil.copytree("../docs/build", "./templates/docs")
 
 class NoCacheHTTPRequestHandler(SimpleHTTPRequestHandler):

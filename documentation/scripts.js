@@ -6,7 +6,7 @@ let currentIndex = 0;
 document.addEventListener('DOMContentLoaded', () => {
     slider(); // Creates and updates the section slider
     if (!content_loaded) {
-        buildBlueprint();
+        buildBlueprint()
     };
 });
 
@@ -23,17 +23,54 @@ function addMDTemplate(directory, targetID) {
 }
 
 function addNBTemplate(nburl, targetID) {
-    const target = document.getElementById(targetID);
-    const htmlurl = 'https://nbviewer.org/urls/' + nburl;
-    // const  converted = '<div class="container" style="display:flex; height: 100%"><iframe class="nbembed" frameborder="0" src="' + htmlurl + '"></iframe></div>'
-    // target.insertAdjacentHTML("beforebegin", converted);
-    target.innerHTML = '<iframe frameborder="0" src="' + htmlurl + '"></iframe>'
+    return new Promise((resolve, reject) => {
+        const target = document.getElementById(targetID);
+        const htmlurl = 'https://nbviewer.org/urls/' + nburl;
+        // const  converted = '<div class="container" style="display:flex; height: 100%"><iframe class="nbembed" frameborder="0" src="' + htmlurl + '"></iframe></div>'
+        // target.insertAdjacentHTML("beforebegin", converted);
+        // target.innerHTML = '<iframe frameborder="0" src="' + htmlurl + '" id="embededHTML_nbviewer"></iframe>'
+        target.innerHTML = '<object type="text/html" data="' + htmlurl + '" id="embededHTML_nbviewer"></object>'
+
+        resolve();
+    }).then(() => {
+        const embededHTML = document.getElementById("embededHTML_nbviewer")
+        embededHTML.addEventListener("load", function () {
+            const embededHTMLDoc = embededHTML.contentDocument || embededHTML.contentWindow.document;
+            if (embededHTMLDoc) {
+                const linkelemt = embededHTMLDoc.createElement('link');
+                linkelemt.rel = 'stylesheet';
+                linkelemt.type = 'text/css';
+                linkelemt.href = './nbviewer_restyle.css';
+                embededHTMLDoc.head.appendChild(linkelemt);
+            }
+        });
+    });
 }
 
 function addHTMLEmbed(html_path, targetID) {
-    const target = document.getElementById(targetID);
-    target.innerHTML = '<embed type="text/html" src="' + html_path + '"></embed>'
+    return new Promise((resolve, reject) => {
+        const target = document.getElementById(targetID);
+        target.innerHTML = '<object type="text/html" data="' + html_path + '" id="embededHTML_docs"></object>'
+        resolve();
+    }).then(() => {
+        // apply restyling
+        const embededHTML = document.getElementById("embededHTML_docs");
+        embededHTML.addEventListener("load", function () {
+            const embededHTMLDoc = embededHTML.contentDocument || embededHTML.contentWindow.document;
+            if (embededHTMLDoc) {
+                const linkelemt = embededHTMLDoc.createElement('link');
+                linkelemt.rel = 'stylesheet';
+                linkelemt.type = 'text/css';
+                linkelemt.href = '../../documenter_restyle.css';
+                embededHTMLDoc.head.appendChild(linkelemt);
+            }
+        });
+    }
+    )
 }
+
+
+
 
 function buildBlueprint() {
     $.ajax({ url: './blueprint.json', method: 'GET', dataType: 'json' }).done(bp => {

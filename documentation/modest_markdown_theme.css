@@ -3,7 +3,7 @@
   *:before,
   *:after {
     background: transparent !important;
-    color: #000 !important;
+    color: var(--main-dark-color) !important;
     box-shadow: none !important;
     text-shadow: none !important;
   }
@@ -58,10 +58,6 @@
   }
 }
 
-pre,
-code {
-  font-family: Menlo, Monaco, "Courier New", monospace;
-}
 
 pre {
   padding: .5rem;
@@ -172,7 +168,7 @@ h6 {
 h1,
 h2,
 h3 {
-  border-bottom: 2px solid #fafafa;
+  /* border-bottom: 2px solid var(--main-dark_contrast); */
   margin-bottom: 1.15rem;
   padding-bottom: .5rem;
   text-align: left;
@@ -185,5 +181,13 @@ blockquote {
 
 pre,
 code {
-  background-color: #fafafa;
+  /* background-color: var(--main-diva-color2); */
+  font-family:  "JuliaMono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace;
+  padding: 3px;
+  border-radius: 3px; 
+  background-color: var(--main-diva-xlight);
+  /* border: 0.1px solid var(--main-dark_contrast); */
+  margin-left: 5px;
+  margin-right: 5px;
+  overflow:hidden;
 }
