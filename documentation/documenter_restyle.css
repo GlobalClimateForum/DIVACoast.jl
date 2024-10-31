@@ -1,0 +1,92 @@
+:root {
+
+    --main-diva-color: #2b3d4f;
+    --main-diva-color2: #097374;
+    --main-diva-light: #A0C1D1;
+    --main-diva-xlight: #D6E4EB;
+    --main-diva-warn: #D16666;
+
+    --main-dark-color: #3F474F;
+    --main-dark_contrast: #5C6B73;
+
+
+    --max-wrapper-width: 1600px;
+    --def-wrapper-width: 80%;
+    --header-height: 125px;
+
+    --max-containertext-width: 60%;
+
+}
+
+#documenter .docs-main {
+    min-width: calc(75rem) !important;
+}
+
+#documenter .docs-sidebar {
+    background-color: transparent;
+    visibility: visible;
+}
+
+#documenter .docs-package-name {
+    visibility: hidden;
+    height: 0px;
+    width: 0px;
+    margin: none;
+    padding: none;
+}
+
+#documenter .modal-background {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+#documenter .docs-navbar-link {
+    visibility: hidden;
+    height: 0px;
+    width: 0px;
+    margin: none;
+    padding: none;
+}
+
+#documenter .docstring header {
+    background-color: var(--main-diva-xlight);
+    color: var(--main-dark-color);
+}
+
+#documenter .content a code {
+    color: var(--main-dark-color);
+    font-weight: bold;
+}
+
+#documenter .docstring a {
+    color: var(--main-dark-color);
+}
+
+.modal-background {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #2b3d4f;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
