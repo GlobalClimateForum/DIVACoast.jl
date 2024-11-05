@@ -17,7 +17,7 @@ end
 
 # function 
 ssp_get_growth(sw::SSPWrapper{AnnualGrowthPercentage}, g::Real) = g / 100
-ssp_get_growth(sw::SSPWrapper{AnnualGrowth}, g::Real) = g
+ssp_get_growth(sw::SSPWrapper{AnnualGrowth}, g::Real) = g - 1
 ssp_get_growth(sw::SSPWrapper{GrowthFactor}, g::Real) = g - 1
 
 function ssp_get_growth_factor(wrapped_ssp::SSPWrapper{T}, variable::String, country::String, ssp_scenario::String, year1::Int, year2::Int, do_warn = true) where {T<:SSPType}
