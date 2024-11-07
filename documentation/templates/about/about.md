@@ -4,10 +4,11 @@ jdiva is a julia library for coastal impact and adaptation modelling. The librar
 The library is __currently under development__ and provided by the [Global Climate Forum](https://globalclimateforum.org/) via [GitLab](https://gitlab.com/globalclimateforum/diva_library).
 
 # Get
-The jdiva library is __currently under development__. You can get the latest (__unstable__) version by cloning the library repository to your machine. 
+The jdiva library is __currently under development__. You can get the latest (__unstable__) version by cloning the library repository to your machine. Since there is not stable version at the moment you have to switch to the development branch afterwards.
 
 ```
 git clone https://gitlab.com/globalclimateforum/diva_library.git
+ git checkout development
 ```
 
 # Setting up Julia
