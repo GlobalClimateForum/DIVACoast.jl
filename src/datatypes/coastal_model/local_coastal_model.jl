@@ -2,8 +2,7 @@ export LocalCoastalImpactModel, CoastalImpactUnit,
   expected_damage_bathtub_standard_ddf, expected_damage_bathtub, exposure_below_bathtub, damage_bathtub_standard_ddf,
   apply_accumulate, apply_accumulate_record, apply, apply_accumulate_store,
   apply_accumulate_store_multithread, apply_store, apply_store_multithread,
-  collect_data,
-  expected_damage_bathtub_standard_ddf_debug
+  collect_data
 
 using Distributions
 using QuadGK
@@ -51,45 +50,6 @@ function expected_damage_bathtub_standard_ddf(lcm::LocalCoastalImpactModel{DT,DA
 
   (edam_area, edam_static, edam_dynamic)
 end
-
-
-function expected_damage_bathtub_standard_ddf_debug(lcm::LocalCoastalImpactModel{DT,DATA}, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT}, tol::Real=1e-3) where {DT<:Real,DATA}
-  println("I debug!!")
-  #  edam_area = quadgk(x -> (damage_bathtub_standard_ddf(lcm.coastal_plain_model, x, hdd_area, :area) * pdf(lcm.surge_model, x)), lcm.coastal_plain_model.elevation[1], maximum(lcm.surge_model), rtol=1e-3)[1]
-  lower_limit = if lcm.protection_level == 0
-    lcm.coastal_plain_model.elevation[1]
-  else
-    quantile(lcm.surge_model, 1 - 1 / lcm.protection_level)
-  end
-  println("lower_limit = ", lower_limit)
-  edam_area = expected_damage_integral_computation(lcm, "area",   x -> f_to_integrate(lcm, x, hdd_area, :area), lower_limit, maximum(lcm.surge_model), tol)
-
-  edam_static = Array{DT}(undef, size(lcm.coastal_plain_model.cummulativeStaticExposure)[2])
-  edam_dynamic = Array{DT}(undef, size(lcm.coastal_plain_model.cummulativeDynamicExposure)[2])
-
-  for ind in 1:size(lcm.coastal_plain_model.cummulativeStaticExposure, 2)
-    edam_static[ind] = expected_damage_integral_computation(lcm, String(lcm.coastal_plain_model.staticExposureSymbols[ind]), x -> f_to_integrate(lcm, x, hdds_static[ind], lcm.coastal_plain_model.staticExposureSymbols[ind]), lower_limit, maximum(lcm.surge_model), tol)
-  end
-
-  for ind in 1:size(lcm.coastal_plain_model.cummulativeDynamicExposure, 2)
-    edam_dynamic[ind] = expected_damage_integral_computation(lcm, String(lcm.coastal_plain_model.dynamicExposureSymbols[ind]), x -> f_to_integrate(lcm, x, hdds_dynamic[ind], lcm.coastal_plain_model.dynamicExposureSymbols[ind]), lower_limit, maximum(lcm.surge_model), tol)
-  end
-
-  (edam_area, edam_static, edam_dynamic)
-end
-
-expected_damage_bathtub_standard_ddf_debug(lcm::LocalCoastalImpactModel{DT,DATA}, hdd_area::Real, hdds_static, hdds_dynamic, tol::Real=1e-3) where {DT<:Real,DATA} =
-  if (hdds_static == []) && (hdds_dynamic == [])
-    expected_damage_bathtub_standard_ddf_debug(lcm, convert(DT, hdd_area), Matrix{DT}(undef, 0, 0), Matrix{DT}(undef, 0, 0), tol)
-  elseif (hdds_static == [])
-    expected_damage_bathtub_standard_ddf_debug(lcm, convert(DT, hdd_area), Matrix{DT}(undef, 0, 0), convert(Array{DT}, hdds_dynamic), tol)
-  elseif (hdds_dynamic == [])
-    expected_damage_bathtub_standard_ddf_debug(lcm, convert(DT, hdd_area), convert(Array{DT}, hdds_static), Matrix{DT}(undef, 0, 0), tol)
-  else
-    expected_damage_bathtub_standard_ddf_debug(lcm, convert(DT, hdd_area), convert(Array{DT}, hdds_static), convert(Array{DT}, hdds_dynamic), tol)
-  end
-
-
 
 expected_damage_bathtub_standard_ddf(lcm::LocalCoastalImpactModel{DT,DATA}, hdd_area::Real, hdds_static, hdds_dynamic, tol::Real=1e-3) where {DT<:Real,DATA} =
   if (hdds_static == []) && (hdds_dynamic == [])
@@ -159,9 +119,8 @@ function expected_damage_integral_computation(lcm::LocalCoastalImpactModel{DT,DA
   try
     return quadgk(f, lower, upper, rtol=tolerance)[1]
   catch
-    println("I failed $(lcm.id) - $s")
+ #   println("I failed $(lcm.id) - $s")
     return integrate_simple(f, lower, 30)
-#    return 0.0
   end
 end
 

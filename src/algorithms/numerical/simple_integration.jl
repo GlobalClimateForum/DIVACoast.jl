@@ -1,4 +1,4 @@
-export integrate_simple, integrate_simple_debug
+export integrate_simple
 
 @inline 
 function midRect(f,a,b)
@@ -22,3 +22,4 @@ function integrate_simple(f, lo, hi, steps=10000, method=midRect)
   end
   return d*ret
 end
+
