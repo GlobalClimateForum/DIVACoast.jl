@@ -60,8 +60,8 @@
 
 
 pre {
-  padding: .5rem;
-  line-height: 1.25;
+  /* padding: .5rem; */
+  /* line-height: 1.25; */
   overflow-x: scroll;
 }
 
@@ -83,50 +83,6 @@ p,
   margin-bottom: 1.3rem;
 }
 
-h1,
-.modest-h1,
-h2,
-.modest-h2,
-h3,
-.modest-h3,
-h4,
-.modest-h4 {
-  margin: 1.414rem 0 .5rem;
-  font-weight: inherit;
-  line-height: 1.42;
-}
-
-h1,
-.modest-h1 {
-  margin-top: 0;
-  font-size: 16pt;
-  font-weight: bold;
-}
-
-h2,
-.modest-h2 {
-  font-size: 14pt;
-}
-
-h3,
-.modest-h3 {
-  font-size: 12pt;
-}
-
-h4,
-.modest-h4 {
-  font-size: 12pt;
-}
-
-h5,
-.modest-h5 {
-  font-size: 1.121rem;
-}
-
-h6,
-.modest-h6 {
-  font-size: .88rem;
-}
 
 small,
 .modest-small {
@@ -183,7 +139,7 @@ pre,
 code {
   /* background-color: var(--main-diva-color2); */
   font-family:  "JuliaMono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace;
-  padding: 3px;
+  padding: 5px;
   border-radius: 3px; 
   background-color: var(--main-diva-xlight);
   /* border: 0.1px solid var(--main-dark_contrast); */
