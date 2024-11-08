@@ -1,4 +1,5 @@
-export SLRWrapper, get_slr_value, fill_missing_values!
+export SLRWrapper, get_slr_value, fill_missing_values!, get_slr_value_from_cell,
+       quantile_index, lon_index, lat_index
 
 using NCDatasets
 
@@ -77,6 +78,40 @@ function get_slr_value(slrw::SLRWrapper, lon::Real, lat::Real, quantile::Real, t
         end
     end
 end
+
+"""
+Gets the Sea Level Rise value at a specific cell (index_lon, index_lat) in a specific quantile (given by index_qtl) at a specific time.
+Faster than the previous 
+"""
+function get_slr_value_from_cell(slrw::SLRWrapper, index_lon::Int, index_lat::Int, index_qtl::Int, time)
+
+#    index_lon = searchsortedfirst(slrw.lon, lon) <= size(slrw.lon, 1) ? searchsortedfirst(slrw.lon, lon) : size(slrw.lon, 1)
+#    index_lat = searchsortedfirst(slrw.lat, lat, rev=true) <= size(slrw.lat, 1) ? searchsortedfirst(slrw.lat, lat, rev=true) : size(slrw.lat, 1)
+#    index_qtl = searchsortedfirst(slrw.quantiles, quantile) <= size(slrw.quantiles, 1) ? searchsortedfirst(slrw.quantiles, quantile) : size(slrw.quantiles, 1)
+
+    if time in slrw.time
+        index_time = searchsortedfirst(slrw.time, time) <= size(slrw.time, 1) ? searchsortedfirst(slrw.time, time) : size(slrw.time, 1)
+        slr_result = slrw.data[index_lon, index_lat, index_time, index_qtl]
+        if slr_result===missing slr_result=0.0 end
+        return slr_result
+    else
+        index_time_after = searchsortedfirst(slrw.time, time) <= size(slrw.time, 1) ? searchsortedfirst(slrw.time, time) : size(slrw.time, 1)
+        if (index_time_after <= 1)
+            return 0.0
+        else
+            Δ_time = slrw.time[index_time_after] - slrw.time[index_time_after-1]
+            r = (time - slrw.time[index_time_after-1]) / Δ_time
+            Δ_slr = slrw.data[index_lon, index_lat, index_time_after, index_qtl] - slrw.data[index_lon, index_lat, index_time_after-1, index_qtl]
+            slr_result = slrw.data[index_lon, index_lat, index_time_after-1, index_qtl] + r * Δ_slr
+            if slr_result===missing slr_result=0.0 end
+            return slr_result
+        end
+    end
+end
+
+quantile_index(slrw::SLRWrapper, quantile::Real) = searchsortedfirst(slrw.quantiles, quantile) <= size(slrw.quantiles, 1) ? searchsortedfirst(slrw.quantiles, quantile) : size(slrw.quantiles, 1)
+lon_index(slrw::SLRWrapper, lon::Real) = searchsortedfirst(slrw.lon, lon) <= size(slrw.lon, 1) ? searchsortedfirst(slrw.lon, lon) : size(slrw.lon, 1)
+lat_index(slrw::SLRWrapper, lat::Real) = searchsortedfirst(slrw.lat, lat, rev=true) <= size(slrw.lat, 1) ? searchsortedfirst(slrw.lat, lat, rev=true) : size(slrw.lat, 1)
 
 function cursor(index, width, b)
 
