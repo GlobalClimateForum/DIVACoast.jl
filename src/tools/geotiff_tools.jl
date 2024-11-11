@@ -18,7 +18,7 @@ function geotiff_connect(infilename1::String, infilename2::String, outfilename::
     dataset_out = GDAL.gdalcreate(driver, outfilename, sga_in1.xsize, sga_in2.ysize, 1, GDAL.GDT_Float32, opts)
     band_out_data = GDAL.gdalgetrasterband(dataset_out, 1)
 
-    GDAL.gdalsetrasternodatavalue(band_out_data, sga_in1.nodatavalue)
+    GDAL.gdalsetrasternodatavalue(band_out_data, sga_in2.nodatavalue)
     GDAL.gdalsetprojection(dataset_out, sga_in1.projref)
     GDAL.gdalsetgeotransform(dataset_out, affine_to_geotransform(sga_in1.f))
 
