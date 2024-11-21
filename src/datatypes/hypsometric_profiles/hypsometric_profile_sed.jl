@@ -144,6 +144,50 @@ function remove_below!(hspf::HypsometricProfile{DT}, below::Real) :: Array{DT}  
   return removed
 end
 
+function remove_below_DEBUG!(hspf::HypsometricProfile{DT}, below::Real) :: Array{DT}  where {DT<:Real}
+  if (below < hspf.elevation[1])
+    return (hspf.cummulativeDynamicExposure[1, :])
+  end
+
+  if (below >= hspf.elevation[size(hspf.elevation, 1)])
+    removed = hspf.cummulativeDynamicExposure[size(hspf.cummulativeDynamicExposure, 1), :]
+
+    hspf.cummulativeDynamicExposure = zeros(size(hspf.cummulativeDynamicExposure, 1), size(hspf.cummulativeDynamicExposure, 2))
+    return removed
+  end
+
+  ind::Int64 = searchsortedfirst(hspf.elevation, below)
+
+  if !(below in hspf.elevation)
+    private_insert_elevation_point(hspf, below, ind)
+  end
+
+  removed = exposure_below_bathtub(hspf, hspf.elevation[ind])[3]
+
+  println("area: ",hspf.elevation)
+  println("area: ",hspf.cummulativeArea)
+  println("before: ",hspf.cummulativeDynamicExposure[:,1])
+
+  for i in 1:ind
+    for j in 1:size(hspf.cummulativeDynamicExposure, 2)
+      hspf.cummulativeDynamicExposure[i, j] = 0.0f0
+    end
+  end
+
+  for i in (ind+1):size(hspf.cummulativeDynamicExposure, 1)
+    for j in 1:size(hspf.cummulativeDynamicExposure, 2)
+      hspf.cummulativeDynamicExposure[i, j] -= removed[j]
+    end
+  end
+
+  println("after: ",hspf.cummulativeDynamicExposure[:,1])
+
+  compress!(hspf)
+
+  return removed
+end
+
+
 
 function remove_below_named!(hspf::HypsometricProfile, below::Real)
   return NamedTuple{hspf.dynamicExposureSymbols}(remove_below(hspf, below))

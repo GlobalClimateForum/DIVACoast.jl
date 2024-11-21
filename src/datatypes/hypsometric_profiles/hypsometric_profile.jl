@@ -7,7 +7,8 @@ export HypsometricProfile,
   sed!, sed_above!, sed_below!, remove_below!, remove_below_named!, add_above!, add_between!,
   add_static_exposure!, add_dynamic_exposure!, remove_static_exposure!, remove_dynamic_exposure!,
   damage_bathtub_standard_ddf, damage_bathtub,
-  compress!
+  compress!,
+  remove_below_DEBUG!
 
 """
     HypsometricProfile(w::DT, width_unit::String,
