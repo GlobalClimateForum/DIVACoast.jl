@@ -1,6 +1,6 @@
-export apply_accumulate, apply_accumulate_record, apply, apply_break, apply_break_store,
-  apply_accumulate_store, apply_accumulate_store_multithread, apply_store, apply_store_multithread,
-  find, collect_data
+export apply_accumulate, apply_accumulate_record, apply, apply_multithread, apply_break,
+  apply_break_store, apply_accumulate_store, apply_accumulate_store_multithread, apply_store,
+  apply_store_multithread, find, collect_data
 
 using DataFrames
 using ThreadPools
@@ -8,6 +8,15 @@ using ThreadPools
 function apply(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
   foreach(x -> apply(x, f), values(ccm.children))
 end
+
+function apply_multithread(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function, mtlevel::String) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
+  if (ccm.level == mtlevel)
+    tforeach(child -> apply_multithread(child, f, mtlevel), values(ccm.children))
+  else
+    foreach(child -> apply_multithread(child, f, mtlevel), values(ccm.children))
+  end
+end
+
 
 function apply_break(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, f::Function) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
   if (!f(ccm))
