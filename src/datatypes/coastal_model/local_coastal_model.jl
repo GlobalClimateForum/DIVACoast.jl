@@ -1,6 +1,6 @@
 export LocalCoastalImpactModel, CoastalImpactUnit,
   expected_damage_bathtub_standard_ddf, expected_damage_bathtub, exposure_below_bathtub, damage_bathtub_standard_ddf,
-  apply_accumulate, apply_accumulate_record, apply, apply_accumulate_store,
+  apply_accumulate, apply_accumulate_record, apply, apply_multithread, apply_accumulate_store,
   apply_accumulate_store_multithread, apply_store, apply_store_multithread,
   collect_data
 
@@ -154,6 +154,11 @@ end
 
 @inline
 function apply(lm::LocalCoastalImpactModel{DT,DATA}, f::Function) where {DT<:Real,DATA}
+  f(lm)
+end
+
+@inline
+function apply_multithread(lm::LocalCoastalImpactModel{DT,DATA}, f::Function, mtlevel::String) where {DT<:Real,DATA}
   f(lm)
 end
 

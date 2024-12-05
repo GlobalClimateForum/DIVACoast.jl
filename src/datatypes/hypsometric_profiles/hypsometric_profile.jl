@@ -7,8 +7,7 @@ export HypsometricProfile,
   sed!, sed_above!, sed_below!, remove_below!, remove_below_named!, add_above!, add_between!,
   add_static_exposure!, add_dynamic_exposure!, remove_static_exposure!, remove_dynamic_exposure!,
   damage_bathtub_standard_ddf, damage_bathtub,
-  compress!,
-  remove_below_DEBUG!
+  compress!, compress_multithread!
 
 """
     HypsometricProfile(w::DT, width_unit::String,
@@ -252,7 +251,7 @@ function compress!(hspf::HypsometricProfile{DT}) where {DT<:Real}
     keep = ones(Bool, size(hspf.elevation, 1))
     nzlf = false
 
-    while i<size(hspf.elevation, 1) && !nzlf
+    while i < size(hspf.elevation, 1) && !nzlf
       if (complete_zero(exposure_below_bathtub(hspf, hspf.elevation[i-1])) && complete_zero(exposure_below_bathtub(hspf, hspf.elevation[i])))
         keep[i-1] = false
         d = d + 1
@@ -286,10 +285,62 @@ function compress!(hspf::HypsometricProfile{DT}) where {DT<:Real}
       end
     end
 
-    resize!(hspf.elevation, c-1)
-    resize!(hspf.cummulativeArea, c-1)
+    resize!(hspf.elevation, c - 1)
+    resize!(hspf.cummulativeArea, c - 1)
     hspf.cummulativeStaticExposure = newCummulativeStaticExposure
     hspf.cummulativeDynamicExposure = newCummulativeDynamicExposure
+  end
+end
+
+function compress_multithread!(hspf::HypsometricProfile{DT}, mtlock) where {DT<:Real}
+  if (size(hspf.elevation, 1) > 2)
+    i = 2
+    d = 0
+    keep = ones(Bool, size(hspf.elevation, 1))
+    nzlf = false
+
+    while i < size(hspf.elevation, 1) && !nzlf
+      if (complete_zero(exposure_below_bathtub(hspf, hspf.elevation[i-1])) && complete_zero(exposure_below_bathtub(hspf, hspf.elevation[i])))
+        keep[i-1] = false
+        d = d + 1
+      else
+        nzlf = true
+      end
+      i += 1
+    end
+
+    for j in i:size(hspf.elevation, 1)-1
+      if private_colinear_lines(hspf, j - 1, j, j + 1, !nzlf)
+        keep[j] = false
+        d = d + 1
+      end
+    end
+
+    # OLD:
+    #newElevation = zeros(DT, size(hspf.elevation, 1) - d)
+    #newCummulativeArea = zeros(DT, size(hspf.elevation, 1) - d)
+    newCummulativeStaticExposure = zeros(DT, size(hspf.cummulativeStaticExposure, 1) - d, size(hspf.cummulativeStaticExposure, 2))
+    newCummulativeDynamicExposure = zeros(DT, size(hspf.cummulativeDynamicExposure, 1) - d, size(hspf.cummulativeDynamicExposure, 2))
+
+    c = 1
+    for i in 1:size(hspf.elevation, 1)
+      if (keep[i])
+        Threads.lock(mtlock) do
+          hspf.elevation[c] = hspf.elevation[i]
+          hspf.cummulativeArea[c] = hspf.cummulativeArea[i]
+        end
+        newCummulativeStaticExposure[c, :] = hspf.cummulativeStaticExposure[i, :]
+        newCummulativeDynamicExposure[c, :] = hspf.cummulativeDynamicExposure[i, :]
+        c += 1
+      end
+    end
+
+    Threads.lock(mtlock) do
+      resize!(hspf.elevation, c - 1)
+      resize!(hspf.cummulativeArea, c - 1)
+      hspf.cummulativeStaticExposure = newCummulativeStaticExposure
+      hspf.cummulativeDynamicExposure = newCummulativeDynamicExposure
+    end
   end
 end
 
