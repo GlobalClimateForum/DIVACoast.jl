@@ -80,8 +80,11 @@ function geotiff_transform(infilename1::String, outfilename::String, f::Function
     for r in 1:(r_tiles)
         GDAL.gdalrasterio(band_in1_data, GDAL.GF_Read, 0, (r - 1), sga_in1.xsize, 1, scanline1, sga_in1.xsize, 1, GDAL.GDT_Float32, 0, 0)
 
+        # if we change 
+        # global_x = 
+
         for i in 1:size(scanline1, 1)
-            outline[i] = f(scanline1[i])
+            outline[i] = f(scanline1[i], sga_in1, r, i)
             if (scanline1[i] == sga_in1.nodatavalue)
                 outline[i] = sga_in1.nodatavalue
             end
