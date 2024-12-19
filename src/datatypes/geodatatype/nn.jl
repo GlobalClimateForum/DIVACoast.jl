@@ -51,11 +51,12 @@ The Neighbours structure holds and BallTree Object and the created Matrix.
 struct Neighbour
   tree::BallTree
   data::Matrix
+  dataframe::DataFrame
 
   function Neighbour(df::DataFrame, dtype::Type; 
     lonlatCols::Tuple{Union{String, Symbol}, Union{String, Symbol}} = (:lon, :lat), dropna::Bool = true)
     data = coords_to_wide(df, dtype; lonlatCols = lonlatCols, dropna = dropna) 
-    new(BallTree(data, Haversine(6371.0)), data)
+    new(BallTree(data, Haversine(6371.0)), data, df)
   end
 end
 
