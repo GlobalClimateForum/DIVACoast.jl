@@ -14,7 +14,7 @@ function geotiff_connect(infilename1::String, infilename2::String, outfilename::
     band_in2_data = GDAL.gdalgetrasterband(dataset_in2_data, 1)
 
     driver = GDAL.gdalgetdriverbyname("GTiff")
-    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES"]
+    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES", "PREDICTOR=2"]
     dataset_out = GDAL.gdalcreate(driver, outfilename, sga_in1.xsize, sga_in2.ysize, 1, GDAL.GDT_Float32, opts)
     band_out_data = GDAL.gdalgetrasterband(dataset_out, 1)
 
@@ -61,7 +61,7 @@ function geotiff_transform(infilename1::String, outfilename::String, f::Function
     band_in1_data = GDAL.gdalgetrasterband(dataset_in1_data, 1)
 
     driver = GDAL.gdalgetdriverbyname("GTiff")
-    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES"]
+    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES", "PREDICTOR=2"]
     dataset_out = GDAL.gdalcreate(driver, outfilename, sga_in1.xsize, sga_in1.ysize, 1, GDAL.GDT_Float32, opts)
     band_out_data = GDAL.gdalgetrasterband(dataset_out, 1)
 
@@ -85,9 +85,6 @@ function geotiff_transform(infilename1::String, outfilename::String, f::Function
 
         for i in 1:size(scanline1, 1)
             outline[i] = f(scanline1[i], sga_in1, r, i)
-            #if (scanline1[i] == sga_in1.nodatavalue)
-            #    outline[i] = sga_in1.nodatavalue
-            #end
         end
 
         GDAL.gdalrasterio(band_out_data, GDAL.GF_Write, 0, (r - 1), sga_in1.xsize, 1, outline, sga_in1.xsize, 1, GDAL.GDT_Float32, 0, 0)
