@@ -17,10 +17,10 @@ exponential distribution (μ=0) is returned
 """
 function estimate_exponential_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
-        fit = curve_fit(exponential_model, x_data, y_data, [0.0, 1.0], lower=[-Inf, 0.001])
+        fit = curve_fit(exponential_model, x_data, y_data, [mean(x_data), var(x_data)], lower=[-Inf, 0.001])
         return GeneralizedPareto(fit.param[1], fit.param[2], 0)
     catch
-        return GeneralizedPareto(0.0, 1.0, 0)
+        return GeneralizedPareto(mean(x_data), var(x_data), 0)
     end
 end
 
@@ -30,10 +30,10 @@ period and x the corresponding water level height. The funtion returns a General
 """
 function estimate_gd_positive_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
-        fit = curve_fit(gdp_positive_model, x_data, y_data, [0.0, 1.0, 0.5], lower=[-Inf, 0.001, 0.001])
+        fit = curve_fit(gdp_positive_model, x_data, y_data, [mean(x_data), var(x_data), 0.5], lower=[-Inf, 0.001, 0.001])
         return GeneralizedPareto(fit.param[1], fit.param[2], fit.param[3])
     catch
-        return GeneralizedPareto(0.0, 1.0, 0.5)
+        return GeneralizedPareto(mean(x_data), var(x_data), 0.5)
     end
 end
 
@@ -43,10 +43,10 @@ period and x the corresponding water level height. The funtion returns a General
 """
 function estimate_gd_negative_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     try
-        fit = curve_fit(gdp_negative_model, x_data, y_data, [0.0, 1.0, -0.5], lower=[-Inf, 0.001, -Inf], upper = [Inf,Inf,-0.001])
+        fit = curve_fit(gdp_negative_model, x_data, y_data, [mean(x_data), var(x_data), -0.5], lower=[-Inf, 0.001, -Inf], upper = [Inf,Inf,-0.001])
         return GeneralizedPareto(fit.param[1], fit.param[2], fit.param[3])
     catch
-        return GeneralizedPareto(0.0, 1.0, -0.5)
+        return GeneralizedPareto(mean(x_data), var(x_data), -0.5)
     end
 end
 
@@ -58,27 +58,27 @@ out of the Gumbel, Frechet and Weibull model based on the summed squared residua
 function estimate_gp_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     fit_exponential  = 
     try
-        curve_fit(exponential_model, x_data, y_data, [0.0, 1.0], lower=[-Inf, 0.001])
+        curve_fit(exponential_model, x_data, y_data, [mean(x_data), var(x_data)], lower=[-Inf, 0.001])
     catch
         missing
     end
     
     fit_gdp_positive = 
     try
-        curve_fit(gdp_positive_model, x_data, y_data, [0.0, 1.0, 0.5], lower=[-Inf, 0.001, 0.05])
+        curve_fit(gdp_positive_model, x_data, y_data, [mean(x_data), var(x_data), 0.5], lower=[-Inf, 0.001, 0.05])
     catch
         missing
     end
     
     fit_gdp_negative = 
     try
-        curve_fit(gdp_negative_model, x_data, y_data, [0.0, 1.0, -0.5], lower=[-Inf, 0.001, -Inf], upper = [Inf,Inf,-0.05])
+        curve_fit(gdp_negative_model, x_data, y_data, [mean(x_data), var(x_data), -0.5], lower=[-Inf, 0.001, -Inf], upper = [Inf,Inf,-0.05])
     catch
         missing
     end
 
     if fit_exponential === missing && fit_gdp_positive === missing && fit_gdp_negative === missing
-        return GeneralizedPareto(0.0, 1.0, 0)
+        return GeneralizedPareto(mean(x_data), var(x_data), 0)
     end
     
     if (fit_exponential  === missing && fit_gdp_positive !== missing) fit_exponential = fit_gdp_positive end
