@@ -68,8 +68,8 @@ The nearest function returns the index of nearest neighbour of an Neighbours Obj
 """
 function nearest(n::Neighbour, coordinate::Tuple)
   lon, lat = coordinate
-  index, distance = knn(n.tree, [lon ; lat], 1)
-  return (:index => index[1], :distance => distance[1])
+  idx, dist = knn(n.tree, [lon ; lat], 1)
+  return (index = idx[1], distance = dist[1])
 end
 
 """
