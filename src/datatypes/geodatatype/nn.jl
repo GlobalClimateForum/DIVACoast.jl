@@ -3,7 +3,7 @@ using CSV
 using NearestNeighbors
 using Distances
 
-export Neighbour, nearest, nearest_coord
+export Neighbour, nearest, nearest_coord, coords_to_wide
 
 """
 This funciton transforms the longitude and latitude columns of an DataFrame to a Matrix in wide-format required
@@ -61,14 +61,15 @@ struct Neighbour
 end
 
 """
-The nearest function returns the nearest neighbour of an Neighbours Object to an coordinate.
+The nearest function returns the index of nearest neighbour of an Neighbours Object to an coordinate.
 # Parameter
   - n: The Neighbours Object to search trough.
   - coordinate: A coordinate the nearest neighbour relates to.
 """
 function nearest(n::Neighbour, coordinate::Tuple)
   lon, lat = coordinate
-  return knn(n.tree, [lon ; lat], 1)
+  index, distance = knn(n.tree, [lon ; lat], 1)
+  return (:index => index[1], :distance => distance[1])
 end
 
 """
