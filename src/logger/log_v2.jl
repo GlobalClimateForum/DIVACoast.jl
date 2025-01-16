@@ -57,23 +57,30 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
     end
 
 #    if lvl != Logging.Info
-        runtime = Dates.canonicalize(Dates.CompoundPeriod(Dates.DateTime(time) - Dates.DateTime(logger.stime)))
+    runtime = Dates.canonicalize(Dates.CompoundPeriod(Dates.DateTime(time) - Dates.DateTime(logger.stime)))
 #    end
 
+    file = basename(caller[:file])
+
+    
     if lvl == Logging.Info
-        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime)"
+        header_w = "$(logger.msg_header)|$lvl @$time_f(after $runtime)"
+        header_c = "$(logger.msg_header)|$lvl @$time_f(after $runtime)"
         color = :cyan
         bold = true
     elseif lvl == Logging.Debug
-        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
+        header_w = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $file"
+        header_c = "$(logger.msg_header)|$lvl @$time_f(after $runtime)\n│ @line:$(caller[:line]) in file $file"
         color = :green
         bold = true
     elseif lvl == Logging.Error
-        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
+        header_w = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $file"
+        header_c = "$(logger.msg_header)|$lvl @$time_f(after $runtime)\n│ @line:$(caller[:line]) in file $file"
         color = :red
         bold = true
     elseif lvl == Logging.Warn
-        header = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $(caller[:file])"
+        header_w = "$(logger.msg_header)|$lvl @$time_f(after $runtime) @line:$(caller[:line]) in file $file"
+        header_c = "$(logger.msg_header)|$lvl @$time_f(after $runtime)\n│ @line:$(caller[:line]) in file $file"
         color = :red
         bold = true
     else
@@ -83,10 +90,10 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
     end
 
     if logger.io == stderr
-        printstyled("[ $header: ", color=color, bold=bold)
-        print("$msg\n")
+        printstyled("┌ $header_c\n└ ", color=color, bold=bold)
+        printstyled("$msg\n", color = :white, italic = true)
     else
-        write(logger.io, "[$header]  $msg\n")
+        write(logger.io, "[$header_w]  $msg\n")
         flush(logger.io)
     end
 end
