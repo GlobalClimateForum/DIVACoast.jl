@@ -15,7 +15,7 @@ if DRAW_HEADER
     println("│~~~~▗▖▐▌~~█~~~█~~▐▌~~▐▌▐▌~▐▌~│")
     println("│~▄~~▐▌▐▌~~█~~~█~~▐▌~~▐▌▐▛▀▜▌~│")
     println("│~▀▄▄▞▘▐▙▄▄▀~▗▄█▄▖~▝▚▞▘~▐▌~▐▌~│")
-    println("│~...© GLOBAL CLIMATE FORUM .~│")
+    println("│~...©GLOBAL CLIMATE FORUM...~│")
     println("└                             ┘")
 end
 
