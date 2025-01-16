@@ -20,6 +20,7 @@ function coords_to_wide(df::DataFrame, dtype::Type;
   
     # returns type missing when can not parse value else returns parsed value
     function na_parser(value, dtype)
+
       if !(typeof(value) <: dtype)
         value = tryparse(dtype, value)
       end
@@ -30,18 +31,19 @@ function coords_to_wide(df::DataFrame, dtype::Type;
     df[!, lon] .= map(val -> na_parser(val, dtype), df[!, lon])
     df[!, lat] .= map(val -> na_parser(val, dtype), df[!, lat])
 
-    # Drop NA rows
+    # Drop NA rows if dropna is set to true
     df = dropna ? filter(row -> !ismissing(row[lon]) && !ismissing(row[lat]), df) : df
     
     # subset lon, lat column from df
-    df = df[:, [lon, lat]]
+    # df = df[:, [lon, lat]]
 
     df[!, lon] .= convert(Vector{dtype}, df[!, lon])
     df[!, lat] .= convert(Vector{dtype}, df[!, lat])
     
     # transform dataframe DataFrame to Matrix(nrows x ncols) and transpose it to Matrix(ncols x nrows)
-    matrix = transpose(Matrix{dtype}(df[:, [lon, lat]])) 
-    return matrix
+    matrix = transpose(Matrix{dtype}(df[:, [lon, lat]]))
+
+    return matrix, df
 end
 
 
@@ -50,13 +52,14 @@ The Neighbours structure holds and BallTree Object and the created Matrix.
 """
 struct Neighbour
   tree::BallTree
-  data::Matrix
+  wide::Matrix
   dataframe::DataFrame
 
   function Neighbour(df::DataFrame, dtype::Type; 
     lonlatCols::Tuple{Union{String, Symbol}, Union{String, Symbol}} = (:lon, :lat), dropna::Bool = true)
-    data = coords_to_wide(df, dtype; lonlatCols = lonlatCols, dropna = dropna) 
-    new(BallTree(data, Haversine(6371.0)), data, df)
+    wide, df = coords_to_wide(df, dtype; lonlatCols = lonlatCols, dropna = dropna) 
+    dataframe = df
+    new(BallTree(wide, Haversine(6371.0)), wide, df)
   end
 end
 
@@ -69,7 +72,8 @@ The nearest function returns the index of nearest neighbour of an Neighbours Obj
 function nearest(n::Neighbour, coordinate::Tuple)
   lon, lat = coordinate
   idx, dist = knn(n.tree, [lon ; lat], 1)
-  return (index = idx[1], distance = dist[1])
+  info_ = n.dataframe[idx[1], :]
+  return (index = idx[1], distance = dist[1], info = info_)
 end
 
 """
@@ -85,7 +89,7 @@ Coordinates can be passed to the fucntion as a DataFrame.
 """
 function nearest(n::Neighbour, df::DataFrame, dtype::Type ; 
   lonlatCols::Tuple{Union{String, Symbol}, Union{String, Symbol}} = (:lon, :lat), dropna::Bool = true)
-  df_wmatrix = coords_to_wide(df, dtype, lonlatCols = lonlatCols, dropna = dropna)
+  wide, df = coords_to_wide(df, dtype, lonlatCols = lonlatCols, dropna = dropna)
   return knn(n.tree, df_wmatrix, 1)
 end
 
@@ -95,7 +99,7 @@ Does same as nearest() but returns Coordinate of nearest neighbour.
 function nearest_coord(n::Neighbour, coordinate::Tuple)
   lon, lat = coordinate
   index, distance = knn(n.tree, [lon, lat], 1)
-  lonN, latN = n.data[:, index[1]]
+  lonN, latN = n.wide[:, index[1]]
   return (lonN, latN)
 end
 
