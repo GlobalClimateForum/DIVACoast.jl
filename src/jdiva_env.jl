@@ -1,4 +1,5 @@
 DRAW_HEADER = true
+export diva_data
 
 # Activates the DIVA project environment (dependencies)
 # Include this script in your Julia code to activate the DIVA environment
@@ -7,16 +8,10 @@ using Pkg
 Pkg.activate("$(ENV["DIVA_LIB"])")
 Pkg.instantiate()  
 
-export data
-
 if DRAW_HEADER
-    println("┌                             ┐")
-    println("│~~~~▗▖▗▄▄▄~~▗▄▄▄▖▗▖~~▗▖~▗▄▖~~│")
-    println("│~~~~▗▖▐▌~~█~~~█~~▐▌~~▐▌▐▌~▐▌~│")
-    println("│~▄~~▐▌▐▌~~█~~~█~~▐▌~~▐▌▐▛▀▜▌~│")
-    println("│~▀▄▄▞▘▐▙▄▄▀~▗▄█▄▖~▝▚▞▘~▐▌~▐▌~│")
-    println("│~...©GLOBAL CLIMATE FORUM...~│")
-    println("└                             ┘")
+    println("┌                                       ┐")
+    println("│ DIVACoast.jl | © GLOBAL CLIMATE FORUM │")
+    println("└                                       ┘")
 end
 
 """
