@@ -12,6 +12,8 @@ for Nearest Neighbour matching.
 - df: The input DataFrame containing the longitude and latitude column.
 - dtype: The datatype the coordinates should be parsed in.
 - lonlatCols: The longitude and latitude columns (default = (:lon, :lat))
+# Return
+- returns created matrix and DataFrame the matrix is based on (omitted NA values).
 """
 function coords_to_wide(df::DataFrame, dtype::Type; 
   lonlatCols::Tuple{Union{String, Symbol}, Union{String, Symbol}} = (:lon, :lat), dropna::Bool = true)
