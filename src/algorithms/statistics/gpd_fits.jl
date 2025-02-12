@@ -137,13 +137,10 @@ function estimate_gpd_positive_distribution(x_data::Array{T}, y_data::Array{T}) 
         end
 
     if (gpd_positive_curve_fit === missing && gpd_positive_optim_fit === missing)
-        println("both missing")
         return GeneralizedPareto(x_mean, x_var, 0.5)
     elseif (gpd_positive_curve_fit === missing && gpd_positive_optim_fit !== missing)
-        println("gpd_positive_curve_fit === missing")
         return GeneralizedPareto(gpd_positive_optim_fit.minimizer[1], gpd_positive_optim_fit.minimizer[2], gpd_positive_optim_fit.minimizer[3])
     elseif (gpd_positive_curve_fit !== missing && gpd_positive_optim_fit === missing)
-        println("gpd_positive_optim_fit === missing")
         return GeneralizedPareto(gpd_positive_curve_fit.param[1], gpd_positive_curve_fit.param[2], gpd_positive_curve_fit.param[3])
     else
         error_gpd_positive_curve_fit = sqrt(sum(gpd_positive_curve_fit.resid .^ 2))

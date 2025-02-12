@@ -180,13 +180,10 @@ function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where
         end
 
     if (weibull_curve_fit === missing && weibull_optim_fit === missing)
-        #println("Weibull both missing")
         return GeneralizedExtremeValue(x_mean, x_var, -0.5)
     elseif (weibull_curve_fit === missing && weibull_optim_fit !== missing)
-        #println("Weibull curve missing")
         return GeneralizedExtremeValue(weibull_optim_fit.minimizer[1], weibull_optim_fit.minimizer[2], weibull_optim_fit.minimizer[3])
     elseif (weibull_curve_fit !== missing && weibull_optim_fit === missing)
-        #println("Weibull optim missing")
         return GeneralizedExtremeValue(weibull_curve_fit.param[1], weibull_curve_fit.param[2], weibull_curve_fit.param[3])
     else
         error_weibull_curve_fit = sqrt(sum(weibull_curve_fit.resid .^ 2))
@@ -215,9 +212,9 @@ function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<
     my_frechet_error = frechet_error(x_data, y_data)([gev_frechet.μ, gev_frechet.σ, gev_frechet.ξ])
     my_weibull_error = weibull_error(x_data, y_data)([gev_weibull.μ, gev_weibull.σ, gev_weibull.ξ])
 
-    println("GUMBEL: ", gev_gumbel, " - ", my_gumbel_error)
-    println("FRECHET: ", gev_frechet, " - ", my_frechet_error)
-    println("WEIBULL: ", gev_weibull, " - ", my_weibull_error)
+    #println("GUMBEL: ", gev_gumbel, " - ", my_gumbel_error)
+    #println("FRECHET: ", gev_frechet, " - ", my_frechet_error)
+    #println("WEIBULL: ", gev_weibull, " - ", my_weibull_error)
 
     if my_gumbel_error <= my_frechet_error && my_gumbel_error <= my_weibull_error
         return gev_gumbel
