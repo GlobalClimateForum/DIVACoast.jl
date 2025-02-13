@@ -20,5 +20,4 @@ git clone https://gitlab.com/globalclimateforum/DIVACoast.jl.git
 include('<path_to_library_repository>/DIVACoast.jl')
 using .DIVACoast
 ```
-4. Dependencies
-Inlcuding the `DIVACoast.jl` script will activate the DIVACoast project environment and install all required packages.
+4. Inlcuding the `DIVACoast.jl` script will activate the DIVACoast project environment and install all required packages.
