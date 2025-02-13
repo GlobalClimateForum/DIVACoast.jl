@@ -1,4 +1,4 @@
-name = "diva_library"
+name = "DIVACoast"
 version = "0.0.0"
 
 [deps]
@@ -26,3 +26,4 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 Suppressor = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
 ThreadPools = "b189fb0b-2eb5-4ed4-bc0c-d34c51242431"
+YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
