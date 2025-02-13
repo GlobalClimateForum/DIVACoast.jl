@@ -1,5 +1,5 @@
 DRAW_HEADER = true
-SHORT_HEADER = true
+SHORT_HEADER = false
 export diva_data
 
 # Activates the DIVA project environment (dependencies)
