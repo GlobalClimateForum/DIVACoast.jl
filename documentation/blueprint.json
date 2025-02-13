@@ -1,22 +1,17 @@
 {
-    "about": {
-        "target_id": "about",
-        "type": "markdown",
-        "content": ["about.md"]
-    },
-    "gettingstarted": {
-        "target_id" : "gettingstarted",
-        "type" : "markdown",
-        "content" : ["setup.md"]
-    },
     "docs":  {
         "target_id" : "docs",
         "type" : "html_embed",
-        "content" : ["./templates/docs/index.html"]
+        "content" : ["./embeds/docs/index.html"]
     },
     "examples": {
         "target_id" : "examples", 
         "type" : "ipynb",
         "content" : ["gitlab.com/globalclimateforum/diva_library/-/raw/development/docs/demoscript_07_hypsometric_profile_damages.ipynb"]
+    },
+    "resmap" : {
+        "target_id" : "resmap", 
+        "type": "html_embed",
+        "content" : ["./embeds/resmap/resmap.gl.html"]
     }
 }

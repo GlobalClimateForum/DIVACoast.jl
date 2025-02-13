@@ -1,5 +1,6 @@
 # Inside make.jl
-include("./../src/jdiva_lib.jl")
+include("$(ENV["DIVA_LIB"])/src/jdiva_env.jl")
+include("$(ENV["DIVA_LIB"])/src/jdiva_lib.jl")
 push!(LOAD_PATH, "../src/")
 
 import .jdiva

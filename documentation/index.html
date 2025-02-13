@@ -5,31 +5,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>jDIVA • Documentation</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="./styles/styles.css">
     <link rel="stylesheet" href="modest_markdown_theme.css">
     <link rel="stylesheet" href="documenter_restyle.css">
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"> -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="scripts.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha512-EBLzUL8XLl+va/zAsmXwS7Z2B1F9HUHkZwyS/VKwh3S7T/U0nF4BaU29EP/ZSf6zgiIxYAnKLu6bJ8dqpmX5uw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js" integrity="sha512-L0Shl7nXXzIlBSUUPpxrokqq4ojqgZFQczTYlGjzONGTDAcLremjwaWv5A+EDLnxhQzY5xUZPWLOLqYRkY0Cbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <!-- <img src="./assets/diva_bakground.svg" class="backgroundImage"> -->
-    <header class="z-depth-2">
+    <header>
         <div class="header_container header_wrapper">
             <img src="./assets/diva_logo_pos_white.svg">
             <nav>
-                <a   data-index-number="0">About</a>
-                <a   data-index-number="1">Docs</a>
-                <!-- <a   data-index-number="2">Getting Started</a> -->
-                <a   data-index-number="3">Examples</a>
+                <a class="headerlink" data-index-number="0">Docs</a>
+                <a class="headerlink" data-index-number="1">Examples</a>
+                <!-- <a class="headerlink" data-index-number="2">Results</a>
+                <a class="headerlink" data-index-number="3">Map</a> -->
+
             </nav>
         </div>
 
@@ -37,21 +36,10 @@
 
     <main>
         <div class="section_slider">
-            <section>
-                <div class="wrapper">
-                    <div class="textcontent" id="about"></div>
-                </div>
-            </section>
-
+            
             <section>
                 <div class="wrapperembed">
                     <div class="embededcontent" id="docs"></div>
-                </div>
-            </section>
-
-            <section>
-                <div class="wrapper">
-                    <div class="textcontent" id="gettingstarted"></div>
                 </div>
             </section>
 
@@ -60,16 +48,20 @@
                     <div class="embededcontent" id="examples"></div>
                 </div>
             </section>
+
+            <!-- <section>
+                <div class="wrapperembed">
+                    <div class="embededcontent" id="resmap"></div>
+                    <div class="resultgraph">
+                        <h1>HypsometricProfile (Baththub Model)</h1>
+                    </div>
+                </div>
+            </section> -->
+
+   
+        
         </div>
     </main>
-
-
-
-
-
-
-
-
 
     <!-- <footer>
         &copy; 2024 <a href="https://www.globalclimateforum.org">Global Climate Forum, Berlin</a>

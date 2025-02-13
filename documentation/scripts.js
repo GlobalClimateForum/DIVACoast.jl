@@ -7,18 +7,35 @@ document.addEventListener('DOMContentLoaded', () => {
     slider(); // Creates and updates the section slider
     if (!content_loaded) {
         buildBlueprint()
+    }else{
+        hilightCode();
     };
 });
 
 // Blueprint 
-function addMDTemplate(directory, targetID) {
-    const target = document.getElementById(targetID);
-    function fetchMarkdown() { return $.ajax({ url: directory, method: 'GET', dataType: 'text' }) };
-    fetchMarkdown().done(content => {
-        target.innerHTML = marked.parse(content)
+function buildBlueprint() {
+    $.ajax({ url: './blueprint.json', method: 'GET', dataType: 'json' }).done(bp => {
+
+        Object.keys(bp).forEach(section => {
+
+            let content = bp[section].content
+            let content_type = bp[section].type
+            let content_target = bp[section].target_id
+
+            if (content.length > 0) {
+                if (content_type == "ipynb") {
+                    content.forEach(nb_url => {
+                        addNBTemplate(nb_url, content_target);
+                    });
+                } else if (content_type == "html_embed") {
+                    content.forEach(html_path => {
+                        addHTMLEmbed(html_path, content_target);
+                    });
+                }
+            };
+        })
     }).fail((jqXHR, textStatus, errorThrown) => {
-        console.error('Failed to fetch Markdown file:', textStatus, errorThrown);
-        target.innerHTML = '<p>Could not fetch content.</p>'
+        console.error('Failed to fetch Blueprint:', textStatus, errorThrown);
     });
 }
 
@@ -40,7 +57,7 @@ function addNBTemplate(nburl, targetID) {
                 const linkelemt = embededHTMLDoc.createElement('link');
                 linkelemt.rel = 'stylesheet';
                 linkelemt.type = 'text/css';
-                linkelemt.href = './nbviewer_restyle.css';
+                linkelemt.href = './styles/nbviewer_restyle.css';
                 embededHTMLDoc.head.appendChild(linkelemt);
             }
         });
@@ -61,7 +78,7 @@ function addHTMLEmbed(html_path, targetID) {
                 const linkelemt = embededHTMLDoc.createElement('link');
                 linkelemt.rel = 'stylesheet';
                 linkelemt.type = 'text/css';
-                linkelemt.href = '../../documenter_restyle.css';
+                linkelemt.href = '../../styles/documenter_restyle.css';
                 embededHTMLDoc.head.appendChild(linkelemt);
             }
         });
@@ -70,62 +87,23 @@ function addHTMLEmbed(html_path, targetID) {
 }
 
 
-
-
-function buildBlueprint() {
-    $.ajax({ url: './blueprint.json', method: 'GET', dataType: 'json' }).done(bp => {
-
-        Object.keys(bp).forEach(section => {
-
-            let content = bp[section].content
-            let content_type = bp[section].type
-            let content_target = bp[section].target_id
-
-            if (content.length > 0) {
-
-                if (content_type == "markdown") {
-                    content.forEach(file => {
-                        let md_path = './templates/' + section + '/' + file
-                        addMDTemplate(md_path, content_target);
-                    })
-                } else if (content_type == "ipynb") {
-                    content.forEach(nb_url => {
-                        addNBTemplate(nb_url, content_target);
-                    });
-                } else if (content_type == "html_embed") {
-                    content.forEach(html_path => {
-                        addHTMLEmbed(html_path, content_target);
-                    });
-                }
-            };
-        })
-    }).fail((jqXHR, textStatus, errorThrown) => {
-        console.error('Failed to fetch Blueprint:', textStatus, errorThrown);
-    });
-}
-
 // Section slider
 function slider() {
-
     const slider = document.querySelector('.section_slider');
-    // const items = document.querySelectorAll('.slider-item');
     const navLinks = document.querySelectorAll('nav a');
-
-
     function move_slider(selected) {
         const offset = - currentIndex * 100;
         slider.style.transform = `translateX(${offset}%)`;
-
         navLinks.forEach(link => {
-            if (link.dataset.indexNumber == currentIndex) {
-                link.style = "font-weight: bold;border-bottom: 2px solid white;";
-            } else {
-                link.style = "font-weight: normal; border-bottom: none"
+            let is_current = link.dataset.indexNumber == currentIndex
+            let is_selected = link.classList.contains("selected")
+            if (is_current && !is_selected){
+                link.classList.add("selected")
+            } else if (!is_current && is_selected){
+                link.classList.remove("selected")
             }
         });
-
     }
-
     navLinks.forEach(link => {
         link.addEventListener('click', (event) => {
             currentIndex = parseInt(link.getAttribute('data-index-number'));
@@ -133,6 +111,5 @@ function slider() {
             move_slider();
         });
     });
-
     move_slider();
 }
