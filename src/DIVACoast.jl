@@ -1,6 +1,6 @@
 using Pkg
 # Activates the DIVACoast.jl project environment (dependencies)
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, "../."))
 Pkg.instantiate()
 
 import YAML
@@ -13,6 +13,8 @@ global config = YAML.load_file(joinpath(@__DIR__, "DIVACoast.jl.yml"), dicttype 
 global earth_radius_km = Main.config[:earthRadiusKM]
 global earth_circumference_km = Main.config[:earthCircumferenceKM]
 
+# append depot path (local packages) to project load path
+# append!(LOAD_PATH, DEPOT_PATH)
 
 module DIVACoast
 
@@ -37,27 +39,27 @@ module DIVACoast
         end
 
         # Include functions
-        include("./src/logger/log_v2.jl")
-        include("./src/logger/jdiva_logger.jl")
-        include("./src/datatypes/geodatatype/SparseGeoArrays.jl")
-        include("./src/datatypes/hypsometric_profiles/hypsometric_profiles.jl")
-        include("./src/datatypes/coastal_model/local_coastal_model.jl")
-        include("./src/datatypes/coastal_model/composed_coastal_model.jl")
-        include("./src/datatypes/coastal_model/composed_coastal_model_generics.jl")
-        include("./src/datatypes/geodatatype/nn.jl")
-        include("./src/algorithms/conversion/SGRToHSP.jl")
-        include("./src/algorithms/coastal/coastline.jl")
-        include("./src/algorithms/coastal/coastplain.jl")
-        include("./src/algorithms/statistics/gev_fits.jl")
-        include("./src/algorithms/statistics/gpd_fits.jl")
-        include("./src/algorithms/numerical/simple_integration.jl")
-        include("./src/io/nc/HSPs_nc_load.jl")
-        include("./src/io/nc/HSPs_nc_save.jl")
-        include("./src/io/csv/ccm_indicator_datafame.jl")
-        include("./src/io/jld/jld_load.jl")
-        include("./src/tools/geotiff_tools.jl")
-        include("./src/scenario/ssp_wrapper.jl")
-        include("./src/scenario/slr_wrapper.jl")
+        include("./logger/log_v2.jl")
+        include("./logger/jdiva_logger.jl")
+        include("./datatypes/geodatatype/SparseGeoArrays.jl")
+        include("./datatypes/hypsometric_profiles/hypsometric_profiles.jl")
+        include("./datatypes/coastal_model/local_coastal_model.jl")
+        include("./datatypes/coastal_model/composed_coastal_model.jl")
+        include("./datatypes/coastal_model/composed_coastal_model_generics.jl")
+        include("./datatypes/geodatatype/nn.jl")
+        include("./algorithms/conversion/SGRToHSP.jl")
+        include("./algorithms/coastal/coastline.jl")
+        include("./algorithms/coastal/coastplain.jl")
+        include("./algorithms/statistics/gev_fits.jl")
+        include("./algorithms/statistics/gpd_fits.jl")
+        include("./algorithms/numerical/simple_integration.jl")
+        include("./io/nc/HSPs_nc_load.jl")
+        include("./io/nc/HSPs_nc_save.jl")
+        include("./io/csv/ccm_indicator_datafame.jl")
+        include("./io/jld/jld_load.jl")
+        include("./tools/geotiff_tools.jl")
+        include("./scenario/ssp_wrapper.jl")
+        include("./scenario/slr_wrapper.jl")
     end
 end
 

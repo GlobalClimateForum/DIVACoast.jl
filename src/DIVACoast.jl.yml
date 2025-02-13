@@ -1,5 +1,5 @@
 drawHeader : True
-shortHeader : False
+shortHeader : True
 earthRadiusKM : 6371
 earthCircumferenceKM : 40075
 

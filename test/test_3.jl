@@ -1,5 +1,10 @@
-include("../DIVACoast.jl")
+include("../src/DIVACoast.jl")
 using .DIVACoast
 
-println(earth_radius_km)
-println(earth_circumference_km)
+println("Radius of the Earth is: $(earth_radius_km)km")
+println("Circumference of the Earth is: $(earth_circumference_km)km")
+
+using GDAL 
+
+println("This script uses GDAL.")
+
