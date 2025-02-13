@@ -1,0 +1,10 @@
+documentation/templates/docs
+dev/test/scratch.jl
+exercises/test.tif
+.vscode/settings.json
+./save/*
+.gitignore
+diva_library.code-workspace
+testdata/.~lock.osm_gadm1.csv#
+src/scenario/ssp_wrapper.jl
+src/scenario/ssp_wrapper.jl

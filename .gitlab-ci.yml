@@ -1,0 +1,14 @@
+pages:
+  stage: deploy
+  script:
+    - mkdir .public
+    - cp -r documentation/* .public
+    - rm -rf .public/embeds/docs
+    - mkdir .public/embeds/docs
+    - cp -r docs/build/* .public/embeds/docs
+    - mv .public public
+  artifacts:
+    paths:
+      - public
+  only:
+    - development
