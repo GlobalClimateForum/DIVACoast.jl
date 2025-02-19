@@ -58,15 +58,10 @@ function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{F
         hspf2_exposures  = map(e -> exposure_below_bathtub(hspf2, e), hspfc.elevation)
         exposures = map(add_exposures, hspf1_exposures, hspf2_exposures)
         
-
-        exposure_transform = (exp_i) -> reduce(hcat, [[exposures[i][exp_i], hspfc.elevation[i]] for i in 1:length(hspfc.elevation)])
-
-        # println(typeof(exposure_transform(1)))
-        # hspfc.cummulativeArea  = exposure_transform(1) 
-        hspfc.cummulativeStaticExposure = exposure_transform(2)
-        hspfc.cummulativeDynamicExposure = exposure_transform(3)
-
-
+        hspfc.cummulativeArea = getindex.(exposures, 1)
+        hspfc.cummulativeStaticExposure =  reduce(hcat, [exp[2] for exp in exposures])
+        hspfc.cummulativeDynamicExposure = reduce(hcat, [exp[3] for exp in exposures])
+        
         # Adding / recalc of distances is missing
     end
     return hspfc
@@ -77,6 +72,5 @@ hp2 = hp_floodplains[62639]
 
 hp3 = hp1 + hp2
 
-plot(hp3)
 
 
