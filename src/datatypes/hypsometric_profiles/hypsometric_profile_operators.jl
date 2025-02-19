@@ -56,10 +56,5 @@ function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{F
     return hspfc
 end
 
-hp1 = hp_floodplains[62626]
-hp2 = hp_floodplains[62639]
-
-hp3 = hp1 + hp2
-
 
 
