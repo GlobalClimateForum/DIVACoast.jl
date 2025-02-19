@@ -1,6 +1,7 @@
 # Just a scratch pad.
-include("../src/jdiva_lib.jl")
-using .jdiva
+include("../src/DIVACoast.jl")
+using .DIVACoast
+
 using Test
 using StructArrays
 
