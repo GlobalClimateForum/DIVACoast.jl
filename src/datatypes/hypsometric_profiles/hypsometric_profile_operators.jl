@@ -1,16 +1,5 @@
-include("$(ENV["DIVA_LIB"])/src/DIVACoast.jl")
-# include("$(ENV["DIVA_DATA"])/testdata/hypsometricprofiles.jl")
-
-using .DIVACoast
 using DataFrames
 using CSV
-
-data = (subdir) -> "$(ENV["DIVA_DATA"])/$(subdir)"
-
-floodplains_hp_path = data("dataset_global/nc/Global_hspfs_floodplains_merit_deltadtm1_0.nc")
-hp_floodplains = load_hsps_nc(Int32, Float32, floodplains_hp_path)
-
-Base.global_logger(DIVALogger())
 
 # Function to add two exposure tuples exposure_1 and exposure_2
 function add_exposures(exposure_1::Tuple{Vararg{Union{Number, AbstractArray{<:Number}}}},
