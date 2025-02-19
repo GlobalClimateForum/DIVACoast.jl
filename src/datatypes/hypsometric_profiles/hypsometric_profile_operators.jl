@@ -1,74 +1,82 @@
-include("$(ENV["DIVA_LIB"])/src/jdiva_env.jl")
-include("$(ENV["DIVA_LIB"])/src/jdiva_lib.jl")
+include("$(ENV["DIVA_LIB"])/src/DIVACoast.jl")
 # include("$(ENV["DIVA_DATA"])/testdata/hypsometricprofiles.jl")
 
-using .jdiva
+using .DIVACoast
 using DataFrames
 using CSV
 
-floodplains_hp_path = diva_data("dataset_global/nc/Global_hspfs_floodplains_merit_deltadtm1_0.nc")
-hp_floodplains  = load_hsps_nc(Int32, Float32, floodplains_hp_path)
+data = (subdir) -> "$(ENV["DIVA_DATA"])/$(subdir)"
 
-using .jdiva
+floodplains_hp_path = data("dataset_global/nc/Global_hspfs_floodplains_merit_deltadtm1_0.nc")
+hp_floodplains = load_hsps_nc(Int32, Float32, floodplains_hp_path)
 
 Base.global_logger(DIVALogger())
 
-function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{Float32}) 
-    
-    get_units = (hp) -> [getfield(hp,sym) for sym in fieldnames(typeof(hp)) if occursin("unit", lowercase(String(sym)))]
-    # Sanity checks
-    # Check if units are the same
-    if !isequal(get_units(hspf1),get_units(hspf2))
+# Function to add two exposure tuples exposure_1 and exposure_2
+function add_exposures(exposure_1::Tuple{Vararg{Union{Number, AbstractArray{<:Number}}}},
+    exposure_2::Tuple{Vararg{Union{Number, AbstractArray{<:Number}}}})::Vector{Union{Array, Number}}
+   
+    exposure = Vector{Union{Array, Number}}(undef, length(exposure_1))
+    for (i, (e1, e2)) in enumerate(zip(exposure_1, exposure_2))
+        if isa(e1, Array) && isa(e2, Array)
+            exposure[i] = e1 .+ e2
+        elseif isa(e1, Number) && isa(e2, Number)
+            exposure[i] = e1 + e2
+        else
+            @warn "$(typeof(e1)) + $(typeof(e2))"
+            throw("Can't add Exposure Values of different types.")
+        end
+    end
+    return exposure
+end
+
+"""
+Addtion of two Hypsometric Profiles. Adds (combines) the folling properties of the HypsometricProfiles:
+- Elevation: Combine Increments
+- width: Adds the width of both HypsometricProfiles
+- cummulativeArea: Adds the cummulative are of both HypsometricProfiles
+- static Exposure: Adds the cummulative static exposure of both HypsometricProfiles
+- dynamic Exposure: Adds the dynamic exposure of both HypsometricProfiles
+NOTE: Distances are not added, and need to be recalculated!
+"""
+function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{Float32})
+
+    get_units = (hp) -> [getfield(hp, sym) for sym in fieldnames(typeof(hp)) if occursin("unit", lowercase(String(sym)))]
+    # Sanity check
+    if !isequal(get_units(hspf1), get_units(hspf2))
         @warn "$(get_units(hspf1)) != $(get_units(hspf2))"
         throw("Can't add HypsometricProfiles of different units.")
     else
+        hspfc = deepcopy(hspf1)
+        hspfc.width = hspf1.width + hspf2.width
 
-    hspfc = deepcopy(hspf1)
-
-    println(fieldnames(typeof(hspf1)))
-
-    # Add width
-    hspfc.width = hspf1.width + hspf2.width
-    
-    # Combine elevation increments
-    hspfc.elevation = vcat(hspf1.elevation, hspf2.elevation) |> sort |> unique
-
-    # Combine Area, StaticExposure, dynamicExposure
-    for (index, elev) in enumerate(hspfc.elevation)
-
-        ea1, es1, ed1 = exposure_below_bathtub(hspf1, elev)
-        ea2, es2. ed2 = exposure_below_bathtub(hspf2, elev)
+        # Combine elevation increments
+        hspfc.elevation = vcat(hspf1.elevation, hspf2.elevation) |> sort |> unique
         
-   end 
+        # Get Exposure Values at elevation increment & combine assets
+        hspf1_exposures  = map(e -> exposure_below_bathtub(hspf1, e), hspfc.elevation)
+        hspf2_exposures  = map(e -> exposure_below_bathtub(hspf2, e), hspfc.elevation)
+        exposures = map(add_exposures, hspf1_exposures, hspf2_exposures)
+        
 
-   hspf1.staticExposureSymbols
-   hspf2.dynamicExposureSymbols
+        exposure_transform = (exp_i) -> reduce(hcat, [[exposures[i][exp_i], hspfc.elevation[i]] for i in 1:length(hspfc.elevation)])
+
+        # println(typeof(exposure_transform(1)))
+        # hspfc.cummulativeArea  = exposure_transform(1) 
+        hspfc.cummulativeStaticExposure = exposure_transform(2)
+        hspfc.cummulativeDynamicExposure = exposure_transform(3)
 
 
-    # ( :cummulativeArea, :area_unit, :cummulativeStaticExposure, :staticExposureSymbols, :staticExposureUnits, :cummulativeDynamicExposure, :dynamicExposureSymbols, :dynamicExposureUnits, :logger)
-
-
-
-    end 
+        # Adding / recalc of distances is missing
+    end
+    return hspfc
 end
 
 hp1 = hp_floodplains[62626]
 hp2 = hp_floodplains[62639]
 
 hp3 = hp1 + hp2
-# width::DT
-# width_unit::String
-# elevation::Array{DT}
-# elevation_unit::String
-# cummulativeArea::Array{DT}
-# area_unit::String
-# cummulativeStaticExposure::Array{DT,2}
-# staticExposureSymbols
-# staticExposureUnits::Array{String}
-# cummulativeDynamicExposure::Array{DT,2}
-# dynamicExposureSymbols
-# dynamicExposureUnits::Array{String}
-# #  distances::Array{DT}
-# logger::ExtendedLogger
+
+plot(hp3)
 
 
