@@ -1,14 +1,13 @@
-export SLRWrapper, get_slr_value, fill_missing_values!, get_slr_value_from_cell,
+export SLRScenarioReader, get_slr_value, fill_missing_values!, get_slr_value_from_cell,
        quantile_index, lon_index, lat_index
 
 using NCDatasets
 
-# SLRReader?
 """
-Creates a SLR-Wrapper around a dataset (NetCDF) using dataset specific variable names for variable (e.g., "SeaLevelRise"), latitude, longitude, time, and quantile
+Creates a SLR-Scenario reader around a dataset (NetCDF) using dataset specific variable names for variable (e.g., "SeaLevelRise"), latitude, longitude, time, and quantile
 After the Wrapper structure was initialized dataset specific functions can be used (e.g, get_slr_value)
 """
-mutable struct SLRWrapper
+mutable struct SLRScenarioReader
     dataset::Dataset
     lon::Array{Real}
     lat::Array{Real}
@@ -18,7 +17,11 @@ mutable struct SLRWrapper
     data::Array{Union{Missing,Real}}
 end
 
-function SLRWrapper(file_name::String, variable::String, lon_name::String, lat_name::String, time_name::String, quantile_name::String)
+"""
+Creates a SLRScenarioReader reader around a dataset (NetCDF) using dataset specific variable names for variable (e.g., "SeaLevelRise"), latitude, longitude, time, and quantile
+After the Wrapper structure was initialized dataset specific functions can be used (e.g, get_slr_value)
+"""
+function SLRScenarioReader(file_name::String, variable::String, lon_name::String, lat_name::String, time_name::String, quantile_name::String)
     ds = Dataset(file_name, "r")
 
     if !haskey(ds.dim, lon_name)
@@ -53,7 +56,7 @@ end
 """
 Gets the Sea Level Rise value at a specific location (lon, lat) in a specific quantile at a specific time.
 """
-function get_slr_value(slrw::SLRWrapper, lon::Real, lat::Real, quantile::Real, time)
+function get_slr_value(slrw::SLRScenarioReader, lon::Real, lat::Real, quantile::Real, time)
 
     index_lon = searchsortedfirst(slrw.lon, lon) <= size(slrw.lon, 1) ? searchsortedfirst(slrw.lon, lon) : size(slrw.lon, 1)
     index_lat = searchsortedfirst(slrw.lat, lat, rev=true) <= size(slrw.lat, 1) ? searchsortedfirst(slrw.lat, lat, rev=true) : size(slrw.lat, 1)
@@ -83,7 +86,7 @@ end
 Gets the Sea Level Rise value at a specific cell (index_lon, index_lat) in a specific quantile (given by index_qtl) at a specific time.
 Faster than the previous 
 """
-function get_slr_value_from_cell(slrw::SLRWrapper, index_lon::Int, index_lat::Int, index_qtl::Int, time)
+function get_slr_value_from_cell(slrw::SLRScenarioReader, index_lon::Int, index_lat::Int, index_qtl::Int, time)
 
 #    index_lon = searchsortedfirst(slrw.lon, lon) <= size(slrw.lon, 1) ? searchsortedfirst(slrw.lon, lon) : size(slrw.lon, 1)
 #    index_lat = searchsortedfirst(slrw.lat, lat, rev=true) <= size(slrw.lat, 1) ? searchsortedfirst(slrw.lat, lat, rev=true) : size(slrw.lat, 1)
@@ -109,9 +112,9 @@ function get_slr_value_from_cell(slrw::SLRWrapper, index_lon::Int, index_lat::In
     end
 end
 
-quantile_index(slrw::SLRWrapper, quantile::Real) = searchsortedfirst(slrw.quantiles, quantile) <= size(slrw.quantiles, 1) ? searchsortedfirst(slrw.quantiles, quantile) : size(slrw.quantiles, 1)
-lon_index(slrw::SLRWrapper, lon::Real) = searchsortedfirst(slrw.lon, lon) <= size(slrw.lon, 1) ? searchsortedfirst(slrw.lon, lon) : size(slrw.lon, 1)
-lat_index(slrw::SLRWrapper, lat::Real) = searchsortedfirst(slrw.lat, lat, rev=true) <= size(slrw.lat, 1) ? searchsortedfirst(slrw.lat, lat, rev=true) : size(slrw.lat, 1)
+quantile_index(slrw::SLRScenarioReader, quantile::Real) = searchsortedfirst(slrw.quantiles, quantile) <= size(slrw.quantiles, 1) ? searchsortedfirst(slrw.quantiles, quantile) : size(slrw.quantiles, 1)
+lon_index(slrw::SLRScenarioReader, lon::Real) = searchsortedfirst(slrw.lon, lon) <= size(slrw.lon, 1) ? searchsortedfirst(slrw.lon, lon) : size(slrw.lon, 1)
+lat_index(slrw::SLRScenarioReader, lat::Real) = searchsortedfirst(slrw.lat, lat, rev=true) <= size(slrw.lat, 1) ? searchsortedfirst(slrw.lat, lat, rev=true) : size(slrw.lat, 1)
 
 function cursor(index, width, b)
 

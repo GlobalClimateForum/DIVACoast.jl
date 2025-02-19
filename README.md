@@ -17,7 +17,7 @@ git clone https://gitlab.com/globalclimateforum/DIVACoast.jl.git
 
 3. Include the library in your script
 ```
-include('<path_to_library_repository>/DIVACoast.jl')
+include('<path_to_library_repository>/src/DIVACoast.jl')
 using .DIVACoast
 ```
 4. Inlcuding the `DIVACoast.jl` script will activate the DIVACoast project environment and install all required packages.
