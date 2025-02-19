@@ -38,29 +38,29 @@ mutable struct HypsometricProfile{DT<:Real}
     s_exposure::StructArray{T1}, s_exposure_units::Array{String},
     d_exposure::StructArray{T2}, d_exposure_units::Array{String}) where {DT<:Real,T1,T2}
     if (length(elevations) != length(area))
-      @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))")
+      @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))"
     end
     if (length(elevations) != size(s_exposure, 1))
-      @error "length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))")
+      @error "length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))"
     end
     if (length(elevations) != size(d_exposure, 1))
-      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))")
+      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))"
     end
     if (length(elevations) < 2)
-      @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed")
+      @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed"
     end
     if (!issorted(elevations))
-      @error "elevations is not sorted: $elevations")
+      @error "elevations is not sorted: $elevations"
     end
 
     if (area[1] != 0)
-      @error "area[1] should be zero, but its not: $area")
+      @error "area[1] should be zero, but its not: $area"
     end
     if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...))
-      @error "d_exposure first column should be zero, but its not: $s_exposure")
+      @error "d_exposure first column should be zero, but its not: $s_exposure"
     end
     if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...))
-      @error "d_exposure first column should be zero, but its not: $d_exposure")
+      @error "d_exposure first column should be zero, but its not: $d_exposure"
     end
 
     s_exposure_arrays = private_convert_strarray_to_array(DT, s_exposure)
@@ -75,22 +75,22 @@ mutable struct HypsometricProfile{DT<:Real}
     d_exposure::Array{DT,2}, d_exposure_units::Array{String}) where {DT<:Real}
     # String(nameof(var"#self#"))
     if (length(elevations) != length(area))
-      @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))")
+      @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))"
     end
     if ((size(s_exposure, 1) > 0) && (length(elevations) != size(s_exposure, 1)))
-      @error "length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))")
+      @error "length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))"
     end
     if ((size(d_exposure, 1) > 0) && (length(elevations) != size(d_exposure, 1)))
-      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))")
+      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))"
     end
     if (length(elevations) < 2)
-      @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed")
+      @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed"
     end
     if (!issorted(elevations))
-      @error "elevations is not sorted: $elevations")
+      @error "elevations is not sorted: $elevations"
     end
     if (area[1] != 0)
-      @error " area[1] should be zero, but its not: $area")
+      @error " area[1] should be zero, but its not: $area"
     end
 
     new{DT}(w, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), ntuple(i -> Symbol("s_exposure_name_$i"), size(s_exposure, 2)), s_exposure_units, cumsum(d_exposure, dims=1), ntuple(i -> Symbol("d_exposure_name_$i"), size(d_exposure, 2)), d_exposure_units)
@@ -103,28 +103,28 @@ mutable struct HypsometricProfile{DT<:Real}
     d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String}) where {DT<:Real}
     # String(nameof(var"#self#"))
     if (length(elevations) != length(area))
-      length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))")
+      @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))"
     end
     if ((size(s_exposure, 1) > 0) && (length(elevations) != size(s_exposure, 1)))
-      length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))")
+      @error "length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))"
     end
     if ((size(d_exposure, 1) > 0) && (length(elevations) != size(d_exposure, 1)))
-      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))")
+      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))"
     end
     if (length(elevations) < 2)
-      @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed")
+      @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed"
     end
     if (!issorted(elevations))
-      @error "elevations is not sorted: $elevations")
+      @error "elevations is not sorted: $elevations"
     end
     if (s_exposure_names != unique(s_exposure_names))
-      @error "s_exposure_names has duplicates: $s_exposure_names")
+      @error "s_exposure_names has duplicates: $s_exposure_names"
     end
     if (d_exposure_names != unique(d_exposure_names))
-      @error "d_exposure_names has duplicates: $d_exposure_names")
+      @error "d_exposure_names has duplicates: $d_exposure_names"
     end
     if (area[1] != 0)
-      @error "area[1] should be zero, but its not: $area")
+      @error "area[1] should be zero, but its not: $area"
     end
 
     new{DT}(w, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), Tuple(map(x -> Symbol(x), s_exposure_names)), s_exposure_units, cumsum(d_exposure, dims=1), Tuple(map(x -> Symbol(x), d_exposure_names)), d_exposure_units)
@@ -207,7 +207,7 @@ end
 
 function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT<:Real}
   if (hspf.elevation[1] != elevation[1])
-    @error "min elevation can not be changed in resampling: $(hspf.elevation[1]) != $(elevation[1])")
+    @error "min elevation can not be changed in resampling: $(hspf.elevation[1]) != $(elevation[1])"
   end
 
   can = Array{DT}(undef, size(elevation, 1))

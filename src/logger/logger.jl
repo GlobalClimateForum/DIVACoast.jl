@@ -12,9 +12,9 @@ mutable struct DIVALogger <: Logging.AbstractLogger
 end
 
 ## Constructor
-DIVALogger() = DIVALogger(stderr,Logging.Info, "JDIVA", now())
-DIVALogger(path::String) = DIVALogger(open(path, "w"), Logging.Info, "JDIVA", now())
-DIVALogger(lvl::Logging.LogLevel) = DIVALogger(stderr, lvl , "JDIVA", now())
+DIVALogger() = DIVALogger(stderr,Logging.Info, "DIVACoast", now())
+DIVALogger(path::String) = DIVALogger(open(path, "w"), Logging.Info, "DIVACoast", now())
+DIVALogger(lvl::Logging.LogLevel) = DIVALogger(stderr, lvl , "DIVACoast", now())
 
 # Method to change the minimum loglevel of a DIVALogger
 function set_loglvl!(level::Logging.LogLevel)
@@ -37,7 +37,7 @@ Logging.min_enabled_level(logger::DIVALogger) = logger.lvl
 
 ## Logger should log when called from Main Module and LogMsg Level is larger then set min lvl
 function Logging.shouldlog(logger::DIVALogger, level, _module, group, id)
-    return (_module == Main.jdiva || _module == Main) && level >= logger.lvl
+    return (_module == Main.DIVACoast || _module == Main) && level >= logger.lvl
 end
 
 ## Logger should catch exceptions
@@ -61,7 +61,6 @@ function Logging.handle_message(logger::DIVALogger, lvl, msg, _mod, group, id, f
 #    end
 
     file = basename(caller[:file])
-
     
     if lvl == Logging.Info
         header_w = "$(logger.msg_header)|$lvl @$time_f(after $runtime)"

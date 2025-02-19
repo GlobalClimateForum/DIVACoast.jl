@@ -39,8 +39,7 @@ module DIVACoast
         end
 
         # Include functions
-        include("./logger/log_v2.jl")
-        include("./logger/jdiva_logger.jl")
+        include("./logger/logger.jl")
         include("./datatypes/geodatatype/SparseGeoArrays.jl")
         include("./datatypes/hypsometric_profiles/hypsometric_profiles.jl")
         include("./datatypes/coastal_model/local_coastal_model.jl")

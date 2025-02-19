@@ -50,7 +50,7 @@ function SLRScenarioReader(file_name::String, variable::String, lon_name::String
         error("dimension variable $(quantile_name) in $file_name should be sorted increasingly.")
     end
 
-    SLRWrapper(ds, ds[lon_name], ds[lat_name], ds[time_name], ds[quantile_name], variable, ds[variable][:, :, :, :])
+    SLRScenarioReader(ds, ds[lon_name], ds[lat_name], ds[time_name], ds[quantile_name], variable, ds[variable][:, :, :, :])
 end
 
 """
@@ -146,7 +146,7 @@ function cursor(index, width, b)
     return result #,weights
 end
 
-function fill_missing_values!(slrw::SLRWrapper)
+function fill_missing_values!(slrw::SLRScenarioReader)
 
     ilon, ilat, itime, iquant = size(slrw.data)
     # Iterate every dimension in slrw.data
