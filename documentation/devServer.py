@@ -6,13 +6,13 @@ import shutil
 
 PORT = 8000
 
-def provide_dev_templates():
-    if os.path.isdir("./templates/docs"):
-        if len(os.listdir("./templates/docs")) > 0: 
-            shutil.rmtree("./templates/docs")
+def embeds():
+    if os.path.isdir("./embeds/docs"):
+        if len(os.listdir("./embeds/docs")) > 0: 
+            shutil.rmtree("./embeds/docs")
         else:
-            os.rmdir("./templates/docs")
-    shutil.copytree("../docs/build", "./templates/docs")
+            os.rmdir("./embeds/docs")
+    shutil.copytree("../docs/build", "./embeds/docs")
 
 class NoCacheHTTPRequestHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -22,9 +22,9 @@ class NoCacheHTTPRequestHandler(SimpleHTTPRequestHandler):
         SimpleHTTPRequestHandler.end_headers(self)
 
 if __name__ == '__main__':
+    embeds()
     from http.server import HTTPServer
     server_address = ('', PORT)
     httpd = HTTPServer(server_address, NoCacheHTTPRequestHandler)
     print(f"Development Server running at http://localhost:{PORT}/")
-    provide_dev_templates()
     httpd.serve_forever()
