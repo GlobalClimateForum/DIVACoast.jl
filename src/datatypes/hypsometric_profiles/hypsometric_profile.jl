@@ -66,7 +66,7 @@ mutable struct HypsometricProfile{DT<:Real}
     s_exposure_arrays = private_convert_strarray_to_array(DT, s_exposure)
     d_exposure_arrays = private_convert_strarray_to_array(DT, d_exposure)
 
-    new{DT}(w, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure_arrays, dims=1), keys(fieldarrays(s_exposure)), s_exposure_units, cumsum(d_exposure_arrays, dims=1), keys(fieldarrays(d_exposure)), d_exposure_units)
+    new{DT}(width, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure_arrays, dims=1), keys(fieldarrays(s_exposure)), s_exposure_units, cumsum(d_exposure_arrays, dims=1), keys(fieldarrays(d_exposure)), d_exposure_units)
   end
 
   function HypsometricProfile(width::DT, width_unit::String,
@@ -93,7 +93,7 @@ mutable struct HypsometricProfile{DT<:Real}
       @error " area[1] should be zero, but its not: $area"
     end
 
-    new{DT}(w, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), ntuple(i -> Symbol("s_exposure_name_$i"), size(s_exposure, 2)), s_exposure_units, cumsum(d_exposure, dims=1), ntuple(i -> Symbol("d_exposure_name_$i"), size(d_exposure, 2)), d_exposure_units)
+    new{DT}(width, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), ntuple(i -> Symbol("s_exposure_name_$i"), size(s_exposure, 2)), s_exposure_units, cumsum(d_exposure, dims=1), ntuple(i -> Symbol("d_exposure_name_$i"), size(d_exposure, 2)), d_exposure_units)
   end
 
 
@@ -127,7 +127,7 @@ mutable struct HypsometricProfile{DT<:Real}
       @error "area[1] should be zero, but its not: $area"
     end
 
-    new{DT}(w, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), Tuple(map(x -> Symbol(x), s_exposure_names)), s_exposure_units, cumsum(d_exposure, dims=1), Tuple(map(x -> Symbol(x), d_exposure_names)), d_exposure_units)
+    new{DT}(width, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), Tuple(map(x -> Symbol(x), s_exposure_names)), s_exposure_units, cumsum(d_exposure, dims=1), Tuple(map(x -> Symbol(x), d_exposure_names)), d_exposure_units)
   end
 
   function HypsometricProfile(width::DT, width_unit::String,
@@ -135,9 +135,9 @@ mutable struct HypsometricProfile{DT<:Real}
     s_exposure::Vector{Any}, s_exposure_names::Vector{Any}, s_exposure_units::Vector{Any},
     d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String}) where {DT<:Real}
     if s_exposure == []
-      return HypsometricProfile(w, width_unit, elevations, elevation_unit, area, area_unit, Matrix{Float32}(undef, 0, 0), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units)
+      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, Matrix{Float32}(undef, 0, 0), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units)
     else
-      return HypsometricProfile(w, width_unit, elevations, elevation_unit, area, area_unit, convert(Array{DT,2}, s_exposure), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units)
+      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, convert(Array{DT,2}, s_exposure), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units)
     end
   end
 
@@ -146,9 +146,9 @@ mutable struct HypsometricProfile{DT<:Real}
     s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
     d_exposure::Vector{Any}, d_exposure_names::Vector{Any}, d_exposure_units::Vector{Any}) where {DT<:Real}
     if d_exposure == []
-      return HypsometricProfile(w, width_unit, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, Matrix{Float32}(undef, 0, 0), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units))
+      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, Matrix{Float32}(undef, 0, 0), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units))
     else
-      return HypsometricProfile(w, width_unit, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, convert(Array{DT,2}, d_exposure), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units))
+      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, convert(Array{DT,2}, d_exposure), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units))
     end
   end
 end
