@@ -45,19 +45,11 @@ In DIVACoast Hypsometric Profiles can either be initialized manually or be gener
 ```@docs
 Main.DIVACoast.HypsometricProfile
 Main.DIVACoast.load_hsps_nc
+Main.DIVACoast.to_hypsometric_profile
+Base.:+
 ```
-### Modify HypsometricProfiles
-When modeling flood events, we typically analyze **multiple scenarios**, which require modifications to the physical model.
-For example, implementing a dike in the physical model alters the hypsometric profile, modifying coastal topography and changing the hydrological connectivity. As a result, floodwaters must reach a higher threshold before inundating certain areas. Similarly, we can also alter the exposure of certain entities. In DIVACoast, we differentiate between two types of exposure:
 
-1. **Static Exposure**
-- Represents entities that cannot be relocated and will be flooded once a certain water level is reached.
-- Example: *Agricultural land, which remains fixed and will always be affected at a given flood depth*
-2. **Dynamic Exposure**
-- Represents entities that can be relocated or adapt over time.
-- Example: *People who may move to higher elevations. GDP decreasing in an area when exposed to flooding.*
-
-To express those process in DIVACoast, we provide the following functionalities.
+## Adapt
 ```@docs
 Main.DIVACoast.add_static_exposure!
 Main.DIVACoast.add_dynamic_exposure!
@@ -103,6 +95,8 @@ Main.DIVACoast.estimate_gpd_negative_distribution
 Main.DIVACoast.estimate_gpd_positive_distribution
 Main.DIVACoast.estimate_gp_distribution
 Main.DIVACoast.estimate_exponential_distribution
+
+Main.DIVACoast.plot_comparison_extreme_distributions
 ```
 
 ## Data handling

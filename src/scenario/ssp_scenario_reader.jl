@@ -1,4 +1,4 @@
-export SSPWrapper, SSPType, AnnualGrowthPercentage, AnnualGrowth, GrowthFactor, SSPWrapper
+export ScenarioReader, SSPType, AnnualGrowthPercentage, AnnualGrowth, GrowthFactor, ScenarioReader
 export ssp_get_growth_factor
 
 using DataFrames
@@ -11,16 +11,16 @@ struct GrowthFactor <: SSPType end
 """
 Wraps SSP Dataset (CSV file).
 """
-mutable struct SSPWrapper{T<:SSPType}
+mutable struct ScenarioReader{T<:SSPType}
     df_ssp::DataFrame
 end
 
 # function 
-ssp_get_growth(sw::SSPWrapper{AnnualGrowthPercentage}, g::Real) = g / 100
-ssp_get_growth(sw::SSPWrapper{AnnualGrowth}, g::Real) = g - 1
-ssp_get_growth(sw::SSPWrapper{GrowthFactor}, g::Real) = g - 1
+ssp_get_growth(sw::ScenarioReader{AnnualGrowthPercentage}, g::Real) = g / 100
+ssp_get_growth(sw::ScenarioReader{AnnualGrowth}, g::Real) = g - 1
+ssp_get_growth(sw::ScenarioReader{GrowthFactor}, g::Real) = g - 1
 
-function ssp_get_growth_factor(wrapped_ssp::SSPWrapper{T}, variable::String, country::String, ssp_scenario::String, year1::Int, year2::Int, do_warn = true) where {T<:SSPType}
+function ssp_get_growth_factor(wrapped_ssp::ScenarioReader{T}, variable::String, country::String, ssp_scenario::String, year1::Int, year2::Int, do_warn = true) where {T<:SSPType}
 
     # Filter function to retrieve specifc ssp_scenario by variable and country
     function flt(v, r, s)

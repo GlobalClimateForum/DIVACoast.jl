@@ -1,6 +1,6 @@
 export estimate_gumbel_distribution, estimate_frechet_distribution
 export estimate_weibull_distribution, estimate_gev_distribution
-export estimate_gumbel_distribution_old, gumbel_error
+export estimate_gumbel_distribution_old, gumbel_error, frechet_error, weibull_error, gumbel_error_x
 
 using LsqFit
 using Distributions
@@ -16,6 +16,10 @@ gumbel_error(x_data, y_data) = function (p)
     sqrt(sum((y_data .- @. exp(-exp(-(x_data - p[1]) / p[2]))) .^ 2))
 end
 
+gumbel_error_x(x_data,y_data) = function (p)
+    sqrt(1/length(x_data)*sum((x_data .- quantile.(GeneralizedExtremeValue(p[1],p[2],p[3]),y_data)) .^ 2))
+end
+
 frechet_error(x_data, y_data) = function (p)
     res = 0.0
     for i in 1:size(x_data, 1)
@@ -26,6 +30,10 @@ frechet_error(x_data, y_data) = function (p)
         end
     end
     sqrt(res)
+end
+
+frechet_error_x(x_data,y_data) = function (p)
+    sqrt(1/length(x_data)*sum((x_data .- quantile.(GeneralizedExtremeValue(p[1],p[2],p[3]),y_data)) .^ 2))
 end
 
 weibull_error(x_data, y_data) = function (p)
@@ -40,6 +48,10 @@ weibull_error(x_data, y_data) = function (p)
         end
     end
     sqrt(res)
+end
+
+weibull_error_x(x_data,y_data) = function (p)
+    sqrt(1/length(x_data)*sum((x_data .- quantile.(GeneralizedExtremeValue(p[1],p[2],p[3]),y_data)) .^ 2))
 end
 
 """
@@ -65,7 +77,7 @@ function estimate_gumbel_distribution(x_data::Array{T}, y_data::Array{T}) where 
 
     gumbel_optim_fit =
         try
-            optimize(x -> gumbel_error(x_data, y_data)(x), lower_bound, upper_bound, x_initial)
+            optimize(x -> gumbel_error_x(x_data, y_data)(x), lower_bound, upper_bound, x_initial)
         catch
             missing
         end
@@ -118,7 +130,7 @@ function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) where
 
     frechet_optim_fit =
         try
-            optimize(x -> frechet_error(x_data, y_data)(x), lower_bound, upper_bound, x_initial)
+            optimize(x -> frechet_error_x(x_data, y_data)(x), lower_bound, upper_bound, x_initial)
         catch
             missing
         end
@@ -174,7 +186,7 @@ function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where
 
     weibull_optim_fit =
         try
-            optimize(x -> weibull_error(x_data, y_data)(x), lower_bound, upper_bound, x_initial)
+            optimize(x -> weibull_error_x(x_data, y_data)(x), lower_bound, upper_bound, x_initial)
         catch
             missing
         end
@@ -208,20 +220,20 @@ function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<
     gev_frechet = estimate_frechet_distribution(x_data, y_data)
     gev_weibull = estimate_weibull_distribution(x_data, y_data)
 
-    my_gumbel_error = gumbel_error(x_data, y_data)([gev_gumbel.μ, gev_gumbel.σ, gev_gumbel.ξ])
-    my_frechet_error = frechet_error(x_data, y_data)([gev_frechet.μ, gev_frechet.σ, gev_frechet.ξ])
-    my_weibull_error = weibull_error(x_data, y_data)([gev_weibull.μ, gev_weibull.σ, gev_weibull.ξ])
+    my_gumbel_error = gumbel_error_x(x_data, y_data)([gev_gumbel.μ, gev_gumbel.σ, gev_gumbel.ξ])
+    my_frechet_error = frechet_error_x(x_data, y_data)([gev_frechet.μ, gev_frechet.σ, gev_frechet.ξ])
+    my_weibull_error = weibull_error_x(x_data, y_data)([gev_weibull.μ, gev_weibull.σ, gev_weibull.ξ])
 
     #println("GUMBEL: ", gev_gumbel, " - ", my_gumbel_error)
     #println("FRECHET: ", gev_frechet, " - ", my_frechet_error)
     #println("WEIBULL: ", gev_weibull, " - ", my_weibull_error)
 
     if my_gumbel_error <= my_frechet_error && my_gumbel_error <= my_weibull_error
-        return gev_gumbel
+        return (gev_gumbel,my_gumbel_error)
     elseif my_frechet_error <= my_weibull_error
-        return gev_frechet
+        return (gev_frechet,my_frechet_error)
     else
-        return gev_weibull
+        return (gev_weibull, my_weibull_error)
     end
 end
 
