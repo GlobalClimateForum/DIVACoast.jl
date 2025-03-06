@@ -248,7 +248,7 @@ footer {
     -webkit-backdrop-filter: blur(4px);
     border: 1px solid rgba(255, 255, 255, 0.18);
 
-    input{
+    input {
         height: 2em;
         border-radius: 0.5em;
         max-width: 100%;
@@ -259,7 +259,7 @@ footer {
         margin: none;
     }
 
-    label{
+    label {
         font-size: smaller;
         margin: none;
 
@@ -282,7 +282,6 @@ footer {
     background-color: var(--main-diva-color);
 }
 
-.markerpopup {}
 
 .popup-metatable {
     width: 100%;
@@ -297,4 +296,42 @@ footer {
 
 }
 
-.hypsoChart {}
+#spinner {
+    z-index: 9997;
+    height: 100vh;  /* Full viewport height */
+    width: 100vw;   /* Full viewport width */
+    position: fixed;
+
+    background: rgba(255, 255, 255, 0.5); /* Semi-transparent background */
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+
+    display: flex;
+    flex-direction: column;   /* Stack items vertically */
+    justify-content:space-around;  /* Vertically center the items */   
+    align-items: center;
+    text-align: center;
+}
+.loader {
+    z-index: 9997;
+    border: 16px solid var(--main-diva-xlight);
+    border-top: 16px solid var(--main-diva-color);
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    animation: spin 2s linear infinite;
+    margin: auto;
+
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

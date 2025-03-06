@@ -132,7 +132,7 @@ function addHTMLEmbed(html_path, targetID) {
 }
 
 // Explore Map
-function initMap(){
+function initMap() {
 
     var mapOptions = {
         center: [53.541176, 9.981012], // Initial center of the map
@@ -150,8 +150,19 @@ function initMap(){
 
 }
 
+// Indicate that the data is being fetched
+function showSpinner() {
+    console.log("SHOWSPINNDER")
+    document.getElementById('spinner').style.display = 'block';
+}
+
+function hideSpinner() {
+    document.getElementById('spinner').style.display = 'none';
+}
+
 function exploreMap() {
 
+    showSpinner();
     initMap();
 
     // Define Cluster Layer
@@ -179,17 +190,29 @@ function exploreMap() {
         popupAnchor: [0, -15]
     });
 
-    
+
     let geojsonLayer;
     let geojsonData;
 
-    let baththubdata = "./embeds/resmap/bathtub.geojson";
+    function isLocal() {
+        const hostname = window.location.hostname;
+        return hostname === 'localhost' || hostname === '127.0.0.1';
+    }
+
+    let baththubdata;
+    if (window.location.hostname === 'localhost') {
+        baththubdata = "https://cors-anywhere.herokuapp.com/https://gitlab.com/larsenno/divacoast_outputs/-/raw/main/bathtub.geojson"
+    } else {
+        baththubdata = "https://gitlab.com/larsenno/divacoast_outputs/-/raw/main/bathtub.geojson"
+    }
+    // let baththubdata = "./embeds/resmap/bathtub.geojson";
 
     fetch(baththubdata)
         .then(response => response.json())
         .then(data => {
             geojsonData = data;
             loadVisibleGeoJSON(map.getBounds());
+            hideSpinner();
         });
 
     function loadVisibleGeoJSON(bounds) {
