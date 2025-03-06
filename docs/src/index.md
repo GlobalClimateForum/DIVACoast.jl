@@ -36,13 +36,28 @@ Main.DIVACoast.LocalCoastalImpactModel
 ```
 
 ## Hypsometric Profile
+A hypsometric profile represents a cross-section of a landscape. It helps to understand terrain structure and, therefore, flood exposure.
+For DIVACoast, it serves as the underlying data structure for the physical model. The profile is derived from a Digital Elevation Model (DEM), incorporating hydrological connectivity, where each elevation increment corresponds to the cumulative area exposed as floodwaters rise.
+Without adaptation measures or attenuative land cover, this follows the bathtub model, where water first inundates low-lying areas before reaching higher elevations. In conclusion, the profile **quantifies the extent of land or infrastructure affected** at each flood stage (elevation increment).
+
+### Initialize a Hypsometric Profile
+In DIVACoast Hypsometric Profiles can either be initialized manually or be generated from a NetCDF file.
 ```@docs
 Main.DIVACoast.HypsometricProfile
 Main.DIVACoast.load_hsps_nc
-Base.:+
 ```
+### Modify HypsometricProfiles
+When modeling flood events, we typically analyze **multiple scenarios**, which require modifications to the physical model.
+For example, implementing a dike in the physical model alters the hypsometric profile, modifying coastal topography and changing the hydrological connectivity. As a result, floodwaters must reach a higher threshold before inundating certain areas. Similarly, we can also alter the exposure of certain entities. In DIVACoast, we differentiate between two types of exposure:
 
-## Adapt
+1. **Static Exposure**
+- Represents entities that cannot be relocated and will be flooded once a certain water level is reached.
+- Example: *Agricultural land, which remains fixed and will always be affected at a given flood depth*
+2. **Dynamic Exposure**
+- Represents entities that can be relocated or adapt over time.
+- Example: *People who may move to higher elevations. GDP decreasing in an area when exposed to flooding.*
+
+To express those process in DIVACoast, we provide the following functionalities.
 ```@docs
 Main.DIVACoast.add_static_exposure!
 Main.DIVACoast.add_dynamic_exposure!
@@ -55,23 +70,29 @@ Main.DIVACoast.remove_below!
 Main.DIVACoast.add_above!
 Main.DIVACoast.add_between!
 Main.DIVACoast.compress!
+Base.:+
 ```
 
-### Analysis
-### Calculate Damages
-```@docs
-Main.DIVACoast.expected_damage_bathtub_standard_ddf
-Main.DIVACoast.expected_damage_bathtub
-```
+## Analysis
+To draw conclusions from our model, we aim to analyze exposed entities under different circumstances. DIVACoast not only allows the use of a bathtub model for exposure analysis but also supports attenuation.
+Attenuation refers to the process by which floodwaters are reduced in depth as they propagate across the landscape, influenced by certain land cover types. This could include factors like vegetation, wetlands, or urban infrastructure that slow down or reduce the extent of flooding.
 
-### Get Exposure
+### Exposure functions
 ```@docs
 Main.DIVACoast.exposure_below_bathtub
 Main.DIVACoast.exposure_below_attenuated
 Main.DIVACoast.attenuate
 ```
+### Damage functions
 
-### Statistics
+
+### Expected damage functions
+```@docs
+Main.DIVACoast.expected_damage_bathtub_standard_ddf
+Main.DIVACoast.expected_damage_bathtub
+```
+
+##  Extreme Value Distributionss
 ```@docs
 Main.DIVACoast.estimate_gumbel_distribution
 Main.DIVACoast.estimate_frechet_distribution
@@ -84,22 +105,42 @@ Main.DIVACoast.estimate_gp_distribution
 Main.DIVACoast.estimate_exponential_distribution
 ```
 
-## Data
-### Read SLR Data
+## Data handling
+Modeling often involves extensive data handling and wrangling. To simplify this process, DIVACoast provides specialized data readers. When running simulations, you may need to access values at specific times, which might not be available in your data. The reader functions handle this by **interpolating** between time steps or **extrapolating** from the last available time step.
+
+**Sea Level Rise** scenarios can be managed using the `SLRScenarioReader`. This reader can then be used with the `get_slr_value()` and `get_slr_value_from_cell()` functions to retrieve the relevant data. The reader takes a **NetCDF** file as input, which must include the following dimensions:
+
+1. **Variable**  
+   - The specific variable you want to access (e.g., Sea Level Rise in meters).
+2. **Longitude and Latitude**  
+   - Dimensions specifying the longitude and latitude for each grid cell in the NetCDF file.
+3. **Time**  
+   - A temporal dimension, e.g., 5-year increments.
+4. **Quantiles**  
+   - Quantiles associated with your variable, useful for capturing uncertainty or different scenarios.
+
+### Sea Level Rise Scenario Reader
 ```@docs
 Main.DIVACoast.SLRScenarioReader
 Main.DIVACoast.get_slr_value
 Main.DIVACoast.get_slr_value_from_cell
+
+**Socio-economic-scenarios** can be managed using the `SSPWrapper` function. 
+
 ```
 ### Read SSP Data
 ```@docs
 Main.DIVACoast.SSPWrapper
 ```
 
-### Read GeoTIFF
+### Spatial-Relationship
 ```@docs
-Main.DIVACoast.geotiff_connect
+Main.DIVACoast.Neighbour
+Main.DIVACoast.nearest
+Main.DIVACoast.nearest_coord
+Main.DIVACoast.coords_to_wide
 ```
+
 
 ## Spatial Operations
 ### SparseGeoArray (SGA)
@@ -129,12 +170,6 @@ Main.DIVACoast.str2wkt
 Main.DIVACoast.epsg!
 Main.DIVACoast.is_rotated
 Main.DIVACoast.bbox!
+Main.DIVACoast.geotiff_connect
 ```
 
-### Spatial-Relationship
-```@docs
-Main.DIVACoast.Neighbour
-Main.DIVACoast.nearest
-Main.DIVACoast.nearest_coord
-Main.DIVACoast.coords_to_wide
-```
