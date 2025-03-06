@@ -1,7 +1,12 @@
 export to_hypsometric_profile, to_hypsometric_profiles,
   attach_to_hypsometric_profiles!, attach_static_exposure_to_hypsometric_profiles!, attach_dynamic_exposure_to_hypsometric_profiles!
 
-function to_hypsometric_profile(sga::SparseGeoArray{DT,IT}, w::DT2, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
+"""
+  to_hypsometric_profile(sga::SparseGeoArray{DT,IT}, width::DT2, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
+
+A hypsometric profile is constructed from an elevation geotiff representing elevations. 
+"""  
+function to_hypsometric_profile(sga::SparseGeoArray{DT,IT}, width::DT2, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
   s = floor(Int, ((max_elevation - min_elevation) / elevation_incr))
   a::Array{DT2} = zeros(s)
   e = Array{DT2}(undef, s)
@@ -37,7 +42,7 @@ end
 function to_hypsometric_profile(sga_elevation::SparseGeoArray{DT,IT}, area_unit::String,
   sgas_exp_st::Array{SparseGeoArray{DT,IT}}, exp_st_names::Array{String}, exp_st_units::Array{String},
   sgas_exp_dyn::Array{SparseGeoArray{DT,IT}}, exp_dyn_names::Array{String}, exp_dyn_units::Array{String},
-  w::DT2, width_unit::String, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2, elevation_unit::String)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
+  width::DT2, width_unit::String, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2, elevation_unit::String)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
   # ToDo:: check if all dimensions match.
 
   s = floor(Int, ((max_elevation - min_elevation) / elevation_incr))
@@ -394,7 +399,6 @@ function attach_to_hypsometric_profiles!(
         exp_dy_data_data = vcat(zeros(Float32, size(exp_dy_data_data))[1], exp_dy_data_data)
       end
       for j in 1:size(exp_dy_data_data, 2)
-        #        println("add dynamic $exp_dy_data_index $j")
         add_dynamic_exposure!(hspf_data[exp_dy_data_index], copy(e), copy(exp_dy_data_data[:, j]), exposure_dynamic_names[j], exposure_dynamic_units[j])
       end
     end

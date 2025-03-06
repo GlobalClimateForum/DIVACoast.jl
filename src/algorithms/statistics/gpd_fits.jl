@@ -224,7 +224,7 @@ out of the exponential, positive GPD and negative GPD model based on the summed 
 function estimate_gp_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     #println()
     #print("fit exponential ... ")
-    gpd_exponential = estimate_exponential_distribution(x_data, y_data)
+    gpd_exponential = estimate_exponential_distribution(x_data, y_data) # ξ = 0
     #println(" done. ", now())
     #print("fit gpd positive ... ")
     gpd_positive = estimate_gpd_positive_distribution(x_data, y_data)
