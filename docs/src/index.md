@@ -39,6 +39,7 @@ Main.DIVACoast.LocalCoastalImpactModel
 ```@docs
 Main.DIVACoast.HypsometricProfile
 Main.DIVACoast.load_hsps_nc
+Main.DIVACoast.to_hypsometric_profile
 Base.:+
 ```
 

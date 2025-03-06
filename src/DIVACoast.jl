@@ -46,7 +46,7 @@ module DIVACoast
         include("./datatypes/coastal_model/composed_coastal_model.jl")
         include("./datatypes/coastal_model/composed_coastal_model_generics.jl")
         include("./datatypes/geodatatype/nn.jl")
-        include("./algorithms/conversion/SGRToHSP.jl")
+        include("./algorithms/conversion/sgr_to_hsp.jl")
         include("./algorithms/coastal/coastline.jl")
         include("./algorithms/coastal/coastplain.jl")
         include("./algorithms/statistics/gev_fits.jl")
