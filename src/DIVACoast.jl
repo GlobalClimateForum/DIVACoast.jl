@@ -51,7 +51,7 @@ module DIVACoast
         include("./algorithms/coastal/coastplain.jl")
         include("./algorithms/statistics/gev_fits.jl")
         include("./algorithms/statistics/gpd_fits.jl")
-        include("./algorithms/statistics/plot_extreme_distributions.jl")
+        include("./algorithms/statistics/extreme_distributions_plot.jl")
         include("./algorithms/numerical/simple_integration.jl")
         include("./io/nc/HSPs_nc_load.jl")
         include("./io/nc/HSPs_nc_save.jl")

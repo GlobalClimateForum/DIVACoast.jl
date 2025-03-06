@@ -82,6 +82,8 @@ Main.DIVACoast.estimate_gpd_negative_distribution
 Main.DIVACoast.estimate_gpd_positive_distribution
 Main.DIVACoast.estimate_gp_distribution
 Main.DIVACoast.estimate_exponential_distribution
+
+Main.DIVACoast.plot_comparison_extreme_distributions
 ```
 
 ## Data
