@@ -1,4 +1,4 @@
-export SLRScenarioReader, get_slr_value, fill_missing_values!, get_slr_value_from_cell,
+export SLRScenarioReader, get_slr_value, fill_missing_values!, get_slr_value_from_grid_cell,
        quantile_index, lon_index, lat_index
 
 using NCDatasets
@@ -86,7 +86,7 @@ end
 Gets the Sea Level Rise value at a specific cell (index_lon, index_lat) in a specific quantile (given by index_qtl) at a specific time.
 Faster than the previous 
 """
-function get_slr_value_from_cell(slrw::SLRScenarioReader, index_lon::Int, index_lat::Int, index_qtl::Int, time)
+function get_slr_value_from_grid_cell(slrw::SLRScenarioReader, index_lon::Int, index_lat::Int, index_qtl::Int, time)
 
 #    index_lon = searchsortedfirst(slrw.lon, lon) <= size(slrw.lon, 1) ? searchsortedfirst(slrw.lon, lon) : size(slrw.lon, 1)
 #    index_lat = searchsortedfirst(slrw.lat, lat, rev=true) <= size(slrw.lat, 1) ? searchsortedfirst(slrw.lat, lat, rev=true) : size(slrw.lat, 1)
@@ -183,7 +183,7 @@ function fill_missing_values!(slrw::SLRScenarioReader)
 
     end
   
-    # NN matching as we have done for surges ...
+    # NN matching  ...
     # ...
 
    
