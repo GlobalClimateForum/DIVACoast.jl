@@ -54,13 +54,10 @@ function plot_extremes(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     plot!(y_range_rp, y_gpd_positive, label="GPD Positive", lw=3, color=ColorSchemes.viridis.colors[200])
     plot!(y_range_rp, y_gpd_negative, label="GPD Negative", lw=3, color=ColorSchemes.viridis.colors[250])
 
-
-
     # Overlay the actual data points
     scatter!(y_data_rp, x_data, markersize=6, label="Extreme Data Points", color=:black)
 
     # Customize the plot
-
     xticks!(y_data_rp, string.(y_data_rp))
     xlabel!("Return period")
     ylabel!("Water level")

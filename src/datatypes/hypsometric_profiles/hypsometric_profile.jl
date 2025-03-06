@@ -10,7 +10,7 @@ export HypsometricProfile,
   compress!, compress_multithread!
 
 """
-    HypsometricProfile(w::DT, width_unit::String,
+    HypsometricProfile(width::DT, width_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::StructArray{T1}, s_exposure_units::Array{String},
     d_exposure::StructArray{T2}, d_exposure_units::Array{String}) where {DT<:Real,T1,T2}
@@ -33,7 +33,7 @@ mutable struct HypsometricProfile{DT<:Real}
   doLog::Bool
 
   # Constructors
-  function HypsometricProfile(w::DT, width_unit::String,
+  function HypsometricProfile(width::DT, width_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::StructArray{T1}, s_exposure_units::Array{String},
     d_exposure::StructArray{T2}, d_exposure_units::Array{String}) where {DT<:Real,T1,T2}
@@ -69,7 +69,7 @@ mutable struct HypsometricProfile{DT<:Real}
     new{DT}(w, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure_arrays, dims=1), keys(fieldarrays(s_exposure)), s_exposure_units, cumsum(d_exposure_arrays, dims=1), keys(fieldarrays(d_exposure)), d_exposure_units)
   end
 
-  function HypsometricProfile(w::DT, width_unit::String,
+  function HypsometricProfile(width::DT, width_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Array{DT,2}, s_exposure_units::Array{String},
     d_exposure::Array{DT,2}, d_exposure_units::Array{String}) where {DT<:Real}
@@ -97,7 +97,7 @@ mutable struct HypsometricProfile{DT<:Real}
   end
 
 
-  function HypsometricProfile(w::DT, width_unit::String,
+  function HypsometricProfile(width::DT, width_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
     d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String}) where {DT<:Real}
@@ -130,7 +130,7 @@ mutable struct HypsometricProfile{DT<:Real}
     new{DT}(w, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), Tuple(map(x -> Symbol(x), s_exposure_names)), s_exposure_units, cumsum(d_exposure, dims=1), Tuple(map(x -> Symbol(x), d_exposure_names)), d_exposure_units)
   end
 
-  function HypsometricProfile(w::DT, width_unit::String,
+  function HypsometricProfile(width::DT, width_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Vector{Any}, s_exposure_names::Vector{Any}, s_exposure_units::Vector{Any},
     d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String}) where {DT<:Real}
@@ -141,7 +141,7 @@ mutable struct HypsometricProfile{DT<:Real}
     end
   end
 
-  function HypsometricProfile(w::DT,
+  function HypsometricProfile(width::DT,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
     d_exposure::Vector{Any}, d_exposure_names::Vector{Any}, d_exposure_units::Vector{Any}) where {DT<:Real}

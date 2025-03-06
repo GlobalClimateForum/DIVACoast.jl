@@ -1,4 +1,3 @@
-
 using Plots
 
 function RecipesBase.plot(hp::HypsometricProfile)
