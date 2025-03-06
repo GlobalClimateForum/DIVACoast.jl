@@ -204,10 +204,10 @@ period and x the corresponding water level height. The funtion returns a General
 out of the Gumbel, Frechet and Weibull model based on the summed squared residuals.
 """
 function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
-    gev_gumbel = estimate_gumbel_distribution(x_data, y_data)
-    gev_frechet = estimate_frechet_distribution(x_data, y_data)
-    gev_weibull = estimate_weibull_distribution(x_data, y_data)
-
+    gev_gumbel = estimate_gumbel_distribution(x_data, y_data)     # ξ = 0
+    gev_frechet = estimate_frechet_distribution(x_data, y_data)   # ξ > 0 
+    gev_weibull = estimate_weibull_distribution(x_data, y_data)   # ξ < 0
+  
     my_gumbel_error = gumbel_error(x_data, y_data)([gev_gumbel.μ, gev_gumbel.σ, gev_gumbel.ξ])
     my_frechet_error = frechet_error(x_data, y_data)([gev_frechet.μ, gev_frechet.σ, gev_frechet.ξ])
     my_weibull_error = weibull_error(x_data, y_data)([gev_weibull.μ, gev_weibull.σ, gev_weibull.ξ])
@@ -217,7 +217,7 @@ function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<
     #println("WEIBULL: ", gev_weibull, " - ", my_weibull_error)
 
     if my_gumbel_error <= my_frechet_error && my_gumbel_error <= my_weibull_error
-        return gev_gumbel
+        return (gev_gumbel, my_gumbel_error)
     elseif my_frechet_error <= my_weibull_error
         return gev_frechet
     else
