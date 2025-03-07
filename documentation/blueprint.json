@@ -8,10 +8,5 @@
         "target_id" : "examples", 
         "type" : "ipynb",
         "content" : ["gitlab.com/globalclimateforum/diva_library/-/raw/development/docs/demoscript_07_hypsometric_profile_damages.ipynb"]
-    },
-    "resmap" : {
-        "target_id" : "resmap", 
-        "type": "html_embed",
-        "content" : ["./embeds/resmap/resmap.gl.html"]
     }
 }
