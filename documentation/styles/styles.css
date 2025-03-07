@@ -10,6 +10,7 @@
     --main-dark_contrast: #5C6B73;
 
 
+    /* --max-wrapper-width: 1800px; */
     --max-wrapper-width: 100vw;
     --def-wrapper-width: 100%;
     --header-height: 8vh;
@@ -121,9 +122,8 @@ nav a {
 }
 
 .wrapperembed {
+    max-width: var(--max-wrapper-width);
     min-width: var(--max-wrapper-width);
-    max-width: var(--max-wrapper-width);
-    max-width: var(--max-wrapper-width);
     overflow-y: hidden;
     min-height: calc(100vh - var(--header-height));
     border-right: 1px solid #dbdbdb;
@@ -227,7 +227,7 @@ footer {
 
 #exploremap {
     height: 100%;
-    width: 100%;
+    width: 100vw !important;
 }
 
 #explorepane {
@@ -298,22 +298,28 @@ footer {
 
 #spinner {
     z-index: 9997;
-    height: 100vh;  /* Full viewport height */
-    width: 100vw;   /* Full viewport width */
+    height: 100vh;
+    /* Full viewport height */
+    width: 100vw;
+    /* Full viewport width */
     position: fixed;
 
-    background: rgba(255, 255, 255, 0.5); /* Semi-transparent background */
+    background: rgba(255, 255, 255, 0.5);
+    /* Semi-transparent background */
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     border: 1px solid rgba(255, 255, 255, 0.18);
 
     display: flex;
-    flex-direction: column;   /* Stack items vertically */
-    justify-content:space-around;  /* Vertically center the items */   
+    flex-direction: column;
+    /* Stack items vertically */
+    justify-content: space-around;
+    /* Vertically center the items */
     align-items: center;
     text-align: center;
 }
+
 .loader {
     z-index: 9997;
     border: 16px solid var(--main-diva-xlight);
