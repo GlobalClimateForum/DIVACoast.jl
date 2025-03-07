@@ -89,7 +89,8 @@ function estimate_gumbel_distribution(x_data::Array{T}, y_data::Array{T}) where 
     elseif (gumbel_curve_fit !== missing && gumbel_optim_fit === missing)
         return GeneralizedExtremeValue(gumbel_curve_fit.param[1], gumbel_curve_fit.param[2], 0)
     else
-        error_gumbel_curve_fit = sqrt(sum(gumbel_curve_fit.resid .^ 2))
+        error_gumbel_curve_fit = sqrt((1/length(gumbel_curve_fit.resid))*sum(gumbel_curve_fit.resid .^ 2))
+        #divide by n here as well
         error_gumbel_optim_fit = gumbel_optim_fit.minimum
         if error_gumbel_curve_fit < error_gumbel_optim_fit
             return GeneralizedExtremeValue(gumbel_curve_fit.param[1], gumbel_curve_fit.param[2], 0)
@@ -146,7 +147,7 @@ function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) where
         return GeneralizedExtremeValue(frechet_curve_fit.param[1], frechet_curve_fit.param[2], frechet_curve_fit.param[3])
     else
         #println("both there")
-        error_frechet_curve_fit = sqrt(sum(frechet_curve_fit.resid .^ 2))
+        error_frechet_curve_fit = sqrt((1/length(frechet_curve_fit.resid))*sum(frechet_curve_fit.resid .^ 2))
         error_frechet_optim_fit = frechet_optim_fit.minimum
 
         if error_frechet_curve_fit < error_frechet_optim_fit
@@ -198,7 +199,7 @@ function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where
     elseif (weibull_curve_fit !== missing && weibull_optim_fit === missing)
         return GeneralizedExtremeValue(weibull_curve_fit.param[1], weibull_curve_fit.param[2], weibull_curve_fit.param[3])
     else
-        error_weibull_curve_fit = sqrt(sum(weibull_curve_fit.resid .^ 2))
+        error_weibull_curve_fit = sqrt((1/length(weibull_curve_fit.resid))*sum(weibull_curve_fit.resid .^ 2))
         error_weibull_optim_fit = weibull_optim_fit.minimum
         if error_weibull_curve_fit < error_weibull_optim_fit
             return GeneralizedExtremeValue(weibull_curve_fit.param[1], weibull_curve_fit.param[2], weibull_curve_fit.param[3])
