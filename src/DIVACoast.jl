@@ -9,14 +9,14 @@ export earth_circumference_km, earth_radius_km
 # Read local library configuration
 global config = YAML.load_file(joinpath(@__DIR__, "DIVACoast.jl.yml"), dicttype = Dict{Symbol, Any})
 
+module DIVACoast
+
 # Set global constants from local config
 global earth_radius_km = Main.config[:earthRadiusKM]
 global earth_circumference_km = Main.config[:earthCircumferenceKM]
 
 # append depot path (local packages) to project load path
 # append!(LOAD_PATH, DEPOT_PATH)
-
-module DIVACoast
 
     function __init__()
         
