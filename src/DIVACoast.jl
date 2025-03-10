@@ -58,8 +58,8 @@ global earth_circumference_km = Main.config[:earthCircumferenceKM]
         include("./io/csv/ccm_indicator_datafame.jl")
         include("./io/jld/jld_load.jl")
         include("./tools/geotiff_tools.jl")
-        include("./scenario/ssp_wrapper.jl")
-        include("./scenario/slr_wrapper.jl")
+        include("./scenario/ssp_scenario_reader.jl")
+        include("./scenario/slr_scenario_reader.jl")
     end
 end
 

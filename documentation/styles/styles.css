@@ -10,7 +10,8 @@
     --main-dark_contrast: #5C6B73;
 
 
-    --max-wrapper-width: 1800px;
+    /* --max-wrapper-width: 1800px; */
+    --max-wrapper-width: 100vw;
     --def-wrapper-width: 100%;
     --header-height: 8vh;
 
@@ -19,12 +20,8 @@
 }
 
 @font-face {
-    font-family: 'JuliaMono';
-    src: url('path/to/font.woff2') format('woff2'),
-         url('path/to/font.woff') format('woff');
-    /* Add additional formats if provided */
-    font-weight: normal;
-    font-style: normal;
+    font-family: JuliaMono;
+    src: url("https://cdn.jsdelivr.net/gh/cormullion/juliamono/webfonts/JuliaMono-Light.woff2");
 }
 
 body {
@@ -36,13 +33,9 @@ body {
 }
 
 main {
-    /* height: calc(100vh - var(--header-height)); Adjust the height based on the header and footer */
     overflow-y: hidden;
     overflow-x: hidden;
     max-height: 100vh;
-    /* padding-top: calc(var(--header-height) + 20px); */
-    /* height: calc(100vh - var(--header-height)); */
-    /* height: calc(100rem + var(--header-height)); */
 }
 
 header {
@@ -65,10 +58,11 @@ header {
 .logoHeader {
     font-family: 'JuliaMono', monospace;
     color: white;
-    display: flex; 
+    display: flex;
     flex-direction: row;
     align-items: center;
     gap: 20px;
+    padding-left: 20px;
 }
 
 .logoHeader img {
@@ -106,7 +100,8 @@ nav a {
     cursor: pointer;
     font-weight: bolder;
 }
-.headerlink{
+
+.headerlink {
     padding: 5px;
     font-size: larger;
 }
@@ -127,9 +122,8 @@ nav a {
 }
 
 .wrapperembed {
+    max-width: var(--max-wrapper-width);
     min-width: var(--max-wrapper-width);
-    max-width: var(--max-wrapper-width);
-    max-width: var(--max-wrapper-width);
     overflow-y: hidden;
     min-height: calc(100vh - var(--header-height));
     border-right: 1px solid #dbdbdb;
@@ -158,7 +152,7 @@ nav a {
     width: 100%;
     display: flex;
     flex-direction: row;
-    align-items:center;
+    align-items: center;
     justify-content: space-between;
     gap: 20px;
 }
@@ -227,4 +221,123 @@ footer {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
+}
+
+/* Explore Map */
+
+#exploremap {
+    height: 100%;
+    width: 100vw !important;
+}
+
+#explorepane {
+    width: 20vw;
+    height: 5em;
+    border-radius: 0 1em 0 0;
+    padding: 1em;
+
+    z-index: 999;
+    position: absolute;
+
+    left: 0;
+    bottom: 0;
+
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+
+    input {
+        height: 2em;
+        border-radius: 0.5em;
+        max-width: 100%;
+        min-width: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        border: none;
+        padding-left: 10px;
+        margin: none;
+    }
+
+    label {
+        font-size: smaller;
+        margin: none;
+
+    }
+}
+
+.cluster-icon {
+    /* background-color: var(--main-diva-warn); */
+    color: var(--main-diva-xlight);
+    width: 30px;
+    height: 30px;
+    border-radius: 12px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 3px solid var(--main-diva-xlight);
+    background-color: var(--main-diva-color);
+}
+
+
+.popup-metatable {
+    width: 100%;
+
+    td:first() {
+        width: 50%;
+    }
+
+    td:not(:first-of-type) {
+        font-weight: bold;
+    }
+
+}
+
+#spinner {
+    z-index: 9997;
+    height: 100vh;
+    /* Full viewport height */
+    width: 100vw;
+    /* Full viewport width */
+    position: fixed;
+
+    background: rgba(255, 255, 255, 0.5);
+    /* Semi-transparent background */
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+
+    display: flex;
+    flex-direction: column;
+    /* Stack items vertically */
+    justify-content: space-around;
+    /* Vertically center the items */
+    align-items: center;
+    text-align: center;
+}
+
+.loader {
+    z-index: 9997;
+    border: 16px solid var(--main-diva-xlight);
+    border-top: 16px solid var(--main-diva-color);
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    animation: spin 2s linear infinite;
+    margin: auto;
+
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }

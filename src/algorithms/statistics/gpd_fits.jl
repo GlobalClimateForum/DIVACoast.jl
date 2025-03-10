@@ -103,7 +103,7 @@ function estimate_exponential_distribution(x_data::Array{T}, y_data::Array{T}) w
     elseif (exponential_curve_fit !== missing && exponential_optim_fit === missing)
         return GeneralizedPareto(exponential_curve_fit.param[1], exponential_curve_fit.param[2], 0)
     else
-        error_exponential_curve_fit = sqrt(sum(exponential_curve_fit.resid .^ 2))
+        error_exponential_curve_fit = sqrt((1/length(exponential_curve_fit.resid))*sum(exponential_curve_fit.resid .^ 2))
         error_exponential_optim_fit = exponential_optim_fit.minimum
         if error_exponential_curve_fit < error_exponential_optim_fit
             return GeneralizedPareto(exponential_curve_fit.param[1], exponential_curve_fit.param[2], 0)
@@ -154,7 +154,7 @@ function estimate_gpd_positive_distribution(x_data::Array{T}, y_data::Array{T}) 
     elseif (gpd_positive_curve_fit !== missing && gpd_positive_optim_fit === missing)
         return GeneralizedPareto(gpd_positive_curve_fit.param[1], gpd_positive_curve_fit.param[2], gpd_positive_curve_fit.param[3])
     else
-        error_gpd_positive_curve_fit = sqrt(sum(gpd_positive_curve_fit.resid .^ 2))
+        error_gpd_positive_curve_fit = sqrt((1/length(gpd_positive_curve_fit.resid))*sum(gpd_positive_curve_fit.resid .^ 2))
         error_gpd_positive_optim_fit = gpd_positive_optim_fit.minimum
         if error_gpd_positive_curve_fit < error_gpd_positive_optim_fit
             return GeneralizedPareto(gpd_positive_curve_fit.param[1], gpd_positive_curve_fit.param[2], gpd_positive_curve_fit.param[3])
@@ -206,7 +206,7 @@ function estimate_gpd_negative_distribution(x_data::Array{T}, y_data::Array{T}) 
     elseif (gpd_negative_curve_fit !== missing && gpd_negative_optim_fit === missing)
         return GeneralizedPareto(gpd_negative_curve_fit.param[1], gpd_negative_curve_fit.param[2], gpd_negative_curve_fit.param[3])
     else
-        error_gpd_negative_curve_fit = sqrt(sum(gpd_negative_curve_fit.resid .^ 2))
+        error_gpd_negative_curve_fit = sqrt((1/length(gpd_negative_curve_fit.resid))*sum(gpd_negative_curve_fit.resid .^ 2))
         error_gpd_negative_optim_fit = gpd_negative_optim_fit.minimum
         if error_gpd_negative_curve_fit < error_gpd_negative_optim_fit
             return GeneralizedPareto(gpd_negative_curve_fit.param[1], gpd_negative_curve_fit.param[2], gpd_negative_curve_fit.param[3])
