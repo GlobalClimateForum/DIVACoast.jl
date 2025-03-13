@@ -31,8 +31,8 @@ include(<path_to_diva>/diva_library/src/DIVACoast.jl); using .jdiva
 # Data structures
 ## Impact Model
 ```@docs
-Main.DIVACoast.ComposedImpactModel
 Main.DIVACoast.LocalCoastalImpactModel
+Main.DIVACoast.ComposedImpactModel
 ```
 
 ## Hypsometric Profile
@@ -49,7 +49,19 @@ Main.DIVACoast.to_hypsometric_profile
 Base.:+
 ```
 
-## Adapt
+### Modifying HypsometricProfiles
+When modeling flood events, we typically analyze **multiple scenarios**, which require modifications to the physical model.
+For example, implementing a dike in the physical model alters the hypsometric profile, modifying coastal topography and changing the hydrological connectivity. As a result, floodwaters must reach a higher threshold before inundating certain areas. Similarly, we can also alter the exposure of certain entities. In DIVACoast, we differentiate between two types of exposure:
+
+1. **Static Exposure**
+- Represents entities that cannot be relocated and will be flooded once a certain water level is reached.
+- Example: *Agricultural land, which remains fixed and will always be affected at a given flood depth*
+2. **Dynamic Exposure**
+- Represents entities that can be relocated or adapt over time.
+- Example: *People who may move to higher elevations. GDP decreasing in an area when exposed to flooding.*
+
+To express those process in DIVACoast, we provide the following functionalities.
+
 ```@docs
 Main.DIVACoast.add_static_exposure!
 Main.DIVACoast.add_dynamic_exposure!
@@ -65,18 +77,17 @@ Main.DIVACoast.compress!
 Base.:+
 ```
 
-## Analysis
+# Analysis
 To draw conclusions from our model, we aim to analyze exposed entities under different circumstances. DIVACoast not only allows the use of a bathtub model for exposure analysis but also supports attenuation.
 Attenuation refers to the process by which floodwaters are reduced in depth as they propagate across the landscape, influenced by certain land cover types. This could include factors like vegetation, wetlands, or urban infrastructure that slow down or reduce the extent of flooding.
 
-### Exposure functions
+## Exposure functions
 ```@docs
 Main.DIVACoast.exposure_below_bathtub
 Main.DIVACoast.exposure_below_attenuated
 Main.DIVACoast.attenuate
 ```
-### Damage functions
-
+## Damage functions
 
 ### Expected damage functions
 ```@docs
@@ -84,7 +95,8 @@ Main.DIVACoast.expected_damage_bathtub_standard_ddf
 Main.DIVACoast.expected_damage_bathtub
 ```
 
-##  Extreme Value Distributionss
+##  Extreme Value Distributions
+Conversion from a **discrete non-parametric distribution** (i.e. a distribution given point-wise) to a given **parametric extreme value distribution** by (method, e.g., least square fit).
 ```@docs
 Main.DIVACoast.estimate_gumbel_distribution
 Main.DIVACoast.estimate_frechet_distribution
@@ -118,23 +130,13 @@ Modeling often involves extensive data handling and wrangling. To simplify this 
 Main.DIVACoast.SLRScenarioReader
 Main.DIVACoast.get_slr_value
 Main.DIVACoast.get_slr_value_from_cell
-
-**Socio-economic-scenarios** can be managed using the `SSPWrapper` function. 
-
 ```
+**Socio-economic-scenarios** can be managed using the `ScenarioReader` function. This reader can be used to retrieve certain growth rates between two years and within a certain ssp scenario. Growth rates can be returned in three different types: AnnualGrowthPercentage, AnnualGrowth, GrowthFactor. 
+
 ### Read SSP Data
 ```@docs
-Main.DIVACoast.SSPWrapper
+Main.DIVACoast.ScenarioReader
 ```
-
-### Spatial-Relationship
-```@docs
-Main.DIVACoast.Neighbour
-Main.DIVACoast.nearest
-Main.DIVACoast.nearest_coord
-Main.DIVACoast.coords_to_wide
-```
-
 
 ## Spatial Operations
 ### SparseGeoArray (SGA)
@@ -165,5 +167,13 @@ Main.DIVACoast.epsg!
 Main.DIVACoast.is_rotated
 Main.DIVACoast.bbox!
 Main.DIVACoast.geotiff_connect
+```
+
+### Spatial-Relationship
+```@docs
+Main.DIVACoast.Neighbour
+Main.DIVACoast.nearest
+Main.DIVACoast.nearest_coord
+Main.DIVACoast.coords_to_wide
 ```
 
