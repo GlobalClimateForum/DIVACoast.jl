@@ -152,7 +152,6 @@ function initMap() {
 
 // Indicate that the data is being fetched
 function showSpinner() {
-    console.log("SHOWSPINNDER")
     document.getElementById('spinner').style.display = 'block';
 }
 
@@ -199,13 +198,7 @@ function exploreMap() {
         return hostname === 'localhost' || hostname === '127.0.0.1';
     }
 
-    let baththubdata;
-    if (window.location.hostname === 'localhost') {
-        baththubdata = "https://cors-anywhere.herokuapp.com/https://gitlab.com/larsenno/divacoast_outputs/-/raw/main/bathtub.geojson"
-    } else {
-        baththubdata = "https://gitlab.com/larsenno/divacoast_outputs/-/raw/main/bathtub.geojson"
-    }
-    // let baththubdata = "./embeds/resmap/bathtub.geojson";
+    let baththubdata = "./embeds/resmap/bathtub.geojson";
 
     fetch(baththubdata)
         .then(response => response.json())
@@ -287,6 +280,8 @@ function renderLineChart(data) {
         return data[element] !== undefined ? data[element] : null;
     });
 
+
+    
     // Create the chart
     var lineChart = new Chart(ctx, {
         type: 'line',
