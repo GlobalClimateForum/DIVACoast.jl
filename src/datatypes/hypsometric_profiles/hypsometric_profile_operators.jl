@@ -4,7 +4,7 @@ using CSV
 # Function to add two exposure tuples exposure_1 and exposure_2
 function add_exposures(exposure_1::Tuple{Vararg{Union{Number, AbstractArray{<:Number}}}},
     exposure_2::Tuple{Vararg{Union{Number, AbstractArray{<:Number}}}})::Vector{Union{Array, Number}}
-   
+    
     exposure = Vector{Union{Array, Number}}(undef, length(exposure_1))
     for (i, (e1, e2)) in enumerate(zip(exposure_1, exposure_2))
         if isa(e1, Array) && isa(e2, Array)
@@ -46,10 +46,12 @@ function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{F
         hspf1_exposures  = map(e -> exposure_below_bathtub(hspf1, e), hspfc.elevation)
         hspf2_exposures  = map(e -> exposure_below_bathtub(hspf2, e), hspfc.elevation)
         exposures = map(add_exposures, hspf1_exposures, hspf2_exposures)
-        
+
         hspfc.cummulativeArea = getindex.(exposures, 1)
-        hspfc.cummulativeStaticExposure =  reduce(hcat, [exp[2] for exp in exposures])
-        hspfc.cummulativeDynamicExposure = reduce(hcat, [exp[3] for exp in exposures])
+        hspfc.cummulativeStaticExposure =  reduce(hcat, getindex.(exposures, 2))
+        hspfc.cummulativeDynamicExposure  = reduce(hcat, getindex.(exposures, 3))
+        
+        # hspfc.cummulativeDynamicExposure = reduce(hcat, [exp[3] for exp in exposures])
         
         # Adding / recalc of distances is missing
     end
