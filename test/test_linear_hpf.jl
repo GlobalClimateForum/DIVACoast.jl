@@ -1,6 +1,3 @@
-include("../src/DIVACoast.jl")
-using .DIVACoast
-
 using Test
 
 # Creates a Hypsometric Profile, with the same area for each constant elevation increment
