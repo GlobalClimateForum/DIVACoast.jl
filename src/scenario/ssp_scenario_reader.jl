@@ -1,4 +1,4 @@
-export ScenarioReader, SSPType, AnnualGrowthPercentage, AnnualGrowth, GrowthFactor, ScenarioReader
+export ScenarioReader, SSPType, AnnualGrowthPercentage, AnnualGrowth, GrowthFactor
 export ssp_get_growth_factor
 
 using DataFrames
