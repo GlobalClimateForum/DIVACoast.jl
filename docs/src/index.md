@@ -74,7 +74,6 @@ Main.DIVACoast.remove_below!
 Main.DIVACoast.add_above!
 Main.DIVACoast.add_between!
 Main.DIVACoast.compress!
-Base.:+
 ```
 
 # Analysis
@@ -129,7 +128,7 @@ Modeling often involves extensive data handling and wrangling. To simplify this 
 ```@docs
 Main.DIVACoast.SLRScenarioReader
 Main.DIVACoast.get_slr_value
-Main.DIVACoast.get_slr_value_from_cell
+Main.DIVACoast.get_slr_value_from_grid_cell
 ```
 **Socio-economic-scenarios** can be managed using the `ScenarioReader` function. This reader can be used to retrieve certain growth rates between two years and within a certain ssp scenario. Growth rates can be returned in three different types: AnnualGrowthPercentage, AnnualGrowth, GrowthFactor. 
 

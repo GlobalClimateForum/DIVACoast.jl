@@ -20,7 +20,11 @@ function add_exposures(exposure_1::Tuple{Vararg{Union{Number, AbstractArray{<:Nu
 end
 
 """
+        function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{Float32})
+
 Addtion of two Hypsometric Profiles. Adds (combines) the folling properties of the HypsometricProfiles:
+
+# Arguments
 - Elevation: Combine Increments
 - width: Adds the width of both HypsometricProfiles
 - cummulativeArea: Adds the cummulative are of both HypsometricProfiles
