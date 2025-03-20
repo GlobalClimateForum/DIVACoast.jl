@@ -26,7 +26,6 @@ Addtion of two Hypsometric Profiles. Adds (combines) the folling properties of t
 - cummulativeArea: Adds the cummulative are of both HypsometricProfiles
 - static Exposure: Adds the cummulative static exposure of both HypsometricProfiles
 - dynamic Exposure: Adds the dynamic exposure of both HypsometricProfiles
-NOTE: Distances are not added, and need to be recalculated!
 """
 function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{Float32})
 
