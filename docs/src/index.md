@@ -30,11 +30,10 @@ include(<path_to_diva>/diva_library/src/DIVACoast.jl); using .jdiva
 
 # Core concepts
 
-The key concept of `DIVACoast.jl` is the concept of risk, which, following the definition of the Intergovernmental Panel on Climate Change (IPCC), is constituted by the three components of hazard, exposure and vulnerability (Oppenheimer et al., 2019; Wong et al., 2014). While on the long run the package is meant to serve multiple coastal risks including the risk of flooding, erosion, salinity intrusion and wetland change, the current release concentrates on flood risk. 
+The key concept of `DIVACoast.jl` is the concept of risk. Following the definition of the Intergovernmental Panel on Climate Change (IPCC), risk constituted by the three components of hazard, exposure and vulnerability (Oppenheimer et al., 2019; Wong et al., 2014). While on the long run the package is meant to serve multiple coastal risks including the risk of flooding, erosion, salinity intrusion and wetland change, the current release concentrates on flood risk. 
 
 ## Flood risk
-
-Coastal flood risk assessment involves at least the following five components: 
+Coastal flood risk assessment involves at least the following five components (Figure x): 
 
 - **Sea-level hazard**, including mean sea-levels (MSL) and extreme sea-levels (ESL) from tides, surges, waves, river run-off and their interactions;
 - **Hazard propagation**, which refers to the transformation of the **sea-level hazard** to the **flood hazard**. This includes the propagation of mean and extreme sea-level onto the shore and the floodplain, including their interaction with natural (e.g., dunes) and artificial (e.g., dikes) defences;
@@ -42,47 +41,28 @@ Coastal flood risk assessment involves at least the following five components:
 - **Flood exposure** in terms of area, people and coastal assets potentially threatened by these hazards; and
 - **Flood vulnerability**, which refers to the  propensity of the exposure to be adversely affected by the flood hazard (IPCC, 2014b).
 
-## External Drivers
-
+## Drivers
 - Sea-level rise: changes the hazard
 - Socio-economic development: changes exposure and vulnerability
 
-## Internal adaptation 
-
+## Adaptation 
 - protection: affects the hazard propagation
 - retreat: reduces exposure
 - accommodate: reduces vulnerability
 
 
-# Coastal Flood Model
+# Exposure 
+Exposure can be represented in different ways. Currently the main way to represent exposure in `DIVACoast.jl` is as `HypsometricProfile`. This is a special kind of coastal profile that allows the computational efficient calculation of flood damages needed for economic assessments and optimization. Hyposmetric profiles are derived from a Digital Elevation Model (DEM) considering hydrological connectivity.
 
-The main data structure of `DIVACoast.jl` is the one of a coastal model, which refers to a specific representation of the coast in terms of the three components of risk. As the current version of `DIVACoast.jl` focuses on flood risk, we limit ourselves to presenting the data structure of a `CoastalFloodModel`. Future versions of the library will alos include `CoastalErosionModel` and `CoastalWetlandsModel` etc. 
+Another way to represent exposure is via a two dimensional grid, in which each grid cell is mapped to its  elevation (or hydrological connectivity), as well as exposed area, people or assets. `DIVACoast.jl` represents such gridded exposure as `SparseGeoArrays`. A number of functions are provided to convert gridded exposure data to hypsometric profiles.
 
-<!-- Change to CoastalFloodModel -->
-```@docs
-Main.DIVACoast.LocalCoastalImpactModel
-Main.DIVACoast.ComposedImpactModel
-```
 
-A `CoastalFloodModel` is defined as <font color="red">This is only a proposition of how we could change the code to get more consistent with our terminology!</font>
-```
-mutable struct CoastalFloodModel{DT<:Real,IDT,DATA} <: CoastalModel
-  id::IDT
-  esl_hazard::Distribution
-  exposure::HypsometricProfile{DT}
-  propagation_model::FloodPropagationModel
-  protection_level::Real
-  vulnerability::Array{Function}
-  data::DATA
-end
-```
-# Exposure as Hypsometric Profile
+## Hypsometric Profiles
+A hypsometric profile represents a cross-section of the coastal zone as a function that maps elevation to  the cumulative exposure below this elevation.
+<!-- add the math -->
 
-A hypsometric profile represents a cross-section of a landscape. It helps to understand terrain structure and, therefore, flood exposure.
-For DIVACoast, it serves as the underlying data structure for the physical model. The profile is derived from a Digital Elevation Model (DEM), incorporating hydrological connectivity, where each elevation increment corresponds to the cumulative area exposed as floodwaters rise.
-Without adaptation measures or attenuative land cover, this follows the bathtub model, where water first inundates low-lying areas before reaching higher elevations. In conclusion, the profile **quantifies the extent of land or infrastructure affected** at each flood stage (elevation increment).
 
-## Initializing Hypsometric Profiles
+### Initializing Hypsometric Profiles
 In DIVACoast Hypsometric Profiles can either be initialized manually or be generated from a NetCDF file.
 ```@docs
 Main.DIVACoast.HypsometricProfile
@@ -90,15 +70,8 @@ Main.DIVACoast.load_hsps_nc
 Main.DIVACoast.to_hypsometric_profile
 Base.:+
 ```
-## Querying Hypsometric Profiles
-```@docs
-Main.DIVACoast.exposure_below_bathtub
-Main.DIVACoast.exposure_below_attenuated
-Main.DIVACoast.attenuate
-```
-## Modifying HypsometricProfiles
-When modeling flood events, we typically analyze **multiple scenarios**, which require modifications to the physical model.
-For example, implementing a dike in the physical model alters the hypsometric profile, modifying coastal topography and changing the hydrological connectivity. As a result, floodwaters must reach a higher threshold before inundating certain areas. Similarly, we can also alter the exposure of certain entities. In DIVACoast, we differentiate between two types of exposure:
+
+We differentiate between two types of exposure:
 
 1. **Static Exposure**
 - Represents entities that cannot be relocated and will be flooded once a certain water level is reached.
@@ -107,7 +80,14 @@ For example, implementing a dike in the physical model alters the hypsometric pr
 - Represents entities that can be relocated or adapt over time.
 - Example: *People who may move to higher elevations. GDP decreasing in an area when exposed to flooding.*
 
-To express those process in DIVACoast, we provide the following functionalities.
+### Querying Hypsometric Profiles
+```@docs
+Main.DIVACoast.exposure_below_bathtub
+Main.DIVACoast.exposure_below_attenuated
+Main.DIVACoast.attenuate
+```
+### Modifying HypsometricProfiles
+Socio-economic development and adaptation changes exposure. For example, socio-economic growth increase the number of people and their assets in the coastal zone and retreat and out-migration reduce assets and people in the costal zone. To express those process in DIVACoast, we provide the following functions.
 
 ```@docs
 Main.DIVACoast.add_static_exposure!
@@ -121,6 +101,77 @@ Main.DIVACoast.remove_below!
 Main.DIVACoast.add_above!
 Main.DIVACoast.add_between!
 Main.DIVACoast.compress!
+```
+
+<font color="red">Remark JH: 
+Can we change the _sed functions above to:
+
+`Main.DIVACoast.multiply_above!`
+
+`Main.DIVACoast.multiply_below!`
+</font>
+
+
+## Gridded exposure
+Many flood risk assessments represent coastal exposure on a two-dimensional grid, which contains, for each grid cell, information on hydrologically connected elevation and 
+
+
+### SparseGeoArray (SGA)
+
+In `DIVACoast.jl` gridded exposure is represented as `SparseGeoArray` (SGA).
+
+```@docs
+Main.DIVACoast.SparseGeoArray
+```
+
+
+### Spatial Operations
+A number of standard functions are provided for handling gridded exposure data.
+
+<!-- Can we group the documentation of these functions into meaningful subheading -->
+
+```@docs
+Main.DIVACoast.getindex
+Main.DIVACoast.coords
+Main.DIVACoast.indices
+Main.DIVACoast.nh4
+Main.DIVACoast.nh8
+Main.DIVACoast.distance
+Main.DIVACoast.go_direction
+Main.DIVACoast.bounding_boxes
+Main.DIVACoast.area
+Main.DIVACoast.emptySGAfromSGA
+Main.DIVACoast.get_extent
+Main.DIVACoast.sga_union
+Main.DIVACoast.sga_intersect
+Main.DIVACoast.sga_diff
+Main.DIVACoast.sga_summarize_within
+Main.DIVACoast.minumum_mean
+Main.DIVACoast.get_closest_value
+Main.DIVACoast.get_box_around
+Main.DIVACoast.epsg2wkt
+Main.DIVACoast.proj2wkt
+Main.DIVACoast.str2wkt
+Main.DIVACoast.epsg!
+Main.DIVACoast.is_rotated
+Main.DIVACoast.bbox!
+Main.DIVACoast.geotiff_connect
+```
+
+## Spatial-Relationship
+```@docs
+Main.DIVACoast.Neighbour
+Main.DIVACoast.nearest
+Main.DIVACoast.nearest_coord
+Main.DIVACoast.coords_to_wide
+```
+<!-- Can we group the documentation of these functions into meaningful subheading -->
+## Converting gridded exposure data to hyposometric profiles
+
+<!-- Can we briefly introduce this? -->
+```
+Main.DIVACoast.convert(ge:: GriddedExposure, hp::HypsometricProfile) 
+   
 ```
 
 # Extreme sea-level hazards
@@ -141,6 +192,52 @@ Main.DIVACoast.estimate_exponential_distribution
 Main.DIVACoast.plot_comparison_extreme_distributions
 ```
 
+# Flood damage assessment
+
+Without adaptation measures or attenuative land cover, this follows the bathtub model, where water first inundates low-lying areas before reaching higher elevations. In conclusion, the profile **quantifies the extent of land or infrastructure affected** at each flood stage (elevation increment).
+
+DIVACoast not only allows the use of a bathtub model for exposure analysis but also supports attenuation.
+Attenuation refers to the process by which floodwaters are reduced in depth as they propagate across the landscape, influenced by certain land cover types. This could include factors like vegetation, wetlands, or urban infrastructure that slow down or reduce the extent of flooding.
+
+## Damage of a single event
+```@docs
+Main.DIVACoast.damage_bathtub
+Main.DIVACoast.damage_bathtub_standard_ddf
+```
+
+## Expected damages
+```@docs
+Main.DIVACoast.expected_damage_bathtub
+Main.DIVACoast.expected_damage_bathtub_standard_ddf
+```
+
+# Coastal Flood Model
+
+The main data structure of `DIVACoast.jl` is the one of a coastal model, which refers to a specific representation of the coast in terms of the three components of risk. As the current version of `DIVACoast.jl` focuses on flood risk, we limit ourselves to presenting the data structure of a `CoastalFloodModel`. Future versions of the library will alos include `CoastalErosionModel` and `CoastalWetlandsModel` etc. 
+
+<!-- Change to CoastalFloodModel -->
+```@docs
+Main.DIVACoast.LocalCoastalImpactModel
+Main.DIVACoast.ComposedImpactModel
+```
+
+A `CoastalFloodModel` is defined as
+```
+mutable struct CoastalFloodModel{DT<:Real,IDT,DATA} <: CoastalImpactUnit
+  id::IDT
+  surge_model::Distribution
+  coastal_plain_model::HypsometricProfile{DT}
+  protection_level::Real
+  data::DATA
+end
+```
+
+ <font color="red">Remark JH: According to the definition of risk above, it would make sense to also include vulnerability in a coastal model, because then we have all three components included in a CoastalFloodModel. Plus we could then write convenience functions such as:</font>
+
+```
+function damage(cfm::CoastalFloodModel, x::Real)
+function expected_damage(cfm::CoastalFloodModel)
+```
 
 # External Drivers
 
@@ -183,62 +280,3 @@ Main.DIVACoast.get_slr_value_from_grid_cell
    - A temporal dimension, e.g., 5-year increments.
 4. **Quantiles**  
    - Quantiles associated with your variable, useful for capturing uncertainty or different scenarios.
-
-
-# Flood Damage Assessment
-To draw conclusions from our model, we aim to analyze exposed entities under different circumstances. DIVACoast not only allows the use of a bathtub model for exposure analysis but also supports attenuation.
-Attenuation refers to the process by which floodwaters are reduced in depth as they propagate across the landscape, influenced by certain land cover types. This could include factors like vegetation, wetlands, or urban infrastructure that slow down or reduce the extent of flooding.
-
-## Damage of a single events
-```@docs
-Main.damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd::DT, s::Symbol)::DT where {DT<:Real}
-
-
-```
-
-## Expected damages
-```@docs
-Main.DIVACoast.expected_damage_bathtub_standard_ddf
-Main.DIVACoast.expected_damage_bathtub
-```
-
-
-
-# Spatial Operations
-## SparseGeoArray (SGA)
-```@docs
-Main.DIVACoast.SparseGeoArray
-Main.DIVACoast.getindex
-Main.DIVACoast.coords
-Main.DIVACoast.indices
-Main.DIVACoast.nh4
-Main.DIVACoast.nh8
-Main.DIVACoast.distance
-Main.DIVACoast.go_direction
-Main.DIVACoast.bounding_boxes
-Main.DIVACoast.area
-Main.DIVACoast.emptySGAfromSGA
-Main.DIVACoast.get_extent
-Main.DIVACoast.sga_union
-Main.DIVACoast.sga_intersect
-Main.DIVACoast.sga_diff
-Main.DIVACoast.sga_summarize_within
-Main.DIVACoast.minumum_mean
-Main.DIVACoast.get_closest_value
-Main.DIVACoast.get_box_around
-Main.DIVACoast.epsg2wkt
-Main.DIVACoast.proj2wkt
-Main.DIVACoast.str2wkt
-Main.DIVACoast.epsg!
-Main.DIVACoast.is_rotated
-Main.DIVACoast.bbox!
-Main.DIVACoast.geotiff_connect
-```
-
-## Spatial-Relationship
-```@docs
-Main.DIVACoast.Neighbour
-Main.DIVACoast.nearest
-Main.DIVACoast.nearest_coord
-Main.DIVACoast.coords_to_wide
-```
