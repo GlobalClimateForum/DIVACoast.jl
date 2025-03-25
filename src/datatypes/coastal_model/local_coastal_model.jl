@@ -23,7 +23,7 @@ mutable struct LocalCoastalImpactModel{DT<:Real,IDT,DATA} <: CoastalImpactUnit
 end
 
 """
-expected_damage_bathtub_standard_ddf(LocalCoastalModel::LocalCoastalModel{DT}, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT})
+    expected_damage_bathtub_standard_ddf(LocalCoastalModel::LocalCoastalModel{DT}, hdd_area::DT, hdds_static::Array{DT}, hdds_dynamic::Array{DT})
 
 This function calculates the annual expected damage for one local coastal model (Hypsometric Profile and Extreme surge distribution) by 
 integrating the product of damages and the pdf (probability disctribution function) of the surge model over all possible extreme values. The output are annual expected damage for area, static and dynamic. The standard depth damage function is used to estimate flood damages."""
@@ -72,7 +72,7 @@ function expected_damage_bathtub_standard_ddf(lcm::LocalCoastalImpactModel, hdd:
 end
 
 """
-expected_damage_bathtub(LocalCoastalModel::LocalCoastalModel{DT}, ddf_area::Function, ddf_static::Array{Function}, ddf_dynamic::Array{Function})
+    expected_damage_bathtub(LocalCoastalModel::LocalCoastalModel{DT}, ddf_area::Function, ddf_static::Array{Function}, ddf_dynamic::Array{Function})
 
 This function calculates the annual expected damage for one local coastal model (Hypsometric Profile and Extreme surge distribution) by 
 integrating the product of damages and the pdf (probability disctribution function) of the surge model. The output are annual expected damage 
