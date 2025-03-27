@@ -5,7 +5,7 @@ export estimate_gumbel_distribution_old, gumbel_error, frechet_error, weibull_er
 using LsqFit
 using Distributions
 using Optim
-
+#test Vanessa
 # the cdf of the three cases. Note: in frechet and weibull case domain restriction has to be taken into account
 gumbel_model(x, p) = @. exp(-exp(-(x - p[1]) / p[2]))
 frechet_model(x, p) = map(x -> (p[1] - p[2] / p[3] <= x) ? exp(-((1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3]))) : 0, x)
