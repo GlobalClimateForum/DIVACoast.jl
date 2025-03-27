@@ -1,6 +1,13 @@
 export geotiff_connect, geotiff_transform, geotiff_collect
 
+"""
+This function connect two geotiffs by a given operation. 
+    infilename1::String
+    infilename2::String
+    outfilename::String
+    f::Function
 
+"""
 function geotiff_connect(infilename1::String, infilename2::String, outfilename::String, f::Function)
 
     sga_in1 = SparseGeoArray{Float32,Int32}()
@@ -13,14 +20,19 @@ function geotiff_connect(infilename1::String, infilename2::String, outfilename::
     dataset_in2_data = GDAL.gdalopen(infilename2, GDAL.GA_ReadOnly)
     band_in2_data = GDAL.gdalgetrasterband(dataset_in2_data, 1)
 
+    if (sga_in1.xsize != sga_in2.xsize) 
+      # error: different sizes of x dimension in the two input files
+    end
+
     driver = GDAL.gdalgetdriverbyname("GTiff")
     opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES", "PREDICTOR=2"]
     dataset_out = GDAL.gdalcreate(driver, outfilename, sga_in1.xsize, sga_in2.ysize, 1, GDAL.GDT_Float32, opts)
     band_out_data = GDAL.gdalgetrasterband(dataset_out, 1)
 
-    GDAL.gdalsetrasternodatavalue(band_out_data, sga_in2.nodatavalue)
+    GDAL.gdalsetrasternodatavalue(band_out_data, sga_in1.nodatavalue)
     GDAL.gdalsetprojection(dataset_out, sga_in1.projref)
     GDAL.gdalsetgeotransform(dataset_out, affine_to_geotransform(sga_in1.f))
+    #GDAL.gdalgettransformerdstgeotransform
 
     r_tiles = sga_in1.ysize ÷ 1
     remaining_r = sga_in1.ysize % 1
@@ -123,7 +135,7 @@ function geotiff_collect(maskfilename::String, infilenames::Array{String}, f::Fu
     scanlines_inp = fill(fill(0.0f0, sga_mask.xsize), size(infilenames, 1))
     vals = fill(0.0f0, size(infilenames, 1))
 
-    #print("processesing progress: 0 ")
+    print("processesing progress: 0 ")
     p = 0
 
     for r in 1:(r_tiles)

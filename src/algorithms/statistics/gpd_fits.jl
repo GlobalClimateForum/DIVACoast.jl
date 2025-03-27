@@ -1,5 +1,5 @@
 export estimate_exponential_distribution, estimate_gpd_positive_distribution
-export estimate_gpd_positive_distribution, estimate_gp_distribution
+export estimate_gpd_negative_distribution, estimate_gp_distribution, exponential_error, gpd_positive_error, gpd_negative_error
 
 using LsqFit
 using Distributions
@@ -25,6 +25,10 @@ exponential_error(x_data, y_data) = function (p)
     sqrt(res)
 end
 
+exponential_error_x(x_data,y_data) = function (p)
+    sqrt(1/length(x_data)*sum((x_data .- quantile.(GeneralizedPareto(p[1],p[2],p[3]),y_data)) .^ 2))
+end
+
 gpd_positive_error(x_data, y_data) = function (p)
     res = 0.0
     for i in 1:size(x_data, 1)
@@ -35,6 +39,10 @@ gpd_positive_error(x_data, y_data) = function (p)
         end
     end
     sqrt(res)
+end
+
+gpd_positive_error_x(x_data,y_data) = function (p)
+    sqrt(1/length(x_data)*sum((x_data .- quantile.(GeneralizedPareto(p[1],p[2],p[3]),y_data)) .^ 2))
 end
 
 gpd_negative_error(x_data, y_data) = function (p)
@@ -49,6 +57,9 @@ gpd_negative_error(x_data, y_data) = function (p)
     sqrt(res)
 end
 
+gpd_negative_error_x(x_data,y_data) = function (p)
+    sqrt(1/length(x_data)*sum((x_data .- quantile.(GeneralizedPareto(p[1],p[2],p[3]),y_data)) .^ 2))
+end
 
 
 """
@@ -80,7 +91,7 @@ function estimate_exponential_distribution(x_data::Array{T}, y_data::Array{T}) w
 
     exponential_optim_fit =
         try
-            optimize(x -> exponential_error(x_data, y_data)(x), lower_bound, upper_bound, x_initial, Optim.Options(outer_iterations=1500, iterations=1000))
+            optimize(x -> exponential_error_x(x_data, y_data)(x), lower_bound, upper_bound, x_initial, Optim.Options(outer_iterations=1500, iterations=1000))
         catch
             missing
         end
@@ -92,7 +103,7 @@ function estimate_exponential_distribution(x_data::Array{T}, y_data::Array{T}) w
     elseif (exponential_curve_fit !== missing && exponential_optim_fit === missing)
         return GeneralizedPareto(exponential_curve_fit.param[1], exponential_curve_fit.param[2], 0)
     else
-        error_exponential_curve_fit = sqrt(sum(exponential_curve_fit.resid .^ 2))
+        error_exponential_curve_fit = sqrt((1/length(exponential_curve_fit.resid))*sum(exponential_curve_fit.resid .^ 2))
         error_exponential_optim_fit = exponential_optim_fit.minimum
         if error_exponential_curve_fit < error_exponential_optim_fit
             return GeneralizedPareto(exponential_curve_fit.param[1], exponential_curve_fit.param[2], 0)
@@ -131,7 +142,7 @@ function estimate_gpd_positive_distribution(x_data::Array{T}, y_data::Array{T}) 
 
     gpd_positive_optim_fit =
         try
-            Optim.optimize(x -> gpd_positive_error(x_data, y_data)(x), lower_bound, upper_bound, x_initial, Fminbox(), Optim.Options(outer_iterations=10, iterations=100, show_trace=false, show_every=50))
+            Optim.optimize(x -> gpd_positive_error_x(x_data, y_data)(x), lower_bound, upper_bound, x_initial, Fminbox(), Optim.Options(outer_iterations=10, iterations=100, show_trace=false, show_every=50))
         catch
             missing
         end
@@ -143,7 +154,7 @@ function estimate_gpd_positive_distribution(x_data::Array{T}, y_data::Array{T}) 
     elseif (gpd_positive_curve_fit !== missing && gpd_positive_optim_fit === missing)
         return GeneralizedPareto(gpd_positive_curve_fit.param[1], gpd_positive_curve_fit.param[2], gpd_positive_curve_fit.param[3])
     else
-        error_gpd_positive_curve_fit = sqrt(sum(gpd_positive_curve_fit.resid .^ 2))
+        error_gpd_positive_curve_fit = sqrt((1/length(gpd_positive_curve_fit.resid))*sum(gpd_positive_curve_fit.resid .^ 2))
         error_gpd_positive_optim_fit = gpd_positive_optim_fit.minimum
         if error_gpd_positive_curve_fit < error_gpd_positive_optim_fit
             return GeneralizedPareto(gpd_positive_curve_fit.param[1], gpd_positive_curve_fit.param[2], gpd_positive_curve_fit.param[3])
@@ -182,7 +193,7 @@ function estimate_gpd_negative_distribution(x_data::Array{T}, y_data::Array{T}) 
 
     gpd_negative_optim_fit =
         try
-            optimize(x -> gpd_negative_error(x_data, y_data)(x), lower_bound, upper_bound, x_initial, Optim.Options(outer_iterations=1500, iterations=1000))
+            optimize(x -> gpd_negative_error_x(x_data, y_data)(x), lower_bound, upper_bound, x_initial, Optim.Options(outer_iterations=1500, iterations=1000))
         catch
             missing
         end
@@ -195,7 +206,7 @@ function estimate_gpd_negative_distribution(x_data::Array{T}, y_data::Array{T}) 
     elseif (gpd_negative_curve_fit !== missing && gpd_negative_optim_fit === missing)
         return GeneralizedPareto(gpd_negative_curve_fit.param[1], gpd_negative_curve_fit.param[2], gpd_negative_curve_fit.param[3])
     else
-        error_gpd_negative_curve_fit = sqrt(sum(gpd_negative_curve_fit.resid .^ 2))
+        error_gpd_negative_curve_fit = sqrt((1/length(gpd_negative_curve_fit.resid))*sum(gpd_negative_curve_fit.resid .^ 2))
         error_gpd_negative_optim_fit = gpd_negative_optim_fit.minimum
         if error_gpd_negative_curve_fit < error_gpd_negative_optim_fit
             return GeneralizedPareto(gpd_negative_curve_fit.param[1], gpd_negative_curve_fit.param[2], gpd_negative_curve_fit.param[3])
@@ -213,7 +224,7 @@ out of the exponential, positive GPD and negative GPD model based on the summed 
 function estimate_gp_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     #println()
     #print("fit exponential ... ")
-    gpd_exponential = estimate_exponential_distribution(x_data, y_data)
+    gpd_exponential = estimate_exponential_distribution(x_data, y_data) # ξ = 0
     #println(" done. ", now())
     #print("fit gpd positive ... ")
     gpd_positive = estimate_gpd_positive_distribution(x_data, y_data)
@@ -222,19 +233,19 @@ function estimate_gp_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:
     gpd_negative = estimate_gpd_negative_distribution(x_data, y_data)
     #println(" done. ", now())
 
-    my_exponential_error = exponential_error(x_data, y_data)([gpd_exponential.μ, gpd_exponential.σ, gpd_exponential.ξ])
-    my_gpd_positive_error = gpd_positive_error(x_data, y_data)([gpd_positive.μ, gpd_positive.σ, gpd_positive.ξ])
-    my_gpd_negative_error = gpd_negative_error(x_data, y_data)([gpd_negative.μ, gpd_negative.σ, gpd_negative.ξ])
+    my_exponential_error = exponential_error_x(x_data, y_data)([gpd_exponential.μ, gpd_exponential.σ, gpd_exponential.ξ])
+    my_gpd_positive_error = gpd_positive_error_x(x_data, y_data)([gpd_positive.μ, gpd_positive.σ, gpd_positive.ξ])
+    my_gpd_negative_error = gpd_negative_error_x(x_data, y_data)([gpd_negative.μ, gpd_negative.σ, gpd_negative.ξ])
 
     #println("EXPONENTIAL:  ", gpd_exponential, " - ", my_exponential_error)
     #println("GPD positive: ", gpd_positive, " - ", my_gpd_positive_error)
     #println("GPD negative: ", gpd_negative, " - ", my_gpd_negative_error)
 
     if my_exponential_error <= my_gpd_positive_error && my_exponential_error <= my_gpd_negative_error
-        return gpd_exponential
+        return (gpd_exponential,my_exponential_error)
     elseif my_gpd_positive_error <= my_gpd_negative_error
-        return gpd_positive
+        return (gpd_positive,my_gpd_positive_error)
     else
-        return gpd_negative
+        return (gpd_negative,my_gpd_negative_error)
     end
 end

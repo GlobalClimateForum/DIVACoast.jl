@@ -10,11 +10,10 @@ export HypsometricProfile,
   compress!, compress_multithread!
 
 """
-    HypsometricProfile(w::DT, width_unit::String,
+    HypsometricProfile(width::DT, width_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::StructArray{T1}, s_exposure_units::Array{String},
-    d_exposure::StructArray{T2}, d_exposure_units::Array{String},
-    logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real,T1,T2}
+    d_exposure::StructArray{T2}, d_exposure_units::Array{String}) where {DT<:Real,T1,T2}
 
 A HypsometricProfile represents the variation in elevation from the coastline to inland areas. It can be constructed manually or by using `load_hsps_nc()` and a NetCDF-file.
 """
@@ -31,136 +30,125 @@ mutable struct HypsometricProfile{DT<:Real}
   cummulativeDynamicExposure::Array{DT,2}
   dynamicExposureSymbols
   dynamicExposureUnits::Array{String}
-  #  distances::Array{DT}
-  logger::ExtendedLogger
+  doLog::Bool
 
   # Constructors
-  function HypsometricProfile(w::DT, width_unit::String,
+  function HypsometricProfile(width::DT, width_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::StructArray{T1}, s_exposure_units::Array{String},
-    d_exposure::StructArray{T2}, d_exposure_units::Array{String},
-    logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real,T1,T2}
+    d_exposure::StructArray{T2}, d_exposure_units::Array{String}) where {DT<:Real,T1,T2}
     if (length(elevations) != length(area))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))")
+      @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))"
     end
     if (length(elevations) != size(s_exposure, 1))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))")
+      @error "length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))"
     end
     if (length(elevations) != size(d_exposure, 1))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))")
+      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))"
     end
     if (length(elevations) < 2)
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed")
+      @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed"
     end
     if (!issorted(elevations))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n elevations is not sorted: $elevations")
+      @error "elevations is not sorted: $elevations"
     end
 
     if (area[1] != 0)
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n area[1] should be zero, but its not: $area")
+      @error "area[1] should be zero, but its not: $area"
     end
     if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n d_exposure first column should be zero, but its not: $s_exposure")
+      @error "d_exposure first column should be zero, but its not: $s_exposure"
     end
     if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...))
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n d_exposure first column should be zero, but its not: $d_exposure")
+      @error "d_exposure first column should be zero, but its not: $d_exposure"
     end
 
     s_exposure_arrays = private_convert_strarray_to_array(DT, s_exposure)
     d_exposure_arrays = private_convert_strarray_to_array(DT, d_exposure)
 
-    new{DT}(w, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure_arrays, dims=1), keys(fieldarrays(s_exposure)), s_exposure_units, cumsum(d_exposure_arrays, dims=1), keys(fieldarrays(d_exposure)), d_exposure_units, ExtendedLogger())
+    new{DT}(width, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure_arrays, dims=1), keys(fieldarrays(s_exposure)), s_exposure_units, cumsum(d_exposure_arrays, dims=1), keys(fieldarrays(d_exposure)), d_exposure_units)
   end
 
-  function HypsometricProfile(w::DT, width_unit::String,
+  function HypsometricProfile(width::DT, width_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Array{DT,2}, s_exposure_units::Array{String},
-    d_exposure::Array{DT,2}, d_exposure_units::Array{String},
-    logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
+    d_exposure::Array{DT,2}, d_exposure_units::Array{String}) where {DT<:Real}
     # String(nameof(var"#self#"))
     if (length(elevations) != length(area))
-      logg(logger, Logging.Error, @__FILE__, "", "\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))")
+      @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))"
     end
     if ((size(s_exposure, 1) > 0) && (length(elevations) != size(s_exposure, 1)))
-      logg(logger, Logging.Error, @__FILE__, "", "\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))")
+      @error "length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))"
     end
     if ((size(d_exposure, 1) > 0) && (length(elevations) != size(d_exposure, 1)))
-      logg(logger, Logging.Error, @__FILE__, "", "\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))")
+      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))"
     end
     if (length(elevations) < 2)
-      logg(logger, Logging.Error, @__FILE__, "", "\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed")
+      @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed"
     end
     if (!issorted(elevations))
-      logg(logger, Logging.Error, @__FILE__, "", "\n elevations is not sorted: $elevations")
+      @error "elevations is not sorted: $elevations"
     end
     if (area[1] != 0)
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n area[1] should be zero, but its not: $area")
+      @error " area[1] should be zero, but its not: $area"
     end
-    #if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $s_exposure") end
-    #if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $d_exposure") end
 
-    new{DT}(w, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), ntuple(i -> Symbol("s_exposure_name_$i"), size(s_exposure, 2)), s_exposure_units, cumsum(d_exposure, dims=1), ntuple(i -> Symbol("d_exposure_name_$i"), size(d_exposure, 2)), d_exposure_units, logger)
+    new{DT}(width, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), ntuple(i -> Symbol("s_exposure_name_$i"), size(s_exposure, 2)), s_exposure_units, cumsum(d_exposure, dims=1), ntuple(i -> Symbol("d_exposure_name_$i"), size(d_exposure, 2)), d_exposure_units)
   end
 
 
-  function HypsometricProfile(w::DT, width_unit::String,
+  function HypsometricProfile(width::DT, width_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
-    d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String},
-    logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
+    d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String}) where {DT<:Real}
     # String(nameof(var"#self#"))
     if (length(elevations) != length(area))
-      logg(logger, Logging.Error, @__FILE__, "", "\n length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))")
+      @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))"
     end
     if ((size(s_exposure, 1) > 0) && (length(elevations) != size(s_exposure, 1)))
-      logg(logger, Logging.Error, @__FILE__, "", "\n length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))")
+      @error "length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))"
     end
     if ((size(d_exposure, 1) > 0) && (length(elevations) != size(d_exposure, 1)))
-      logg(logger, Logging.Error, @__FILE__, "", "\n length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))")
+      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))"
     end
     if (length(elevations) < 2)
-      logg(logger, Logging.Error, @__FILE__, "", "\n length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed")
+      @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed"
     end
     if (!issorted(elevations))
-      logg(logger, Logging.Error, @__FILE__, "", "\n elevations is not sorted: $elevations")
+      @error "elevations is not sorted: $elevations"
     end
     if (s_exposure_names != unique(s_exposure_names))
-      logg(logger, Logging.Error, @__FILE__, "", "\n s_exposure_names has duplicates: $s_exposure_names")
+      @error "s_exposure_names has duplicates: $s_exposure_names"
     end
     if (d_exposure_names != unique(d_exposure_names))
-      logg(logger, Logging.Error, @__FILE__, "", "\n d_exposure_names has duplicates: $d_exposure_names")
+      @error "d_exposure_names has duplicates: $d_exposure_names"
     end
     if (area[1] != 0)
-      logg(logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n area[1] should be zero, but its not: $area")
+      @error "area[1] should be zero, but its not: $area"
     end
-    #if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $s_exposure") end
-    #if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...)) logg(logger,Logging.Error,@__FILE__,String(nameof(var"#self#")),"\n d_exposure first column should be zero, but its not: $d_exposure") end
 
-    new{DT}(w, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), Tuple(map(x -> Symbol(x), s_exposure_names)), s_exposure_units, cumsum(d_exposure, dims=1), Tuple(map(x -> Symbol(x), d_exposure_names)), d_exposure_units, logger)
+    new{DT}(width, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), Tuple(map(x -> Symbol(x), s_exposure_names)), s_exposure_units, cumsum(d_exposure, dims=1), Tuple(map(x -> Symbol(x), d_exposure_names)), d_exposure_units)
   end
 
-
-  function HypsometricProfile(w::DT, width_unit::String,
+  function HypsometricProfile(width::DT, width_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Vector{Any}, s_exposure_names::Vector{Any}, s_exposure_units::Vector{Any},
-    d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String},
-    logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
+    d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String}) where {DT<:Real}
     if s_exposure == []
-      return HypsometricProfile(w, width_unit, elevations, elevation_unit, area, area_unit, Matrix{Float32}(undef, 0, 0), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units, logger)
+      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, Matrix{Float32}(undef, 0, 0), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units)
     else
-      return HypsometricProfile(w, width_unit, elevations, elevation_unit, area, area_unit, convert(Array{DT,2}, s_exposure), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units, logger)
+      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, convert(Array{DT,2}, s_exposure), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units)
     end
   end
 
-  function HypsometricProfile(w::DT,
+  function HypsometricProfile(width::DT,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
-    d_exposure::Vector{Any}, d_exposure_names::Vector{Any}, d_exposure_units::Vector{Any},
-    logger::ExtendedLogger=ExtendedLogger()) where {DT<:Real}
+    d_exposure::Vector{Any}, d_exposure_names::Vector{Any}, d_exposure_units::Vector{Any}) where {DT<:Real}
     if d_exposure == []
-      return HypsometricProfile(w, width_unit, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, Matrix{Float32}(undef, 0, 0), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
+      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, Matrix{Float32}(undef, 0, 0), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units))
     else
-      return HypsometricProfile(w, width_unit, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, convert(Array{DT,2}, d_exposure), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units), logger)
+      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, convert(Array{DT,2}, d_exposure), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units))
     end
   end
 end
@@ -219,7 +207,7 @@ end
 
 function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT<:Real}
   if (hspf.elevation[1] != elevation[1])
-    logg(hspf.logger, Logging.Error, @__FILE__, "", "\n min elevation can not be changed in resampling: $(hspf.elevation[1]) != $(elevation[1])")
+    @error "min elevation can not be changed in resampling: $(hspf.elevation[1]) != $(elevation[1])"
   end
 
   can = Array{DT}(undef, size(elevation, 1))
@@ -411,3 +399,4 @@ include("hypsometric_profile_damage_standard_ddf.jl")
 include("hypsometric_profile_sed.jl")
 include("hypsometric_profile_modifications.jl")
 include("hypsometric_profile_plot.jl")
+include("hypsometric_profile_operators.jl")

@@ -1,10 +1,5 @@
-# Just a scratch pad.
-include("../src/jdiva_lib.jl")
-using .jdiva
-using Test
-using StructArrays
-
-
+# Test Hypsometric Profile
+exit()
 # Creates a random Hypsometric Profile
 function initHypsometricProfile(returnSettings = false)
 

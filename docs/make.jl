@@ -1,20 +1,19 @@
 # Inside make.jl
-include("$(ENV["DIVA_LIB"])/src/jdiva_env.jl")
-include("$(ENV["DIVA_LIB"])/src/jdiva_lib.jl")
+include("$(ENV["DIVA_LIB"])/src/DIVACoast.jl")
 push!(LOAD_PATH, "../src/")
 
-import .jdiva
+import .DIVACoast
 using Documenter
 
 makedocs(
     authors="Daniel Lincke et al <daniel.lincke@globalclimateforum.org>",
-    sitename="jdiva docs",
-    modules=[jdiva],
+    sitename="DIVACoast.jl Docs",
+    modules=[DIVACoast],
     remotes=nothing,
     # pages=["Home" => "index.md"],
     format=Documenter.HTML(
         prettyurls=false,
-        repolink="https://gitlab.com/globalclimateforum/diva_library",
-        collapselevel=1
+        repolink="https://gitlab.com/globalclimateforum/DIVACoast.jl",
+        collapselevel=2
     )
 )
