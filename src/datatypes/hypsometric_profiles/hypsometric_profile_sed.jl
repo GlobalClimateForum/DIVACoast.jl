@@ -3,7 +3,7 @@ Applies factor to exposed assets / population. (socio-economic development)
 """
 function sed!(hspf::HypsometricProfile, factors::Array{T}) where {T<:Real}
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
-    logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
+        @error "size(hspf.cummulativeDynamicExposure,2)!=length(factors) \n as $(size(hspf.cummulativeDynamicExposure,2)) != $(length(factors))"
   end
 
   for j in 1:(size(hspf.cummulativeDynamicExposure, 2))
@@ -13,7 +13,7 @@ end
 
 function sed!(hspf::HypsometricProfile{DT}, factors) where {DT<:Real}
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
-    logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
+        @error "size(hspf.cummulativeDynamicExposure,2)!=length(factors) \n as $(size(hspf.cummulativeDynamicExposure,2)) != $(length(factors))"
   end
 
   fac_array :: Array{DT} = private_match_factors(hspf, factors)
@@ -25,7 +25,7 @@ Applies socio-economic development (factor) above a certain elevation.
 """
 function sed_above!(hspf::HypsometricProfile, above::Real, factors::Array{DT}) where {DT<:Real}
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
-    logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
+        @error "size(hspf.cummulativeDynamicExposure,2)!=length(factors) \n as $(size(hspf.cummulativeDynamicExposure,2)) != $(length(factors))"
   end
 
   if (above < hspf.elevation[1])
@@ -52,7 +52,7 @@ end
 
 function sed_above!(hspf::HypsometricProfile, above::Real, factors)
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
-    logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
+        @error "size(hspf.cummulativeDynamicExposure,2)!=length(factors) \n as $(size(hspf.cummulativeDynamicExposure,2)) != $(length(factors))"
   end
 
   fac_array::Array{DT} = private_match_factors(hspf, factors)
@@ -64,7 +64,7 @@ Applies socio-economic development (factor) below a certain elevation.
 """
 function sed_below!(hspf::HypsometricProfile, below::Real, factors::Array{T}) where {T<:Real}
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
-    logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
+        @error "size(hspf.cummulativeDynamicExposure,2)!=length(factors) \n as $(size(hspf.cummulativeDynamicExposure,2)) != $(length(factors))"
   end
 
   if (below < hspf.elevation[1])
@@ -97,7 +97,7 @@ end
 
 function sed_below!(hspf::HypsometricProfile{DT}, below, factors) where {DT<:Real}
   if (size(hspf.cummulativeDynamicExposure, 2) != length(factors))
-    logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeDynamicExposure,2)!=length(factors) as size($hspf.cummulativeDynamicExposure,2)!=length($factors) as $(size(hspf.cummulativeDynamicExposure,2))!=$(length(factors))")
+        @error "size(hspf.cummulativeDynamicExposure,2)!=length(factors) \n as $(size(hspf.cummulativeDynamicExposure,2)) != $(length(factors))"
   end
 
   fac_array::Array{DT} = private_match_factors(hspf, factors)
