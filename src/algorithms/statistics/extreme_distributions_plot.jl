@@ -9,7 +9,7 @@ using ColorSchemes
 This function creates a plot that compares six different extreme distribution fits to underlying data. The input
     is an x_data and y_data array, x_data is the absolute height of extremes and y_data is the annual probability to be below this value.
     The function fits three different GEV and three different GPD functions to the data and plots all of these. 
-        It also highlights the best fit out of these six functions and highlights this in the plot.
+        It also highlights the best fit out of these six functions based on least sqaure fitting and highlights this in the plot.
 """
 function plot_comparison_extreme_distributions(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     # Define different GEV and GPD distributions
