@@ -78,7 +78,18 @@ function add_dynamic_exposure!(hspf::HypsometricProfile, elevation::Array{DT}, d
 end
 
 """
-Removes static exposure from a HypsometricProfile
+    function remove_static_exposure!(hspf::HypsometricProfile, ind :: Integer)
+
+Function removes static exposure from a HypsometricProfile at the index `ind`. The function removes the exposure data, the exposure name and the exposure units from the HypsometricProfile.
+
+# Arguments
+- `hspf::HypsometricProfile`: The hypsometric profile object from which the exposure data will be removed.
+- `ind::Integer`: The index of the exposure data to be removed.
+
+# Example
+```julia
+remove_static_exposure!(hspf, 1)
+```
 """
 function remove_static_exposure!(hspf::HypsometricProfile, ind :: Integer)
   if (1<=ind && ind<=size(hspf.staticExposureUnits,1))
@@ -89,7 +100,18 @@ function remove_static_exposure!(hspf::HypsometricProfile, ind :: Integer)
 end
 
 """
-Removes dynamic exposure from a HypsometricProfile
+    function remove_dynamic_exposure!(hspf::HypsometricProfile, ind :: Integer)
+
+Function removes dynamic exposure from a HypsometricProfile at the index `ind`. The function removes the exposure data, the exposure name and the exposure units from the HypsometricProfile.
+
+# Arguments
+- `hspf::HypsometricProfile`: The hypsometric profile object from which the exposure data will be removed.
+- `ind::Integer`: The index of the exposure data to be removed.
+
+# Example
+```julia
+remove_dynamic_exposure!(hspf, 1)
+```
 """
 function remove_dynamic_exposure!(hspf::HypsometricProfile, ind :: Integer)
   if (1<=ind && ind<=size(hspf.dynamicExposureUnits,1))

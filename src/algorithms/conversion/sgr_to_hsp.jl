@@ -2,9 +2,25 @@ export to_hypsometric_profile, to_hypsometric_profiles,
   attach_to_hypsometric_profiles!, attach_static_exposure_to_hypsometric_profiles!, attach_dynamic_exposure_to_hypsometric_profiles!
 
 """
-  to_hypsometric_profile(sga::SparseGeoArray{DT,IT}, width::DT2, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
+    function to_hypsometric_profile(sga::SparseGeoArray{DT,IT}, width::DT2, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
 
-A hypsometric profile is constructed from an elevation geotiff representing elevations. 
+Function converts a `SparseGeoArray` object to a `HypsometricProfile` object. The function calculates the area of each elevation increment and stores it in the `HypsometricProfile` object. Elevation
+increments are calculated between a `min_elevation` and a `max_elevation` with a desired eleveation increment: `elevation_incr`. The function returns the `HypsometricProfile` object.
+
+# Arguments
+- `sga::SparseGeoArray{DT,IT}`: The `SparseGeoArray` object to be converted.
+- `width::DT2`: The width of the hypsometric profile.
+- `min_elevation::DT2`: The minimum elevation of the hypsometric profile to be considered.
+- `max_elevation::DT2`: The maximum elevation of the hypsometric profile to be considered.
+- `elevation_incr::DT2`: Desired elevation increment.
+
+# Returns
+- `HypsometricProfile`: The hypsometric profile object.
+
+# Example
+```julia
+to_hypsometric_profile(sga, 1.0, -2.0, 20.0, 5.0)
+```
 """  
 function to_hypsometric_profile(sga::SparseGeoArray{DT,IT}, width::DT2, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
   s = floor(Int, ((max_elevation - min_elevation) / elevation_incr))
@@ -38,7 +54,36 @@ function to_hypsometric_profile(sga::SparseGeoArray{DT,IT}, width::DT2, min_elev
   return HypsometricProfile(w, pushfirst!(e, min_elevation), pushfirst!(a, 0), a[:, :], a[:, :])
 end
 
+"""
+    function to_hypsometric_profile(sga_elevation::SparseGeoArray{DT,IT}, area_unit::String, sgas_exp_st::Array{SparseGeoArray{DT,IT}}, exp_st_names::Array{String}, exp_st_units::Array{String}, sgas_exp_dyn::Array{SparseGeoArray{DT,IT}}, exp_dyn_names::Array{String}, exp_dyn_units::Array{String}, width::DT2, width_unit::String, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2, elevation_unit::String)
 
+Creates a `HypsometricProfile` object from a `SparseGeoArray` object containing elevation data. 
+It also calculates associated area affected and static/dynamic exposure at each elevation increment. The function returns the `HypsometricProfile` object.
+
+# Arguments
+- `sga_elevation::SparseGeoArray{DT,IT}`: The `SparseGeoArray` object containing elevation data.
+- `area_unit::String`: The unit of the area.
+- `sgas_exp_st::Array{SparseGeoArray{DT,IT}}`: The `SparseGeoArray` objects containing static exposure data.
+- `exp_st_names::Array{String}`: The names of the static exposure data.
+- `exp_st_units::Array{String}`: The units of the static exposure data.
+- `sgas_exp_dyn::Array{SparseGeoArray{DT,IT}}`: The `SparseGeoArray` objects containing dynamic exposure data.
+- `exp_dyn_names::Array{String}`: The names of the dynamic exposure data.
+- `exp_dyn_units::Array{String}`: The units of the dynamic exposure data.
+- `width::DT2`: The width of the hypsometric profile.
+- `width_unit::String`: The unit of the width.
+- `min_elevation::DT2`: The minimum elevation of the hypsometric profile to be considered.
+- `max_elevation::DT2`: The maximum elevation of the hypsometric profile to be considered.
+- `elevation_incr::DT2`: Desired elevation increment.
+- `elevation_unit::String`: The unit of the elevation.
+
+# Returns
+- `HypsometricProfile`: The hypsometric profile object.
+
+# Example
+```julia
+to_hypsometric_profile(sga_elevation, "m²", sgas_exp_st, ["agriculture", "urban"], ["m²", "m²"], sgas_exp_dyn, ["population", "assets"], ["individuals", "USD"], 1.0, "m", -2.0, 20.0, 5.0, "m")
+```
+"""
 function to_hypsometric_profile(sga_elevation::SparseGeoArray{DT,IT}, area_unit::String,
   sgas_exp_st::Array{SparseGeoArray{DT,IT}}, exp_st_names::Array{String}, exp_st_units::Array{String},
   sgas_exp_dyn::Array{SparseGeoArray{DT,IT}}, exp_dyn_names::Array{String}, exp_dyn_units::Array{String},
@@ -105,7 +150,6 @@ function to_hypsometric_profile(sga_elevation::SparseGeoArray{DT,IT}, area_unit:
 
   return HypsometricProfile(w, width_unit, pushfirst!(e, min_elevation), elevation_unit, pushfirst!(a, 0), area_unit, [z_st'; st], exp_st_names, exp_st_units, [z_dy'; dyn], exp_dyn_names, exp_dyn_units)
 end
-
 
 function to_hypsometric_profile(sgas_elevation::Dict{IT2,SparseGeoArray{DT,IT}}, area_unit::String,
   sgas_exp_st::Array{Dict{IT2,SparseGeoArray{DT,IT}}}, exp_st_names::Array{String}, exp_st_units::Array{String},
