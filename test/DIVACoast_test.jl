@@ -7,7 +7,7 @@ import YAML
 export earth_circumference_km, earth_radius_km
 
 # Read local library configuration
-global config = YAML.load_file(joinpath(@__DIR__, "DIVACoast_test.jl.yml"), dicttype = Dict{Symbol, Any})
+global config = YAML.load_file(joinpath(@__DIR__, "../src/DIVACoast.jl.yml"), dicttype = Dict{Symbol, Any})
 
 module DIVACoast
 export earth_circumference_km, earth_radius_km
@@ -40,7 +40,7 @@ export earth_circumference_km, earth_radius_km
         end
 
         # Include functions
-        include("./logger/logger.jl")
+        include(".src/logger/logger.jl")
         include("./datatypes/geodatatype/SparseGeoArrays.jl")
         include("./datatypes/hypsometric_profiles/hypsometric_profiles.jl")
         include("./datatypes/coastal_model/local_coastal_model.jl")
