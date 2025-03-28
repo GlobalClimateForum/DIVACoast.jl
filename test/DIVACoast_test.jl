@@ -40,7 +40,7 @@ export earth_circumference_km, earth_radius_km
         end
 
         # Include functions
-        include(".src/logger/logger.jl")
+        include("../src/logger/logger.jl")
         include("./datatypes/geodatatype/SparseGeoArrays.jl")
         include("./datatypes/hypsometric_profiles/hypsometric_profiles.jl")
         include("./datatypes/coastal_model/local_coastal_model.jl")
