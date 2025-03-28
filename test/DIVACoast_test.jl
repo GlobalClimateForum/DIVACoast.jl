@@ -7,7 +7,7 @@ import YAML
 export earth_circumference_km, earth_radius_km
 
 # Read local library configuration
-global config = YAML.load_file(joinpath(@__DIR__, "DIVACoast.jl.yml"), dicttype = Dict{Symbol, Any})
+global config = YAML.load_file(joinpath(@__DIR__, "DIVACoast_test.jl.yml"), dicttype = Dict{Symbol, Any})
 
 module DIVACoast
 export earth_circumference_km, earth_radius_km
