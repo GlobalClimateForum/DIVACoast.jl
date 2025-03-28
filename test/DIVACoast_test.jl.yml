@@ -1,0 +1,5 @@
+drawHeader : True
+shortHeader : True
+earthRadiusKM : 6371
+earthCircumferenceKM : 40075
+
