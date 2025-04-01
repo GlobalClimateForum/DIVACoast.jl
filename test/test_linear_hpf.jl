@@ -33,6 +33,4 @@ println(area)
 
 
 # Bathtub model - calculated
-
-
 area, static, dynamic = exposure_below_bathtub(hp, 4f0)

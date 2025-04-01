@@ -4,7 +4,8 @@ using .DIVACoast
 using Test
 
 println(earth_circumference_km)
-# @testset "DIVACoast - Configuration" begin
-#     @test earth_circumference_km == 40075
-#     @test earth_radius_km == 6371
-# end
+
+@testset "DIVACoast - Configuration" begin
+    @test earth_circumference_km == 40075
+    @test earth_radius_km == 6371
+end
