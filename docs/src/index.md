@@ -182,7 +182,7 @@ Main.DIVACoast.coords_to_wide
 
 ## Flood propagation model
 
-Currently `DIVACoast.jl` only support the **bathtub model** and the **attenuated bathtub model**. Attenuation refers to the reduction of water levels while floods propagate inland across the landscape. The magnitude of attenuation is a function of land cover such as vegetation, buildings and infrastructure which slow down and hence reduce the extent of flooding.
+Currently `DIVACoast.jl` supports the **bathtub model** and the **attenuated bathtub model**. Attenuation refers to the reduction of water levels while floods propagate inland across the landscape. The magnitude of attenuation is a function of land cover such as vegetation, buildings and infrastructure which slow down and hence reduce the extent of flooding.
 
 ## Damage of a single event
 ```@docs
