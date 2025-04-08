@@ -104,10 +104,8 @@ Main.DIVACoast.attenuate
 Socio-economic development and adaptation changes exposure. For example, socio-economic growth increases the number of people and their assets in the coastal zone, while retreat reduces assets and people in the costal zone. To represent those process in DIVACoast, we provide the following functions.
 
 ```@docs
-Main.DIVACoast.add_static_exposure!
-Main.DIVACoast.add_dynamic_exposure!
-Main.DIVACoast.remove_static_exposure!
-Main.DIVACoast.remove_dynamic_exposure!
+Main.DIVACoast.add_exposure_dimension!
+Main.DIVACoast.remove_exposure_dimension!
 Main.DIVACoast.sed!
 Main.DIVACoast.sed_above!
 Main.DIVACoast.sed_below!
