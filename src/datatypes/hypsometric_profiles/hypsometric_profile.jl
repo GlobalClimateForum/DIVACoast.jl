@@ -4,16 +4,16 @@ export HypsometricProfile,
   unit,
   exposure_below_bathtub, exposure_below_bathtub_named,
   exposure_below_attenuated, attenuate,
-  sed!, sed_above!, sed_below!, remove_below!, remove_below_named!, add_above!, add_between!,
-  add_static_exposure!, add_dynamic_exposure!, remove_static_exposure!, remove_dynamic_exposure!,
+  exposure_growth!, exposure_growth_above!, exposure_growth_below!, 
+  remove_exposure_below!, remove_exposure_below_named!, add_exposure_above!, add_exposure_between!,
+  add_exposure_dimension!, remove_exposure_dimension!,
   damage_bathtub_standard_ddf, damage_bathtub,
   compress!, compress_multithread!
 
 """
-    HypsometricProfile(width::DT, width_unit::String,
+    HypsometricProfile(coast_length::DT, coast_length_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
-    s_exposure::StructArray{T1}, s_exposure_units::Array{String},
-    d_exposure::StructArray{T2}, d_exposure_units::Array{String}) where {DT<:Real,T1,T2}
+    exposure_data::StructArray{T1}, exposure_units::Array{String}) where {DT<:Real,T1}
 
 A HypsometricProfile represents the variation in elevation from the coastline to inland areas. It can be constructed manually or by using `load_hsps_nc()` and a NetCDF-file.
 """
@@ -24,27 +24,20 @@ mutable struct HypsometricProfile{DT<:Real}
   elevation_unit::String
   cummulativeArea::Array{DT}
   area_unit::String
-  cummulativeStaticExposure::Array{DT,2}
-  staticExposureSymbols
-  staticExposureUnits::Array{String}
-  cummulativeDynamicExposure::Array{DT,2}
-  dynamicExposureSymbols
-  dynamicExposureUnits::Array{String}
+  cummulativeExposure::Array{DT,2}
+  exposureSymbols
+  exposureUnits::Array{String}
   doLog::Bool
 
   # Constructors
-  function HypsometricProfile(width::DT, width_unit::String,
+  function HypsometricProfile(coast_length::DT, coast_length_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
-    s_exposure::StructArray{T1}, s_exposure_units::Array{String},
-    d_exposure::StructArray{T2}, d_exposure_units::Array{String}) where {DT<:Real,T1,T2}
+    exposure_data::StructArray{T}, exposure_units::Array{String}) where {DT<:Real,T}
     if (length(elevations) != length(area))
       @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))"
     end
-    if (length(elevations) != size(s_exposure, 1))
-      @error "length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))"
-    end
-    if (length(elevations) != size(d_exposure, 1))
-      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))"
+    if (length(elevations) != size(exposure_data, 1))
+      @error "length(elevations) != size(exposure_data,1)  as length($elevations) != size($exposure_data,1)  as $(length(elevations)) != $(size(exposure_data,1))"
     end
     if (length(elevations) < 2)
       @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed"
@@ -56,32 +49,23 @@ mutable struct HypsometricProfile{DT<:Real}
     if (area[1] != 0)
       @error "area[1] should be zero, but its not: $area"
     end
-    if (values(s_exposure[1]) != tuple(zeros(length(s_exposure[1]))...))
-      @error "d_exposure first column should be zero, but its not: $s_exposure"
-    end
-    if (values(d_exposure[1]) != tuple(zeros(length(d_exposure[1]))...))
-      @error "d_exposure first column should be zero, but its not: $d_exposure"
+    if (values(exposure_data[1]) != tuple(zeros(length(exposure_data[1]))...))
+      @error "exposure_data first column should be zero, but its not: $exposure_data"
     end
 
-    s_exposure_arrays = private_convert_strarray_to_array(DT, s_exposure)
-    d_exposure_arrays = private_convert_strarray_to_array(DT, d_exposure)
-
-    new{DT}(width, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure_arrays, dims=1), keys(fieldarrays(s_exposure)), s_exposure_units, cumsum(d_exposure_arrays, dims=1), keys(fieldarrays(d_exposure)), d_exposure_units)
+    exposure_arrays = private_convert_strarray_to_array(DT, exposure_data)
+    new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_arrays, dims=1), keys(fieldarrays(exposure_data)), exposure_units)
   end
 
-  function HypsometricProfile(width::DT, width_unit::String,
+  function HypsometricProfile(coast_length::DT, coast_length_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
-    s_exposure::Array{DT,2}, s_exposure_units::Array{String},
-    d_exposure::Array{DT,2}, d_exposure_units::Array{String}) where {DT<:Real}
+    exposure_data::Array{DT,2}, exposure_units::Array{String}) where {DT<:Real}
     # String(nameof(var"#self#"))
     if (length(elevations) != length(area))
       @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))"
     end
-    if ((size(s_exposure, 1) > 0) && (length(elevations) != size(s_exposure, 1)))
-      @error "length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))"
-    end
-    if ((size(d_exposure, 1) > 0) && (length(elevations) != size(d_exposure, 1)))
-      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))"
+    if ((size(exposure_data, 1) > 0) && (length(elevations) != size(exposure_data, 1)))
+      @error "length(elevations) != size(exposure_data,1)  as length($elevations) != size($exposure_data,1)  as $(length(elevations)) != $(size(exposure_data,1))"
     end
     if (length(elevations) < 2)
       @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed"
@@ -93,23 +77,19 @@ mutable struct HypsometricProfile{DT<:Real}
       @error " area[1] should be zero, but its not: $area"
     end
 
-    new{DT}(width, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), ntuple(i -> Symbol("s_exposure_name_$i"), size(s_exposure, 2)), s_exposure_units, cumsum(d_exposure, dims=1), ntuple(i -> Symbol("d_exposure_name_$i"), size(d_exposure, 2)), d_exposure_units)
+    new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_data, dims=1), ntuple(i -> Symbol("exposure_data_name_$i"), size(exposure_data, 2)), exposure_units)
   end
 
 
-  function HypsometricProfile(width::DT, width_unit::String,
+  function HypsometricProfile(coast_length::DT, coast_length_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
-    s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
-    d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String}) where {DT<:Real}
+    exposure_data::Array{DT,2}, exposure_names::Array{String}, exposure_units::Array{String}) where {DT<:Real}
     # String(nameof(var"#self#"))
     if (length(elevations) != length(area))
       @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))"
     end
-    if ((size(s_exposure, 1) > 0) && (length(elevations) != size(s_exposure, 1)))
-      @error "length(elevations) != size(s_exposure,1) as length($elevations) != size($s_exposure,1) as $(length(elevations)) != $(size(s_exposure,1))"
-    end
-    if ((size(d_exposure, 1) > 0) && (length(elevations) != size(d_exposure, 1)))
-      @error "length(elevations) != size(d_exposure,1)  as length($elevations) != size($d_exposure,1)  as $(length(elevations)) != $(size(d_exposure,1))"
+    if ((size(exposure_data, 1) > 0) && (length(elevations) != size(exposure_data, 1)))
+      @error "length(elevations) != size(exposure_data,1)  as length($elevations) != size($exposure_data,1)  as $(length(elevations)) != $(size(exposure_data,1))"
     end
     if (length(elevations) < 2)
       @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed"
@@ -117,40 +97,16 @@ mutable struct HypsometricProfile{DT<:Real}
     if (!issorted(elevations))
       @error "elevations is not sorted: $elevations"
     end
-    if (s_exposure_names != unique(s_exposure_names))
-      @error "s_exposure_names has duplicates: $s_exposure_names"
-    end
-    if (d_exposure_names != unique(d_exposure_names))
-      @error "d_exposure_names has duplicates: $d_exposure_names"
+    if (exposure_names != unique(exposure_names))
+      @error "exposure_names has duplicates: $exposure_names"
     end
     if (area[1] != 0)
       @error "area[1] should be zero, but its not: $area"
     end
 
-    new{DT}(width, width_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(s_exposure, dims=1), Tuple(map(x -> Symbol(x), s_exposure_names)), s_exposure_units, cumsum(d_exposure, dims=1), Tuple(map(x -> Symbol(x), d_exposure_names)), d_exposure_units)
+    new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_data, dims=1), Tuple(map(x -> Symbol(x), exposure_names)), exposure_units)
   end
 
-  function HypsometricProfile(width::DT, width_unit::String,
-    elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
-    s_exposure::Vector{Any}, s_exposure_names::Vector{Any}, s_exposure_units::Vector{Any},
-    d_exposure::Array{DT,2}, d_exposure_names::Array{String}, d_exposure_units::Array{String}) where {DT<:Real}
-    if s_exposure == []
-      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, Matrix{Float32}(undef, 0, 0), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units)
-    else
-      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, convert(Array{DT,2}, s_exposure), convert(Array{String}, s_exposure_names), convert(Array{String}, s_exposure_units), d_exposure, d_exposure_names, d_exposure_units)
-    end
-  end
-
-  function HypsometricProfile(width::DT,
-    elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
-    s_exposure::Array{DT,2}, s_exposure_names::Array{String}, s_exposure_units::Array{String},
-    d_exposure::Vector{Any}, d_exposure_names::Vector{Any}, d_exposure_units::Vector{Any}) where {DT<:Real}
-    if d_exposure == []
-      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, Matrix{Float32}(undef, 0, 0), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units))
-    else
-      return HypsometricProfile(width, width_unit, elevations, elevation_unit, area, area_unit, s_exposure, s_exposure_names, s_exposure_units, convert(Array{DT,2}, d_exposure), convert(Array{String}, d_exposure_names), convert(Array{String}, d_exposure_units))
-    end
-  end
 end
 
 
@@ -211,20 +167,17 @@ function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT
   end
 
   can = Array{DT}(undef, size(elevation, 1))
-  csen::Array{DT,2} = Array{DT,2}(undef, size(elevation, 1), size(hspf.cummulativeStaticExposure, 2))
-  cden::Array{DT,2} = Array{DT,2}(undef, size(elevation, 1), size(hspf.cummulativeDynamicExposure, 2))
+  cden::Array{DT,2} = Array{DT,2}(undef, size(elevation, 1), size(hspf.cummulativeExposure, 2))
 
   for i in 1:size(elevation, 1)
     t_exposure = exposure_below_bathtub(hspf, elevation[i])
     can[i] = t_exposure[1]
-    csen[i, :] = t_exposure[2]
-    cden[i, :] = t_exposure[3]
+    cden[i, :] = t_exposure[2]
   end
 
   hspf.elevation = copy(elevation)
   hspf.cummulativeArea = can
-  hspf.cummulativeStaticExposure = csen
-  hspf.cummulativeDynamicExposure = cden
+  hspf.cummulativeExposure = cden
 end
 
 """
@@ -259,24 +212,21 @@ function compress!(hspf::HypsometricProfile{DT}) where {DT<:Real}
     # OLD:
     #newElevation = zeros(DT, size(hspf.elevation, 1) - d)
     #newCummulativeArea = zeros(DT, size(hspf.elevation, 1) - d)
-    newCummulativeStaticExposure = zeros(DT, size(hspf.cummulativeStaticExposure, 1) - d, size(hspf.cummulativeStaticExposure, 2))
-    newCummulativeDynamicExposure = zeros(DT, size(hspf.cummulativeDynamicExposure, 1) - d, size(hspf.cummulativeDynamicExposure, 2))
+    newCummulativeExposure = zeros(DT, size(hspf.cummulativeExposure, 1) - d, size(hspf.cummulativeExposure, 2))
 
     c = 1
     for i in 1:size(hspf.elevation, 1)
       if (keep[i])
         hspf.elevation[c] = hspf.elevation[i]
         hspf.cummulativeArea[c] = hspf.cummulativeArea[i]
-        newCummulativeStaticExposure[c, :] = hspf.cummulativeStaticExposure[i, :]
-        newCummulativeDynamicExposure[c, :] = hspf.cummulativeDynamicExposure[i, :]
+        newCummulativeExposure[c, :] = hspf.cummulativeExposure[i, :]
         c += 1
       end
     end
 
     resize!(hspf.elevation, c - 1)
     resize!(hspf.cummulativeArea, c - 1)
-    hspf.cummulativeStaticExposure = newCummulativeStaticExposure
-    hspf.cummulativeDynamicExposure = newCummulativeDynamicExposure
+    hspf.cummulativeExposure = newCummulativeExposure
   end
 end
 
@@ -307,8 +257,7 @@ function compress_multithread!(hspf::HypsometricProfile{DT}, mtlock) where {DT<:
     # OLD:
     #newElevation = zeros(DT, size(hspf.elevation, 1) - d)
     #newCummulativeArea = zeros(DT, size(hspf.elevation, 1) - d)
-    newCummulativeStaticExposure = zeros(DT, size(hspf.cummulativeStaticExposure, 1) - d, size(hspf.cummulativeStaticExposure, 2))
-    newCummulativeDynamicExposure = zeros(DT, size(hspf.cummulativeDynamicExposure, 1) - d, size(hspf.cummulativeDynamicExposure, 2))
+    newCummulativeExposure = zeros(DT, size(hspf.cummulativeExposure, 1) - d, size(hspf.cummulativeExposure, 2))
 
     c = 1
     for i in 1:size(hspf.elevation, 1)
@@ -317,8 +266,7 @@ function compress_multithread!(hspf::HypsometricProfile{DT}, mtlock) where {DT<:
           hspf.elevation[c] = hspf.elevation[i]
           hspf.cummulativeArea[c] = hspf.cummulativeArea[i]
         end
-        newCummulativeStaticExposure[c, :] = hspf.cummulativeStaticExposure[i, :]
-        newCummulativeDynamicExposure[c, :] = hspf.cummulativeDynamicExposure[i, :]
+        newCummulativeExposure[c, :] = hspf.cummulativeExposure[i, :]
         c += 1
       end
     end
@@ -326,8 +274,7 @@ function compress_multithread!(hspf::HypsometricProfile{DT}, mtlock) where {DT<:
     Threads.lock(mtlock) do
       resize!(hspf.elevation, c - 1)
       resize!(hspf.cummulativeArea, c - 1)
-      hspf.cummulativeStaticExposure = newCummulativeStaticExposure
-      hspf.cummulativeDynamicExposure = newCummulativeDynamicExposure
+      hspf.cummulativeExposure = newCummulativeExposure
     end
   end
 end
@@ -336,27 +283,27 @@ function get_position(hspf::HypsometricProfile, s::Symbol)
   if (s == :area)
     return (1, 1)
   end
-  if (findfirst(==(s), hspf.staticExposureSymbols) != nothing)
-    return (2, findfirst(==(s), hspf.staticExposureSymbols))
-  end
-  if (findfirst(==(s), hspf.dynamicExposureSymbols) != nothing)
-    return (3, findfirst(==(s), hspf.dynamicExposureSymbols))
+  if (findfirst(==(s), hspf.exposureSymbols) != nothing)
+    return (2, findfirst(==(s), hspf.exposureSymbols))
   end
   return (-1, 0)
 end
 
 get_position(hspf::HypsometricProfile, n::String) = get_position(hspf, Symbol(n))
 
+"""
+    unit(hspf::HypsometricProfile, s::Symbol)  
+    unit(hspf::HypsometricProfile, s::String)    
+
+    returns the unit (of type String) of the exposure dimension with name s (where s can be a string or a symbol)
+"""
 function unit(hspf::HypsometricProfile, s::Symbol)
   p = get_position(hspf, s)
   if (p[1] == 1)
     return hspf.area_unit
   end
   if (p[1] == 2)
-    return hspf.staticExposureUnits[p[2]]
-  end
-  if (p[1] == 3)
-    return hspf.dynamicExposureUnits[p[2]]
+    return hspf.exposureUnits[p[2]]
   end
   return "unknown symbol: $s"
 end
@@ -373,11 +320,6 @@ function complete_zero(exposure)
       return false
     end
   end
-  for i in 1:size(exposure[3], 1)
-    if exposure[3][i] != 0
-      return false
-    end
-  end
   return true
 end
 
@@ -390,13 +332,13 @@ function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, 
   if (check_zero && complete_zero(ex2) && !complete_zero(ex3))
     return false
   end
-  return isapprox(ex2[1], ex1[1] + r * (ex3[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex3[2] - ex1[2])) && isapprox(ex2[3], ex1[3] + r * (ex3[3] - ex1[3]))
+  return isapprox(ex2[1], ex1[1] + r * (ex3[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex3[2] - ex1[2]))
 end
 
 include("hypsometric_profile_exposure.jl")
 include("hypsometric_profile_damage_arbitrary_ddf.jl")
 include("hypsometric_profile_damage_standard_ddf.jl")
-include("hypsometric_profile_sed.jl")
-include("hypsometric_profile_modifications.jl")
+include("hypsometric_profile_exposure_modifications.jl")
+include("hypsometric_profile_dimension_modifications.jl")
 include("hypsometric_profile_plot.jl")
 include("hypsometric_profile_operators.jl")

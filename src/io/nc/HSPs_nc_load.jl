@@ -68,53 +68,34 @@ function load_hsps_nc(::Type{IT}, ::Type{DT}, filename::String)::Dict{IT,Hypsome
   end
 
   hpsf_data::Dict{IT,HypsometricProfile{DT}} = Dict()
-  static_exp = Array{NCDatasets.CFVariable}(undef, 0)
-  static_exp_names = Array{String}(undef, 0)
-  static_exp_units = Array{String}(undef, 0)
-  dynamic_exp = Array{NCDatasets.CFVariable}(undef, 0)
-  dynamic_exp_names = Array{String}(undef, 0)
-  dynamic_exp_units = Array{String}(undef, 0)
+  exposure_data = Array{NCDatasets.CFVariable}(undef, 0)
+  exposure_names = Array{String}(undef, 0)
+  exposure_units = Array{String}(undef, 0)
 
   for (varname, var) in ds
     #    # all variables
     #    @show (varname, size(var))
-    if (varname != "ids" && varname != "elevations")
-      if haskey(var.attrib, "static") && lowercase(var.attrib["static"]) == "true"
-        push!(static_exp, var)
-        push!(static_exp_names, varname)
-        if haskey(var.attrib, "unit")
-          push!(static_exp_units, var.attrib["unit"])
-        else
-          push!(static_exp_units, "")
-        end
-      end
-      if haskey(var.attrib, "dynamic") && lowercase(var.attrib["dynamic"]) == "true"
-        push!(dynamic_exp, var)
-        push!(dynamic_exp_names, varname)
-        if haskey(var.attrib, "unit")
-          push!(dynamic_exp_units, var.attrib["unit"])
-        else
-          push!(dynamic_exp_units, "")
-        end
+    if (varname != "ids" && varname != "elevations" && varname != "area" && varname != "width")
+      push!(exposure_data, var)
+      push!(exposure_names, varname)
+      if haskey(var.attrib, "unit")
+        push!(exposure_units, var.attrib["unit"])
+      else
+        push!(exposure_units, "")
       end
     end
   end
- 
+
   # reading all data at once is memory intense but much quicker
   area_all::Array{DT} = area_nc[:, :]
-  s_exposure_all :: Array{DT,3} = Array{DT,3}(undef, size(ids, 1), size(el, 1), size(static_exp, 1))
-  d_exposure_all :: Array{DT,3} = Array{DT,3}(undef, size(ids, 1), size(el, 1), size(dynamic_exp, 1))
+  exposure_all::Array{DT,3} = Array{DT,3}(undef, size(ids, 1), size(el, 1), size(exposure_data, 1))
 
-  for j in 1:size(static_exp, 1)
-    s_exposure_all[:,:,j] = static_exp[j][:, :]    
-  end
-  for j in 1:size(dynamic_exp, 1)
-    d_exposure_all[:,:,j] = dynamic_exp[j][:, :]
-    #d_exposure[:, j] = convert(Array{DT}, dynamic_exp[j][i, :])      
+  for j in 1:size(exposure_data, 1)
+    exposure_all[:, :, j] = exposure_data[j][:, :]    
   end
 
   for i in 1:size(ids, 1)
-    hpsf_data[ids[i]] = HypsometricProfile(width[i], width_unit, copy(el), el_unit, area_all[i,:], area_unit, s_exposure_all[i,:,:], static_exp_names, static_exp_units, d_exposure_all[i,:,:], dynamic_exp_names, dynamic_exp_units)
+    hpsf_data[ids[i]] = HypsometricProfile(width[i], width_unit, copy(el), el_unit, area_all[i, :], area_unit, exposure_all[i, :, :], exposure_names, exposure_units)
   end
 
   close(ds)

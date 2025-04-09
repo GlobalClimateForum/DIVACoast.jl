@@ -15,6 +15,7 @@ end
 DIVALogger() = DIVALogger(stderr,Logging.Info, "DIVACoast", now())
 DIVALogger(path::String) = DIVALogger(open(path, "w"), Logging.Info, "DIVACoast", now())
 DIVALogger(lvl::Logging.LogLevel) = DIVALogger(stderr, lvl , "DIVACoast", now())
+DIVALogger(path::String, lvl::Logging.LogLevel) = DIVALogger(open(path, "w"), lvl , "DIVACoast", now())
 
 # Method to change the minimum loglevel of a DIVALogger
 function set_loglvl!(level::Logging.LogLevel)

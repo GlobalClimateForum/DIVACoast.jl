@@ -3,9 +3,9 @@ include("../src/DIVACoast.jl")
 using .DIVACoast
 using Test
 
-println(earth_circumference_km)
+println(DIVACoast.earth_circumference_km)
 
 @testset "DIVACoast - Configuration" begin
-    @test earth_circumference_km == 40075
-    @test earth_radius_km == 6371
+    @test DIVACoast.earth_circumference_km == 40075
+    @test DIVACoast.earth_radius_km == 6371
 end
