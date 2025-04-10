@@ -106,12 +106,12 @@ Socio-economic development and adaptation changes exposure. For example, socio-e
 ```@docs
 Main.DIVACoast.add_exposure_dimension!
 Main.DIVACoast.remove_exposure_dimension!
-Main.DIVACoast.sed!
-Main.DIVACoast.sed_above!
-Main.DIVACoast.sed_below!
-Main.DIVACoast.remove_below!
-Main.DIVACoast.add_above!
-Main.DIVACoast.add_between!
+Main.DIVACoast.growth_exposure!
+Main.DIVACoast.growth_exposure_above!
+Main.DIVACoast.growth_exposure_below!
+Main.DIVACoast.remove_exposurebelow!
+Main.DIVACoast.add_exposureabove!
+Main.DIVACoast.add_exposure_between!
 Main.DIVACoast.compress!
 ```
 
