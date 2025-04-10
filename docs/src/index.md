@@ -109,8 +109,8 @@ Main.DIVACoast.remove_exposure_dimension!
 Main.DIVACoast.growth_exposure!
 Main.DIVACoast.growth_exposure_above!
 Main.DIVACoast.growth_exposure_below!
-Main.DIVACoast.remove_exposurebelow!
-Main.DIVACoast.add_exposureabove!
+Main.DIVACoast.remove_exposure_below!
+Main.DIVACoast.add_exposure_above!
 Main.DIVACoast.add_exposure_between!
 Main.DIVACoast.compress!
 ```
