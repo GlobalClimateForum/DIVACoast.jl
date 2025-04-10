@@ -42,7 +42,7 @@ export earth_circumference_km, earth_radius_km
         # Include functions
         include("../src/logger/logger.jl")
         include("../src/datatypes/geodatatype/SparseGeoArrays.jl")
-        include("../src/datatypes/hypsometric_profiles/hypsometric_profiles.jl")
+        include("../src/datatypes/hypsometric_profiles/hypsometric_profile.jl")
         include("../src/datatypes/coastal_model/local_coastal_model.jl")
         include("../src/datatypes/coastal_model/composed_coastal_model.jl")
         include("../src/datatypes/coastal_model/composed_coastal_model_generics.jl")
