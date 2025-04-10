@@ -20,12 +20,12 @@ ssp_get_growth(sw::SSPScenarioReader{AnnualGrowthPercentage}, g::Real) = g / 100
 ssp_get_growth(sw::SSPScenarioReader{AnnualGrowth}, g::Real) = g - 1
 ssp_get_growth(sw::SSPScenarioReader{GrowthFactor}, g::Real) = g - 1
 
-function ssp_get_growth_factor(wrapped_ssp::SSPScenarioReader{T}, variable::String, country::String, ssp_scenario::String, year1::Int, year2::Int, do_warn = true) where {T<:SSPType}
+function ssp_get_growth_factor(wrapped_ssp::SSPScenarioReader{T}, variable::String, location::String, ssp_scenario::String, year1::Int, year2::Int, do_warn = true) where {T<:SSPType}
 
     # Filter function to retrieve specifc ssp_scenario by variable and country
     function flt(v, r, s)
         v_filter = !ismissing(v) && v == variable
-        r_filter = !ismissing(r) && r == country
+        r_filter = !ismissing(r) && r == location
         s_filter = !ismissing(s) && s == ssp_scenario
         return (v_filter && r_filter && s_filter)
     end
@@ -50,7 +50,7 @@ function ssp_get_growth_factor(wrapped_ssp::SSPScenarioReader{T}, variable::Stri
 
     filtered_df = filter([:Variable, :Region, :Scenario] => flt, wrapped_ssp.df_ssp)
     if (nrow(filtered_df)==0)
-        if (do_warn) println("WARNING: $variable for $country in $ssp_scenario not found!") end
+        if (do_warn) println("WARNING: $variable for $location in $ssp_scenario not found!") end
         return 1.0
     end
 

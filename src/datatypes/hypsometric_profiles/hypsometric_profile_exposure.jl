@@ -14,42 +14,35 @@ function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real) where {DT
   ind::Int64 = searchsortedfirst(hspf.elevation, e)
   if (e in hspf.elevation)
     @inbounds ea = hspf.cummulativeArea[ind]
-    @inbounds es = (size(hspf.cummulativeStaticExposure, 1) > 0) ? hspf.cummulativeStaticExposure[ind, :] : Array{DT,2}(undef, 0, 0)
-    @inbounds ed = (size(hspf.cummulativeDynamicExposure, 1) > 0) ? hspf.cummulativeDynamicExposure[ind, :] : Array{DT,2}(undef, 0, 0)
-    return (ea, es, ed)
+    @inbounds ed = (size(hspf.cummulativeExposure, 1) > 0) ? hspf.cummulativeExposure[ind, :] : Array{DT,2}(undef, 0, 0)
+    return (ea, ed)
   else
     if (ind == 1)
       @inbounds ea = hspf.cummulativeArea[ind]
-      @inbounds es = (size(hspf.cummulativeStaticExposure, 1) > 0) ? hspf.cummulativeStaticExposure[ind, :] : Array{DT,2}(undef, 0, 0)
-      @inbounds ed = (size(hspf.cummulativeDynamicExposure, 1) > 0) ? hspf.cummulativeDynamicExposure[ind, :] : Array{DT,2}(undef, 0, 0)
-      return (ea, es, ed)
+      @inbounds ed = (size(hspf.cummulativeExposure, 1) > 0) ? hspf.cummulativeExposure[ind, :] : Array{DT,2}(undef, 0, 0)
+      return (ea, ed)
     end
     if (ind > size(hspf.elevation, 1))
       @inbounds ea = hspf.cummulativeArea[size(hspf.elevation, 1)]
-      @inbounds es = (size(hspf.cummulativeStaticExposure, 1) > 0) ? hspf.cummulativeStaticExposure[size(hspf.elevation, 1), :] : Array{DT,2}(undef, 0, 0)
-      @inbounds ed = (size(hspf.cummulativeDynamicExposure, 1) > 0) ? hspf.cummulativeDynamicExposure[size(hspf.elevation, 1), :] : Array{DT,2}(undef, 0, 0)
-      return (ea, es, ed)
+      @inbounds ed = (size(hspf.cummulativeExposure, 1) > 0) ? hspf.cummulativeExposure[size(hspf.elevation, 1), :] : Array{DT,2}(undef, 0, 0)
+      return (ea, ed)
     end
     @inbounds r = (e - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
-    @inbounds ea = convert(DT,hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1]) * r))
-    @inbounds es = convert(Array{DT},(size(hspf.cummulativeStaticExposure, 1) > 0) ? hspf.cummulativeStaticExposure[ind-1, :] + ((hspf.cummulativeStaticExposure[ind, :] - hspf.cummulativeStaticExposure[ind-1, :]) * r) : Array{DT,2}(undef, 0, 0))
-    @inbounds ed = convert(Array{DT},(size(hspf.cummulativeDynamicExposure, 1) > 0) ? hspf.cummulativeDynamicExposure[ind-1, :] + ((hspf.cummulativeDynamicExposure[ind, :] - hspf.cummulativeDynamicExposure[ind-1, :]) * r) : Array{DT,2}(undef, 0, 0))
-    return (ea, es, ed)
+    @inbounds ea = convert(DT, hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1]) * r))
+    @inbounds ed = convert(Array{DT}, (size(hspf.cummulativeExposure, 1) > 0) ? hspf.cummulativeExposure[ind-1, :] + ((hspf.cummulativeExposure[ind, :] - hspf.cummulativeExposure[ind-1, :]) * r) : Array{DT,2}(undef, 0, 0))
+    return (ea, ed)
   end
 end
 
 function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real, s::Symbol) where {DT<:Real}
   p = get_position(hspf, s)
 
-  exposure = zeros(DT, size(hspf.elevation,1))
-  if (p[1]==1)
+  exposure = zeros(DT, size(hspf.elevation, 1))
+  if (p[1] == 1)
     exposure = hspf.cummulativeArea
   end
-  if (p[1]==2)
-    exposure = hspf.cummulativeStaticExposure[:, p[2]]
-  end
-  if (p[1]==3)
-    exposure = hspf.cummulativeDynamicExposure[:, p[2]] 
+  if (p[1] == 2)
+    exposure = hspf.cummulativeExposure[:, p[2]]
   end
 
   ind::Int64 = searchsortedfirst(hspf.elevation, e)
@@ -57,13 +50,13 @@ function exposure_below_bathtub(hspf::HypsometricProfile{DT}, e::Real, s::Symbol
     return exposure[ind]
   else
     if (ind == 1)
-      return convert(DT,exposure[ind])
+      return convert(DT, exposure[ind])
     end
     if (ind > size(hspf.elevation, 1))
-      return convert(DT,exposure[size(hspf.elevation, 1)])
+      return convert(DT, exposure[size(hspf.elevation, 1)])
     end
     @inbounds r = (e - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
-    return convert(DT,exposure[ind-1] + ((exposure[ind] - exposure[ind-1]) * r))
+    return convert(DT, exposure[ind-1] + ((exposure[ind] - exposure[ind-1]) * r))
   end
 end
 
@@ -73,7 +66,7 @@ end
 
 function exposure_below_bathtub_named(hspf::HypsometricProfile, e::Real)
   ex = exposure_below_bathtub(hspf, e)
-  @inbounds return (NamedTuple{Symbol("area")}(ex[1]), NamedTuple{hspf.staticExposureSymbols}(ex[2]), NamedTuple{hspf.dynamicExposureSymbols}(ex[3]))
+  @inbounds return (NamedTuple{Symbol("area")}(ex[1]), NamedTuple{hspf.exposureSymbols}(ex[3]))
 end
 
 """
@@ -94,9 +87,9 @@ Exposed area, static and dynamic exposure for elevations smaller than `e``, taki
 
 
 """
-exposure_below_attenuated(hspf::HypsometricProfile{DT}, e::Real, att_rates :: Array{<:Real}) where {DT<:Real} = exposure_below_bathtub(hspf, attenuate(hspf, e, att_rates))
-exposure_below_attenuated(hspf::HypsometricProfile{DT}, e::Real, att_rate :: Real) where {DT<:Real} = exposure_below_attenuated(hspf, e, map(x->att_rate, hspf.elevation))
-  
+exposure_below_attenuated(hspf::HypsometricProfile{DT}, e::Real, att_rates::Array{<:Real}) where {DT<:Real} = exposure_below_bathtub(hspf, attenuate(hspf, e, att_rates))
+exposure_below_attenuated(hspf::HypsometricProfile{DT}, e::Real, att_rate::Real) where {DT<:Real} = exposure_below_attenuated(hspf, e, map(x -> att_rate, hspf.elevation))
+
 """
     attenuate(hspf::HypsometricProfile{DT}, wl::Real, att_rates :: Array{<:Real}) where {DT<:Real}
     attenuate(hspf::HypsometricProfile{DT}, wl::Real, att_rate :: Real) where {DT<:Real}
@@ -114,33 +107,35 @@ If attenuation rates are given as array, the array dimension has to much the arr
 The attenuated waterlevel.
 
 """
-function attenuate(hspf::HypsometricProfile{DT}, wl::Real, att_rates :: Array{<:Real}) where {DT<:Real}
-  if (size(hspf.elevation, 1)!= size(att_rates, 1)) 
+function attenuate(hspf::HypsometricProfile{DT}, wl::Real, att_rates::Array{<:Real}) where {DT<:Real}
+  if (size(hspf.elevation, 1) != size(att_rates, 1))
     return wl
   end
 
-  if (wl<=hspf.elevation[1]) return wl end
+  if (wl <= hspf.elevation[1])
+    return wl
+  end
 
   wl_attenuated = 0
   ind = 2
-  Δ_wl_att_part = (distance(hspf, hspf.elevation[ind]) - distance(hspf,hspf.elevation[ind-1])) * att_rates[ind]
+  Δ_wl_att_part = (distance(hspf, hspf.elevation[ind]) - distance(hspf, hspf.elevation[ind-1])) * att_rates[ind]
   Δ_wl = (hspf.elevation[ind] - hspf.elevation[ind-1])
 
   while ((Δ_wl_att_part + Δ_wl <= wl) && (ind < size(hspf.elevation, 1)))
     wl = wl - (Δ_wl_att_part + Δ_wl)
     wl_attenuated += Δ_wl
-    ind += 1 
+    ind += 1
     Δ_wl_att_part = (distance(hspf, hspf.elevation[ind]) - distance(hspf, hspf.elevation[ind-1])) * att_rates[ind]
     Δ_wl = (hspf.elevation[ind] - hspf.elevation[ind-1])
   end
 
-  
+
   if (ind <= size(hspf.elevation, 1))
     Δ_wl_att_part = (distance(hspf, hspf.elevation[ind] + wl) - distance(hspf, hspf.elevation[ind])) * att_rates[ind]
-    wl_attenuated += Δ_wl_att_part 
+    wl_attenuated += Δ_wl_att_part
   end
-  
+
   wl_attenuated
 end
 
-attenuate(hspf::HypsometricProfile{DT}, wl::Real, att_rate :: Real) where {DT<:Real} = attenuate(hspf, wl, map(x->att_rate, hspf.elevation))
+attenuate(hspf::HypsometricProfile{DT}, wl::Real, att_rate::Real) where {DT<:Real} = attenuate(hspf, wl, map(x -> att_rate, hspf.elevation))

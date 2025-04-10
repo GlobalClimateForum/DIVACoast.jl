@@ -5,6 +5,8 @@ export estimate_gumbel_distribution_old, gumbel_error, frechet_error, weibull_er
 using LsqFit
 using Distributions
 using Optim
+using LinearAlgebra
+
 #test Vanessa
 # the cdf of the three cases. Note: in frechet and weibull case domain restriction has to be taken into account
 gumbel_model(x, p) = @. exp(-exp(-(x - p[1]) / p[2]))
@@ -16,8 +18,8 @@ gumbel_error(x_data, y_data) = function (p)
     sqrt(sum((y_data .- @. exp(-exp(-(x_data - p[1]) / p[2]))) .^ 2))
 end
 
-gumbel_error_x(x_data,y_data) = function (p)
-    sqrt(1/length(x_data)*sum((x_data .- quantile.(GeneralizedExtremeValue(p[1],p[2],p[3]),y_data)) .^ 2))
+gumbel_error_x(x_data, y_data) = function (p)
+    sqrt(1 / length(x_data) * sum((x_data .- quantile.(GeneralizedExtremeValue(p[1], p[2], p[3]), y_data)) .^ 2))
 end
 
 frechet_error(x_data, y_data) = function (p)
@@ -32,8 +34,8 @@ frechet_error(x_data, y_data) = function (p)
     sqrt(res)
 end
 
-frechet_error_x(x_data,y_data) = function (p)
-    sqrt(1/length(x_data)*sum((x_data .- quantile.(GeneralizedExtremeValue(p[1],p[2],p[3]),y_data)) .^ 2))
+frechet_error_x(x_data, y_data) = function (p)
+    sqrt(1 / length(x_data) * sum((x_data .- quantile.(GeneralizedExtremeValue(p[1], p[2], p[3]), y_data)) .^ 2))
 end
 
 weibull_error(x_data, y_data) = function (p)
@@ -50,53 +52,48 @@ weibull_error(x_data, y_data) = function (p)
     sqrt(res)
 end
 
-weibull_error_x(x_data,y_data) = function (p)
-    sqrt(1/length(x_data)*sum((x_data .- quantile.(GeneralizedExtremeValue(p[1],p[2],p[3]),y_data)) .^ 2))
+weibull_error_x(x_data, y_data) = function (p)
+    sqrt(1 / length(x_data) * sum((x_data .- quantile.(GeneralizedExtremeValue(p[1], p[2], p[3]), y_data)) .^ 2))
 end
 
 """
 This function tries to fit a gumbel distribution to given data. 
-    x is the actual data (e.g. water level).
-    y are the empirical cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
+    wl_data is the actual data (e.g. water level).
+    cdf_data are the empirical cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
 The funtion returns a GeneralizedExtremeValue (GEV) with the third (shape, ξ) parameter being zero. If the cdf fit fails for any reason, 
 the standard gumbel distribution (μ=mean(data), σ=var(data), ξ=0.0) is returned
 """
-function estimate_gumbel_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
-    x_mean = sum((1 .- y_data) .* x_data) / sum(1 .- y_data)
-    x_var = max(sqrt(sum((x_data .- x_mean).^ 2) / size(x_data,1)),0.0001)
-    lower_bound = [-Inf, 0.0000001]
-    upper_bound = [Inf, Inf]
-    x_initial = [x_mean, x_var]
+function estimate_gumbel_distribution(wl_data::Array{T}, cdf_data::Array{T}) where {T<:Real}
 
-    gumbel_curve_fit =
-        try
-            curve_fit(gumbel_model, x_data, y_data, x_initial, lower=lower_bound)
-        catch
-            missing
+    if (length(wl_data) != length(cdf_data))
+        @error "length(x_data) != length(y_data) as length($(wl_data)) != length($(cdf_data)) as $(length(wl_data)) != $(length(cdf_data))"
+    end
+
+    if (length(wl_data) != length(cdf_data))
+        @error "length(x_data) != length(y_data) as length($(wl_data)) != length($(cdf_data)) as $(length(wl_data)) != $(length(cdf_data))"
+    end
+
+    for i in 1:length(cdf_data)
+        if cdf_data[i] == 0.0
+            cdf_data[i] = 0.0001
         end
+    end
+    #map(x -> x[2],sort(collect(zip(x_data, y_data)); by= x->x[2]))
 
-    gumbel_optim_fit =
-        try
-            optimize(x -> gumbel_error_x(x_data, y_data)(x), lower_bound, upper_bound, x_initial)
-        catch
-            missing
-        end
+    wl_mean = sum((1 .- cdf_data) .* wl_data) / sum(1 .- cdf_data)
+    wl_var = max(sqrt(sum((wl_data .- wl_mean) .^ 2) / size(wl_data, 1)), 0.0001)
 
-    if (gumbel_curve_fit === missing && gumbel_optim_fit === missing)
-        return GeneralizedExtremeValue(x_mean, x_var, 0)
-    elseif (gumbel_curve_fit === missing && gumbel_optim_fit !== missing)
-        return GeneralizedExtremeValue(gumbel_optim_fit.minimizer[1], gumbel_optim_fit.minimizer[2], 0)
-    elseif (gumbel_curve_fit !== missing && gumbel_optim_fit === missing)
-        return GeneralizedExtremeValue(gumbel_curve_fit.param[1], gumbel_curve_fit.param[2], 0)
+    log_log_x = map(p -> log(-log(p)), cdf_data)
+    y_mean = mean(wl_data)
+    log_log_x_mean = mean(log_log_x)
+
+    slope = sum(dot((wl_data .- y_mean), (log_log_x .- log_log_x_mean))) / sum(dot((log_log_x .- log_log_x_mean), (log_log_x .- log_log_x_mean)))
+    intercept = y_mean - slope * log_log_x_mean
+
+    if (slope < 0)
+        return GeneralizedExtremeValue(intercept, -slope, 0)
     else
-        error_gumbel_curve_fit = sqrt((1/length(gumbel_curve_fit.resid))*sum(gumbel_curve_fit.resid .^ 2))
-        #divide by n here as well
-        error_gumbel_optim_fit = gumbel_optim_fit.minimum
-        if error_gumbel_curve_fit < error_gumbel_optim_fit
-            return GeneralizedExtremeValue(gumbel_curve_fit.param[1], gumbel_curve_fit.param[2], 0)
-        else
-            return GeneralizedExtremeValue(gumbel_optim_fit.minimizer[1], gumbel_optim_fit.minimizer[2], 0)
-        end
+        return GeneralizedExtremeValue(intercept, -slope, 0)
     end
 end
 
@@ -113,9 +110,11 @@ a standard Frechet distribution (μ=mean(data), σ=var(data), ξ=0.5) is returne
 """
 function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     x_mean = sum((1 .- y_data) .* x_data) / sum(1 .- y_data)
-    x_var = max(sqrt(sum((x_data .- x_mean).^ 2) / size(x_data,1)),0.0001)
+    x_var = max(sqrt(sum((x_data .- x_mean) .^ 2) / size(x_data, 1)), 0.0001)
     x_skewness = sum((((x_data .- x_mean)) ./ x_var) .^ 3) / sum(1 .- y_data)
-    if (x_skewness<0) x_skewness = x_skewness * -1 end
+    if (x_skewness < 0)
+        x_skewness = x_skewness * -1
+    end
     lower_bound = [-Inf, 0.0000001, 0.05]
     upper_bound = [Inf, Inf, Inf]
     x_initial = [x_mean, x_var, x_skewness]
@@ -147,7 +146,7 @@ function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) where
         return GeneralizedExtremeValue(frechet_curve_fit.param[1], frechet_curve_fit.param[2], frechet_curve_fit.param[3])
     else
         #println("both there")
-        error_frechet_curve_fit = sqrt((1/length(frechet_curve_fit.resid))*sum(frechet_curve_fit.resid .^ 2))
+        error_frechet_curve_fit = sqrt((1 / length(frechet_curve_fit.resid)) * sum(frechet_curve_fit.resid .^ 2))
         error_frechet_optim_fit = frechet_optim_fit.minimum
 
         if error_frechet_curve_fit < error_frechet_optim_fit
@@ -171,9 +170,11 @@ This function fits a Weibull Distribution to the inserted data. y should be the 
 """
 function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     x_mean = sum((1 .- y_data) .* x_data) / sum(1 .- y_data)
-    x_var = max(sqrt(sum((x_data .- x_mean).^ 2) / size(x_data,1)),0.0001)
+    x_var = max(sqrt(sum((x_data .- x_mean) .^ 2) / size(x_data, 1)), 0.0001)
     x_skewness = sum((((x_data .- x_mean)) ./ x_var) .^ 3) / sum(1 .- y_data)
-    if (x_skewness>0) x_skewness = x_skewness * -1 end
+    if (x_skewness > 0)
+        x_skewness = x_skewness * -1
+    end
     lower_bound = [-Inf, 0.0000001, -Inf]
     upper_bound = [Inf, Inf, -0.05]
     x_initial = [x_mean, x_var, x_skewness]
@@ -199,7 +200,7 @@ function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where
     elseif (weibull_curve_fit !== missing && weibull_optim_fit === missing)
         return GeneralizedExtremeValue(weibull_curve_fit.param[1], weibull_curve_fit.param[2], weibull_curve_fit.param[3])
     else
-        error_weibull_curve_fit = sqrt((1/length(weibull_curve_fit.resid))*sum(weibull_curve_fit.resid .^ 2))
+        error_weibull_curve_fit = sqrt((1 / length(weibull_curve_fit.resid)) * sum(weibull_curve_fit.resid .^ 2))
         error_weibull_optim_fit = weibull_optim_fit.minimum
         if error_weibull_curve_fit < error_weibull_optim_fit
             return GeneralizedExtremeValue(weibull_curve_fit.param[1], weibull_curve_fit.param[2], weibull_curve_fit.param[3])
@@ -230,9 +231,9 @@ function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<
     #println("WEIBULL: ", gev_weibull, " - ", my_weibull_error)
 
     if my_gumbel_error <= my_frechet_error && my_gumbel_error <= my_weibull_error
-        return (gev_gumbel,my_gumbel_error)
+        return (gev_gumbel, my_gumbel_error)
     elseif my_frechet_error <= my_weibull_error
-        return (gev_frechet,my_frechet_error)
+        return (gev_frechet, my_frechet_error)
     else
         return (gev_weibull, my_weibull_error)
     end

@@ -3,7 +3,7 @@ export estimate_gpd_negative_distribution, estimate_gp_distribution, exponential
 
 using LsqFit
 using Distributions
-
+using LinearAlgebra
 using Dates
 
 exponential_model(x, p) = map(x -> (x >= p[1]) ? 1 - exp(-(x - p[1]) / p[2]) : 0, x)
