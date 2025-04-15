@@ -52,6 +52,7 @@ export earth_circumference_km, earth_radius_km
         include("./algorithms/coastal/coastplain.jl")
         include("./algorithms/statistics/gev_fits.jl")
         include("./algorithms/statistics/gpd_fits.jl")
+        include("./algorithms/statistics/LinearInterpolation.jl")
         include("./algorithms/statistics/extreme_distributions_plot.jl")
         include("./algorithms/numerical/simple_integration.jl")
         include("./io/nc/HSPs_nc_load.jl")

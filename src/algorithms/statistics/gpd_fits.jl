@@ -1,5 +1,5 @@
 export estimate_exponential_distribution, estimate_gpd_positive_distribution
-export estimate_gpd_negative_distribution, estimate_gp_distribution, exponential_error, gpd_positive_error, gpd_negative_error
+export estimate_gpd_negative_distribution, estimate_gp_distribution, exponential_error, gpd_positive_error, gpd_negative_error, exponential_error_x, gpd_positive_error_x, gpd_negative_error_x
 
 using LsqFit
 using Distributions

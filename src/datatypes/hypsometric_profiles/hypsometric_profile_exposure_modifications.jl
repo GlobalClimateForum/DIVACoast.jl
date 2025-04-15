@@ -97,11 +97,11 @@ function exposure_growth_below!(hspf::HypsometricProfile, below::Real, factors::
     end
   end
 
-  for i in (ind+1):size(hspf.cummulativeExposure, 1)
-    for j in 1:size(hspf.cummulativeExposure, 2)
-      hspf.cummulativeExposure[i, j] *= hspf.cummulativeExposure[i, j] + (hspf.cummulativeExposure[ind, j] - (1 / factors[j]) * hspf.cummulativeExposure[ind, j])
-    end
-  end
+  #for i in (ind+1):size(hspf.cummulativeExposure, 1)
+   # for j in 1:size(hspf.cummulativeExposure, 2)
+    #  hspf.cummulativeExposure[i, j] *= hspf.cummulativeExposure[i, j] + (hspf.cummulativeExposure[ind, j] - (1 / factors[j]) * hspf.cummulativeExposure[ind, j])
+    #end
+  #end
 end
 
 
