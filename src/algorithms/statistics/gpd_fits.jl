@@ -69,47 +69,23 @@ This function tries to fit an exponential distribution to given data.
 The funtion returns a GeneralizedPareto (GPD) with the third shape parameter being zero. If the cdf fit fails for any reason, the standard 
 exponential distribution (μ=0) is returned
 """
-function estimate_exponential_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
-    x_mean = sum((1 .- y_data) .* x_data) / sum(1 .- y_data)
-    x_var = max(sqrt(sum((x_data .- x_mean).^ 2) / size(x_data,1)),0.0001)
-    x_mean = minimum(x_data)
+function estimate_exponential_distribution(wl_data::Array{T}, cdf_data::Array{T}) where {T<:Real}
+  
+    wl_mean = sum((1 .- cdf_data) .* wl_data) / sum(1 .- cdf_data)
+    wl_min = minimum(wl_data) - 0.0001
+    wl_var = max(sqrt(sum((wl_data .- wl_mean) .^ 2) / size(wl_data, 1)), 0.0001)
 
-    lower_bound = [-Inf, 0.0000001]
-    upper_bound = [Inf, Inf]
-    x_initial = [x_mean, x_var]
+    log_1_minus_x = map(p -> log(1-p), cdf_data)
+    y_mean = mean(wl_data)
+    log_1_minus_x_mean = mean(log_1_minus_x)
+  
+    slope = sum(dot((wl_data .- y_mean),(log_1_minus_x .- log_1_minus_x_mean)))/sum(dot((log_1_minus_x .- log_1_minus_x_mean),(log_1_minus_x .- log_1_minus_x_mean)))
+    intercept = y_mean - slope * log_1_minus_x_mean
 
-    if x_var <= 0
-        x_var = 0.001
-    end
-
-    exponential_curve_fit =
-        try
-            curve_fit(exponential_model, x_data, y_data, x_initial, lower=lower_bound)
-        catch
-            missing
-        end
-
-    exponential_optim_fit =
-        try
-            optimize(x -> exponential_error_x(x_data, y_data)(x), lower_bound, upper_bound, x_initial, Optim.Options(outer_iterations=1500, iterations=1000))
-        catch
-            missing
-        end
-
-    if (exponential_curve_fit === missing && exponential_optim_fit === missing)
-        return GeneralizedPareto(x_mean, x_var, 0)
-    elseif (exponential_curve_fit === missing && exponential_optim_fit !== missing)
-        return GeneralizedPareto(exponential_optim_fit.minimizer[1], exponential_optim_fit.minimizer[2], 0)
-    elseif (exponential_curve_fit !== missing && exponential_optim_fit === missing)
-        return GeneralizedPareto(exponential_curve_fit.param[1], exponential_curve_fit.param[2], 0)
+    if (slope < 0)
+        return GeneralizedPareto(intercept, -slope, 0)
     else
-        error_exponential_curve_fit = sqrt((1/length(exponential_curve_fit.resid))*sum(exponential_curve_fit.resid .^ 2))
-        error_exponential_optim_fit = exponential_optim_fit.minimum
-        if error_exponential_curve_fit < error_exponential_optim_fit
-            return GeneralizedPareto(exponential_curve_fit.param[1], exponential_curve_fit.param[2], 0)
-        else
-            return GeneralizedPareto(exponential_optim_fit.minimizer[1], exponential_optim_fit.minimizer[2], 0)
-        end
+        return GeneralizedPareto(wl_min, wl_var, 0)
     end
 end
 

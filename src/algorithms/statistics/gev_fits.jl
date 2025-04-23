@@ -93,7 +93,7 @@ function estimate_gumbel_distribution(wl_data::Array{T}, cdf_data::Array{T}) whe
     if (slope < 0)
         return GeneralizedExtremeValue(intercept, -slope, 0)
     else
-        return GeneralizedExtremeValue(intercept, -slope, 0)
+        return GeneralizedExtremeValue(wl_mean, wl_var, 0)
     end
 end
 
