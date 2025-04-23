@@ -2,11 +2,10 @@ using StructArrays
 
 export HypsometricProfile,
   unit,
-  exposure_below_bathtub, exposure_below_bathtub_named,
-  exposure_below_attenuated, attenuate,
-  exposure_growth!, exposure_growth_above!, exposure_growth_below!, 
-  remove_exposure_below!, remove_exposure_below_named!, add_exposure_above!, add_exposure_between!,
-  add_exposure_dimension!, remove_exposure_dimension!,
+  exposure_to, 
+  multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!, 
+  remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
+  add_exposure_variable!, remove_exposure_variable!,
   damage_bathtub_standard_ddf, damage_bathtub,
   compress!, compress_multithread!
 
@@ -126,15 +125,13 @@ function distance(hspf::HypsometricProfile{DT}, e::Real)::DT where {DT<:Real}
   for i in 2:(ind-1)
     Δ_area = hspf.cummulativeArea[i] - hspf.cummulativeArea[i-1]
     @inbounds Δ_el = (hspf.elevation[i] - hspf.elevation[i-1]) / 1000
-    #println("$e:  $(hspf.elevation[i]) $(hspf.elevation[i-1]) $(Δ_area) $(Δ_el)")
     if (Δ_area != 0) && ((Δ_area / hspf.width) * (Δ_area / hspf.width) > (Δ_el * Δ_el))
       d += sqrt((Δ_area / hspf.width) * (Δ_area / hspf.width) - (Δ_el * Δ_el))
     end
   end
 
-  @inbounds Δ_area = exposure_below_bathtub(hspf, e, :area) - hspf.cummulativeArea[ind-1]
+  @inbounds Δ_area = exposure_to(hspf, e, :area) - hspf.cummulativeArea[ind-1]
   @inbounds Δ_el = (e - hspf.elevation[ind-1]) / 1000
-  #println("$e:  $(hspf.elevation[ind-1]) $(Δ_el) $(Δ_area)")
   if (Δ_area != 0) && ((Δ_area / hspf.width) * (Δ_area / hspf.width) > (Δ_el * Δ_el))
     d += sqrt((Δ_area / hspf.width) * (Δ_area / hspf.width) - (Δ_el * Δ_el))
   end
@@ -170,7 +167,7 @@ function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT
   cden::Array{DT,2} = Array{DT,2}(undef, size(elevation, 1), size(hspf.cummulativeExposure, 2))
 
   for i in 1:size(elevation, 1)
-    t_exposure = exposure_below_bathtub(hspf, elevation[i])
+    t_exposure = exposure_to(hspf, elevation[i])
     can[i] = t_exposure[1]
     cden[i, :] = t_exposure[2]
   end
@@ -193,7 +190,7 @@ function compress!(hspf::HypsometricProfile{DT}) where {DT<:Real}
     nzlf = false
 
     while i < size(hspf.elevation, 1) && !nzlf
-      if (complete_zero(exposure_below_bathtub(hspf, hspf.elevation[i-1])) && complete_zero(exposure_below_bathtub(hspf, hspf.elevation[i])))
+      if (complete_zero(exposure_to(hspf, hspf.elevation[i-1])) && complete_zero(exposure_to(hspf, hspf.elevation[i])))
         keep[i-1] = false
         d = d + 1
       else
@@ -238,7 +235,7 @@ function compress_multithread!(hspf::HypsometricProfile{DT}, mtlock) where {DT<:
     nzlf = false
 
     while i < size(hspf.elevation, 1) && !nzlf
-      if (complete_zero(exposure_below_bathtub(hspf, hspf.elevation[i-1])) && complete_zero(exposure_below_bathtub(hspf, hspf.elevation[i])))
+      if (complete_zero(exposure_to(hspf, hspf.elevation[i-1])) && complete_zero(exposure_to(hspf, hspf.elevation[i])))
         keep[i-1] = false
         d = d + 1
       else
@@ -295,7 +292,7 @@ get_position(hspf::HypsometricProfile, n::String) = get_position(hspf, Symbol(n)
     unit(hspf::HypsometricProfile, s::Symbol)  
     unit(hspf::HypsometricProfile, s::String)    
 
-    returns the unit (of type String) of the exposure dimension with name s (where s can be a string or a symbol)
+    returns the unit (of type String) of the exposure variable with name s (where s can be a string or a symbol)
 """
 function unit(hspf::HypsometricProfile, s::Symbol)
   p = get_position(hspf, s)
@@ -311,6 +308,13 @@ end
 unit(hspf::HypsometricProfile, n::String) = unit(hspf, Symbol(n))
 
 
+function named(f::Function; kwargs...)
+  t = f(kwargs...)
+  @inbounds return (NamedTuple{Symbol("area")}(t[1]), NamedTuple{hspf.exposureSymbols}(t[2]))
+end
+
+
+
 function complete_zero(exposure)
   if (exposure[1] != 0)
     return false
@@ -324,9 +328,9 @@ function complete_zero(exposure)
 end
 
 function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, i3::Int64, check_zero::Bool)::Bool
-  ex1 = exposure_below_bathtub(hspf, hspf.elevation[i1])
-  ex2 = exposure_below_bathtub(hspf, hspf.elevation[i2])
-  ex3 = exposure_below_bathtub(hspf, hspf.elevation[i3])
+  ex1 = exposure_to(hspf, hspf.elevation[i1])
+  ex2 = exposure_to(hspf, hspf.elevation[i2])
+  ex3 = exposure_to(hspf, hspf.elevation[i3])
   r = (hspf.elevation[i2] - hspf.elevation[i1]) / (hspf.elevation[i3] - hspf.elevation[i1])
   # hack to capture special case that makes problems (if e3 is very small)
   if (check_zero && complete_zero(ex2) && !complete_zero(ex3))
@@ -334,11 +338,3 @@ function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, 
   end
   return isapprox(ex2[1], ex1[1] + r * (ex3[1] - ex1[1])) && isapprox(ex2[2], ex1[2] + r * (ex3[2] - ex1[2]))
 end
-
-include("hypsometric_profile_exposure.jl")
-include("hypsometric_profile_damage_arbitrary_ddf.jl")
-include("hypsometric_profile_damage_standard_ddf.jl")
-include("hypsometric_profile_exposure_modifications.jl")
-include("hypsometric_profile_dimension_modifications.jl")
-include("hypsometric_profile_plot.jl")
-include("hypsometric_profile_operators.jl")

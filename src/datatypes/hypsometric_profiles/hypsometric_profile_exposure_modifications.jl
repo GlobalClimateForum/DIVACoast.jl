@@ -1,7 +1,25 @@
 """
-Applies a factor all dimensions of exposure (can be uexposure_growth for socio-economic development).
+  function multiply_exposure!(hspf::HypsometricProfile{DT}, factors::Array{T}) where {DT<:Real,T<:Real}
+  function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::Symbol) where {DT<:Real,T<:Real}
+  function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::String)
+
+  The `multiply_exposure!` function applies factors to all exposure data of a HypsometricProfile, where different factors 
+  for different variables are possible. This can be used to implement soci-economic growth. Versions for single varaibles exist.
+
+# Arguments
+- `hspf::HypsometricProfile`: the hypsometric profile to modify
+- factors: an array of factors, one for each variable of the profile
+- factor: one factor for a specific exposure variable
+- s: The name of the exposure variable to modify (apply the factor to)
+
+# Example
+```julia
+function multiply_exposure!(hspf, [1.0, 1.1])
+function multiply_exposure!(hspf, 1.0, :assets)
+function multiply_exposure!(hspf, 1.1, "population")
+```
 """
-function exposure_growth!(hspf::HypsometricProfile{DT}, factors::Array{T}) where {DT<:Real, T<:Real}
+function multiply_exposure!(hspf::HypsometricProfile{DT}, factors::Array{T}) where {DT<:Real,T<:Real}
   if (size(hspf.cummulativeExposure, 2) != length(factors))
     @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
   end
@@ -11,35 +29,48 @@ function exposure_growth!(hspf::HypsometricProfile{DT}, factors::Array{T}) where
   end
 end
 
-function exposure_growth!(hspf::HypsometricProfile{DT}, factors) where {DT<:Real}
-  if (size(hspf.cummulativeExposure, 2) != length(factors))
-    @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
-  end
-
-  fac_array::Array{DT} = match_factors(hspf, factors)
-  exposure_growth!(hspf, fac_array)
-end
-
-function exposure_growth!(hspf::HypsometricProfile{DT}, factor::T, s::Symbol) where {DT<:Real, T<:Real}
+function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::Symbol) where {DT<:Real,T<:Real}
   p = get_position(hspf, s)
   if (p[1] == 2)
     hspf.cummulativeExposure[:, p[2]] *= factor
   end
+  if (p[1] == -1)
+    @error "profile ($hspf) has no variable $(s)"
+  end
 end
 
-exposure_growth!(hspf::HypsometricProfile{DT}, factor::T, s::String) where {DT<:Real, T<:Real} = exposure_growth!(hspf, Symbol(s))
+multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::String) where {DT<:Real,T<:Real} = multiply_exposure!(hspf, Symbol(s))
 
 
 """
-Applies socio-economic development (factor) above a certain elevation.
+  function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, factors::Array{T}) where {DT<:Real,T<:Real}
+  function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, factor::T, s::Symbol) where {DT<:Real,T<:Real}
+  function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, factor::T, s::String)
+
+  The `multiply_exposure!` function applies factors to all exposure data above a given elevation of a HypsometricProfile, 
+  where different factors for different variables are possible. Versions for single varaibles exist.
+
+# Arguments
+- `hspf::HypsometricProfile`: the hypsometric profile to modify
+- above: the elvation, only exposure above this elevation is affected
+- factors: an array of factors, one for each variable of the profile
+- factor: one factor for a specific exposure variable
+- s: The name of the exposure variable to modify (apply the factor to)
+
+# Example
+```julia
+function multiply_exposure_above!(hspf, [1.0, 1.1])
+function multiply_exposure_above!(hspf, 1.0, :assets)
+function multiply_exposure_above!(hspf, 1.1, "population")
+```
 """
-function exposure_growth_above!(hspf::HypsometricProfile, above::Real, factors::Array{DT}) where {DT<:Real}
+function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factors::Array{DT}) where {DT<:Real}
   if (size(hspf.cummulativeExposure, 2) != length(factors))
     @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
   end
 
   if (above < hspf.elevation[1])
-    exposure_growth!(hspf, factors)
+    multiply_exposure!(hspf, factors)
     return
   end
   if (above > hspf.elevation[size(hspf.elevation, 1)])
@@ -59,20 +90,48 @@ function exposure_growth_above!(hspf::HypsometricProfile, above::Real, factors::
   end
 end
 
+function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factors::Real, s::Symbol)
+  p = get_position(hspf, s)
+  if (p[1] == -1)
+    @error "profile ($hspf) has no variable $(s)"
+  end
+  if (p[1] == 2)
+    if (above < hspf.elevation[1])
+      multiply_exposure!(hspf, factors)
+      return
+    end
+    if (above > hspf.elevation[size(hspf.elevation, 1)])
+      return
+    end
 
-function exposure_growth_above!(hspf::HypsometricProfile, above::Real, factors)
+    ind::Int64 = searchsortedfirst(hspf.elevation, above)
+
+    if !(above in hspf.elevation)
+      insert_elevation_point(hspf, above, ind)
+    end
+
+    for j in 1:(size(hspf.cummulativeExposure, 2))
+      hspf.cummulativeExposure[p[2], j] *= factors[j]
+    end
+  end
+end
+
+
+function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factors)
   if (size(hspf.cummulativeExposure, 2) != length(factors))
     @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
   end
 
   fac_array::Array{DT} = match_factors(hspf, factors)
-  exposure_growth_above!(hspf, above, fac_array)
+  multiply_exposure_above!(hspf, above, fac_array)
 end
+
+
 
 """
 Applies socio-economic development (factor) below a certain elevation.
 """
-function exposure_growth_below!(hspf::HypsometricProfile, below::Real, factors::Array{T}) where {T<:Real}
+function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factors::Array{T}) where {T<:Real}
   if (size(hspf.cummulativeExposure, 2) != length(factors))
     @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
   end
@@ -81,7 +140,7 @@ function exposure_growth_below!(hspf::HypsometricProfile, below::Real, factors::
     return
   end
   if (below > hspf.elevation[size(hspf.elevation, 1)])
-    exposure_growth!(hspf, factors)
+    multiply_exposure!(hspf, factors)
     return
   end
 
@@ -105,14 +164,18 @@ function exposure_growth_below!(hspf::HypsometricProfile, below::Real, factors::
 end
 
 
-function exposure_growth_below!(hspf::HypsometricProfile{DT}, below, factors) where {DT<:Real}
+function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below, factors) where {DT<:Real}
   if (size(hspf.cummulativeExposure, 2) != length(factors))
     @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
   end
 
   fac_array::Array{DT} = match_factors(hspf, factors)
-  exposure_growth_below!(hspf, below, fac_array)
+  multiply_exposure_below!(hspf, below, fac_array)
 end
+
+
+
+
 
 """
 Removes expoexposure_growth assets / population below a certain elevation.
@@ -135,7 +198,7 @@ function remove_exposure_below!(hspf::HypsometricProfile{DT}, below::Real)::Arra
     insert_elevation_point(hspf, below, ind)
   end
 
-  removed = exposure_below_bathtub(hspf, hspf.elevation[ind])[3]
+  removed = exposure_below(hspf, hspf.elevation[ind])[3]
 
   for i in 1:ind
     for j in 1:size(hspf.cummulativeExposure, 2)
@@ -240,7 +303,7 @@ end
 
 
 function insert_elevation_point(hspf::HypsometricProfile{DT}, el::Real, ind::Int64) where {DT<:Real}
-  ex = exposure_below_bathtub(hspf, el)
+  ex = exposure_below(hspf, el)
   insert!(hspf.elevation, ind, el)
   insert!(hspf.cummulativeArea, ind, ex[1])
   # probably not efficient

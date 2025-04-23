@@ -46,8 +46,8 @@ function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{F
         hspfc.elevation = vcat(hspf1.elevation, hspf2.elevation) |> sort |> unique
         
         # Get Exposure Values at elevation increment & combine assets
-        hspf1_exposures  = map(e -> exposure_below_bathtub(hspf1, e), hspfc.elevation)
-        hspf2_exposures  = map(e -> exposure_below_bathtub(hspf2, e), hspfc.elevation)
+        hspf1_exposures  = map(e -> exposure_below(hspf1, e), hspfc.elevation)
+        hspf2_exposures  = map(e -> exposure_below(hspf2, e), hspfc.elevation)
         exposures = map(add_exposures, hspf1_exposures, hspf2_exposures)
 
         hspfc.cummulativeArea = getindex.(exposures, 1)
