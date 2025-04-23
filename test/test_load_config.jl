@@ -1,7 +1,7 @@
 # cd(@__DIR__)
-include("../src/DIVACoast.jl")
-using .DIVACoast
-using Test
+#include("../src/DIVACoast.jl")
+#using .DIVACoast
+#using Test
 
 println(DIVACoast.earth_circumference_km)
 

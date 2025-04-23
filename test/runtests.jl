@@ -2,6 +2,7 @@ cd(@__DIR__)
 include("../src/DIVACoast.jl")
 using .DIVACoast
 using Logging
+using Test
 # Get all test files
 tests = [file for file in readdir() if file != "runtests.jl" && endswith(file, ".jl")]
 

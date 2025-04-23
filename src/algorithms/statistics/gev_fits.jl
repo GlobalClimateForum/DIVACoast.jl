@@ -1,6 +1,6 @@
 export estimate_gumbel_distribution, estimate_frechet_distribution
 export estimate_weibull_distribution, estimate_gev_distribution
-export estimate_gumbel_distribution_old, gumbel_error, frechet_error, weibull_error, gumbel_error_x
+export estimate_gumbel_distribution_old, gumbel_error, frechet_error, weibull_error, gumbel_error_x, frechet_error_x, weibull_error_x
 
 using LsqFit
 using Distributions
