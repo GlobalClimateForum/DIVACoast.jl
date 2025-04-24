@@ -41,7 +41,7 @@ function runTests()
         #println(damage_bathtub_standard_ddf(hpTest, 100.0, 0f0, :assets))
         #@test damage_bathtub_standard_ddf(hpTest, 10, 0f0, [], [0f0,1f0]) == maximum(hpTest.elevation)
       end
-  
+      
     end
 end
 

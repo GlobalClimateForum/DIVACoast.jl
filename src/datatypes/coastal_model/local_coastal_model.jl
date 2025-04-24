@@ -1,5 +1,5 @@
 export LocalCoastalImpactModel, CoastalImpactUnit,
-  expected_damage_bathtub_standard_ddf, expected_damage_bathtub, exposure_below_bathtub, damage_bathtub_standard_ddf,
+  expected_damage_bathtub_standard_ddf, expected_damage_bathtub, damage_bathtub_standard_ddf,
   apply_accumulate, apply_accumulate_record, apply, apply_multithread, apply_accumulate_store,
   apply_accumulate_store_multithread, apply_store, apply_store_multithread,
   collect_data
@@ -113,8 +113,8 @@ function expected_damage_integral_computation(lcm::LocalCoastalImpactModel{DT,DA
 end
 
 
-exposure_to(lcm::LocalCoastalImpactModel{DT,DATA}, wl::Number, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel, DATA} = exposure_to(lcm.coastal_plain_model, wl, im)
-exposure_to(lcm::LocalCoastalImpactModel{DT,DATA}, wl::Number, s::Symbol, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel ,DATA} = exposure_to(lcm.coastal_plain_model, s, wl, im)
+exposure(lcm::LocalCoastalImpactModel{DT,DATA}, wl::Number, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel, DATA} = exposure(lcm.coastal_plain_model, wl, im)
+exposure(lcm::LocalCoastalImpactModel{DT,DATA}, wl::Number, s::Symbol, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel ,DATA} = exposure(lcm.coastal_plain_model, s, wl, im)
 
 damage_bathtub_standard_ddf(lcm::LocalCoastalImpactModel{DT,DATA}, wl, hdd_area, hdds_other) where {DT<:Real,DATA} = damage_bathtub_standard_ddf(lcm.coastal_plain_model, wl, hdd_area, hdds_other)
 damage_bathtub_standard_ddf(lcm::LocalCoastalImpactModel{DT,DATA}, wl::T1, hdd::T2, s::Symbol) where {DT<:Real,T1<:Real,T2<:Real,DATA} = damage_bathtub_standard_ddf(lcm.coastal_plain_model, convert(DT, wl), convert(DT, hdd), s)
