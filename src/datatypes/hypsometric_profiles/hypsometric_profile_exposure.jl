@@ -1,5 +1,5 @@
 """
-    exposure_to(hspf::HypsometricProfile{DT}, wl::Real, im::IM) where {DT<:Real, IM<:InundationModel}
+    exposure(hspf::HypsometricProfile{DT}, wl::Real, im::IM) where {DT<:Real, IM<:InundationModel}
 
 Calculate the cumulative area, static exposure, and dynamic exposure below elevation (`e`) for a hypsometric profile. The function handles different cases based on the elevation's presence in the profile and its position.
 # Arguments
@@ -12,7 +12,7 @@ Calculate the cumulative area, static exposure, and dynamic exposure below eleva
 Exposed area and exposure for elevations smaller than `e`.
 
 """
-function exposure_to(hspf::HypsometricProfile{DT}, wl::Number, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
+function exposure(hspf::HypsometricProfile{DT}, wl::Number, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
   water_levels = inundate(hspf, wl, im)
 
   #println(water_levels)
@@ -42,7 +42,7 @@ function exposure_to(hspf::HypsometricProfile{DT}, wl::Number, im::IM = BathtubI
 
 end
 
-function exposure_to(hspf::HypsometricProfile{DT}, wl::Real, s::Symbol, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
+function exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Symbol, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
   p = get_position(hspf, s)
   exposure = zeros(DT, size(hspf.elevation,1))
   if (p[1]==1)
@@ -75,10 +75,10 @@ function exposure_to(hspf::HypsometricProfile{DT}, wl::Real, s::Symbol, im::IM =
 
 end
 
-function exposure_to(hspf::HypsometricProfile{DT}, wl::Real, s::Array{Symbol}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
-  map(x -> exposure_below(hspf, x, wl, im), s)
+function exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Array{Symbol}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
+  map(x -> exposure(hspf, x, wl, im), s)
 end
 
-exposure_to(hspf::HypsometricProfile{DT}, wl::Real, s::String, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = exposure_to(hspf, wl, Symbol(s), im)
-exposure_to(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = exposure_to(hspf, wl, map(x -> Symbol(x),s), im)
+exposure(hspf::HypsometricProfile{DT}, wl::Real, s::String, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = exposure(hspf, wl, Symbol(s), im)
+exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = exposure(hspf, wl, map(x -> Symbol(x),s), im)
 
