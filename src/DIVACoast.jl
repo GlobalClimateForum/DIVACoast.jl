@@ -41,6 +41,8 @@ function __init__()
         println("└                                                      ┘")
     end
 
+    export exposure
+    
     # Include functions
     include("./logger/logger.jl")
     include("./datatypes/geodatatype/SparseGeoArrays.jl")
