@@ -1,14 +1,5 @@
 using StructArrays
 
-export HypsometricProfile,
-  unit,
-  exposure, 
-  multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!, 
-  remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
-  add_exposure_variable!, remove_exposure_variable!,
-  damage_bathtub_standard_ddf, damage_bathtub,
-  compress!, compress_multithread!
-
 """
     HypsometricProfile(coast_length::DT, coast_length_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,

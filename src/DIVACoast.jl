@@ -13,7 +13,13 @@ export earth_circumference_km, earth_radius_km
 module DIVACoast
 
 export earth_circumference_km, earth_radius_km
-export exposure
+export HypsometricProfile,
+  unit,exposure, 
+  multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!, 
+  remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
+  add_exposure_variable!, remove_exposure_variable!,
+  damage_bathtub_standard_ddf, damage_bathtub,
+  compress!, compress_multithread!
 
 # append depot path (local packages) to project load path
 # append!(LOAD_PATH, DEPOT_PATH)
