@@ -158,7 +158,7 @@ function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT
   cden::Array{DT,2} = Array{DT,2}(undef, size(elevation, 1), size(hspf.cummulativeExposure, 2))
 
   for i in 1:size(elevation, 1)
-    t_exposure = exposure_to(hspf, elevation[i])
+    t_exposure = exposure(hspf, elevation[i])
     can[i] = t_exposure[1]
     cden[i, :] = t_exposure[2]
   end
@@ -181,7 +181,7 @@ function compress!(hspf::HypsometricProfile{DT}) where {DT<:Real}
     nzlf = false
 
     while i < size(hspf.elevation, 1) && !nzlf
-      if (complete_zero(exposure_to(hspf, hspf.elevation[i-1])) && complete_zero(exposure_to(hspf, hspf.elevation[i])))
+      if (complete_zero(exposure(hspf, hspf.elevation[i-1])) && complete_zero(exposure(hspf, hspf.elevation[i])))
         keep[i-1] = false
         d = d + 1
       else
@@ -226,7 +226,7 @@ function compress_multithread!(hspf::HypsometricProfile{DT}, mtlock) where {DT<:
     nzlf = false
 
     while i < size(hspf.elevation, 1) && !nzlf
-      if (complete_zero(exposure_to(hspf, hspf.elevation[i-1])) && complete_zero(exposure_to(hspf, hspf.elevation[i])))
+      if (complete_zero(exposure(hspf, hspf.elevation[i-1])) && complete_zero(exposure(hspf, hspf.elevation[i])))
         keep[i-1] = false
         d = d + 1
       else
@@ -319,9 +319,9 @@ function complete_zero(exposure)
 end
 
 function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, i3::Int64, check_zero::Bool)::Bool
-  ex1 = exposure_to(hspf, hspf.elevation[i1])
-  ex2 = exposure_to(hspf, hspf.elevation[i2])
-  ex3 = exposure_to(hspf, hspf.elevation[i3])
+  ex1 = exposure(hspf, hspf.elevation[i1])
+  ex2 = exposure(hspf, hspf.elevation[i2])
+  ex3 = exposure(hspf, hspf.elevation[i3])
   r = (hspf.elevation[i2] - hspf.elevation[i1]) / (hspf.elevation[i3] - hspf.elevation[i1])
   # hack to capture special case that makes problems (if e3 is very small)
   if (check_zero && complete_zero(ex2) && !complete_zero(ex3))
