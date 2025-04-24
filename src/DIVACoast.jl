@@ -13,6 +13,7 @@ export earth_circumference_km, earth_radius_km
 module DIVACoast
 
 export earth_circumference_km, earth_radius_km
+export exposure
 
 # append depot path (local packages) to project load path
 # append!(LOAD_PATH, DEPOT_PATH)
@@ -41,8 +42,6 @@ function __init__()
         println("└                                                      ┘")
     end
 
-    export exposure
-    
     # Include functions
     include("./logger/logger.jl")
     include("./datatypes/geodatatype/SparseGeoArrays.jl")
