@@ -1,0 +1,5 @@
+export standard_ddf
+
+standard_ddf(hdd :: Number) = function (d :: Number) 
+  d / (d + hdd)
+end

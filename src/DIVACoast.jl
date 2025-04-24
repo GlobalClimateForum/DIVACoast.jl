@@ -1,15 +1,17 @@
+#export earth_circumference_km, earth_radius_km
+
+module DIVACoast
+
 using Pkg
 # Activates the DIVACoast.jl project environment (dependencies)
 Pkg.activate(joinpath(@__DIR__, "../."))
 Pkg.instantiate()
 
 import YAML
-export earth_circumference_km, earth_radius_km
 
 # Read local library configuration
 global config = YAML.load_file(joinpath(@__DIR__, "DIVACoast.jl.yml"), dicttype=Dict{Symbol,Any})
 
-module DIVACoast
 export earth_circumference_km, earth_radius_km
 
 # append depot path (local packages) to project load path
