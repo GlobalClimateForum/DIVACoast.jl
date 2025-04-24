@@ -1,8 +1,8 @@
-function inundate(hspf::HypsometricProfile{DT}, wl::Real, im::IM)::Tuple{Array{DT}, Array{DT}} where {DT<:Real,IM<:InundationModel}
+function inundate(hspf::HypsometricProfile{DT}, wl::Number, im::IM) ::Tuple{Array{DT}, Array{DT}} where {DT<:Real,IM<:InundationModel}
     @error("fallback")
 end
 
-function inundate(hspf::HypsometricProfile{DT}, wl::Real, im::IM)::Tuple{Array{DT}, Array{DT}} where {DT<:Real,IM<:BathtubInundation}
+function inundate(hspf::HypsometricProfile{DT}, wl::Number, im::IM)::Tuple{Array{DT}, Array{DT}} where {DT<:Real,IM<:BathtubInundation}
     ind::Int64 = searchsortedfirst(hspf.elevation, wl)
     if (wl in hspf.elevation)
         return (hspf.elevation[1:ind], repeat([convert(DT,wl)],ind))

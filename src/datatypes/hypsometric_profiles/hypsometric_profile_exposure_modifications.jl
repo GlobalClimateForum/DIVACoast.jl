@@ -29,6 +29,13 @@ function multiply_exposure!(hspf::HypsometricProfile{DT}, factors::Array{T}) whe
   end
 end
 
+function multiply_exposure!(hspf::HypsometricProfile{DT}, named_factors :: NamedTuple) where {DT<:Real} 
+  for field in keys(named_factors)
+    factor = named_factors[field]
+    multiply_exposure!(hspf, factor, field)
+  end
+end
+
 function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::Symbol) where {DT<:Real,T<:Real}
   p = get_position(hspf, s)
   if (p[1] == 2)
