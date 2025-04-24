@@ -14,12 +14,12 @@ module DIVACoast
 
 export earth_circumference_km, earth_radius_km
 export HypsometricProfile,
-  unit,exposure, 
-  multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!, 
-  remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
-  add_exposure_variable!, remove_exposure_variable!,
-  damage_bathtub_standard_ddf, damage_bathtub,
-  compress!, compress_multithread!
+    unit, exposure,
+    multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!,
+    remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
+    add_exposure_variable!, remove_exposure_variable!,
+    damage_bathtub_standard_ddf, damage_bathtub,
+    compress!, compress_multithread!
 
 # append depot path (local packages) to project load path
 # append!(LOAD_PATH, DEPOT_PATH)
@@ -49,6 +49,7 @@ function __init__()
     end
 
     # Include functions
+    #=
     include("./logger/logger.jl")
     include("./datatypes/geodatatype/SparseGeoArrays.jl")
     include("./datatypes/inundation_model/inundation_model.jl")
@@ -79,6 +80,40 @@ function __init__()
     include("./tools/geotiff_tools.jl")
     include("./scenario/ssp_scenario_reader.jl")
     include("./scenario/slr_scenario_reader.jl")
+    =#
 end
+
+
+# Include functions
+include("./logger/logger.jl")
+include("./datatypes/geodatatype/SparseGeoArrays.jl")
+include("./datatypes/inundation_model/inundation_model.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile.jl")
+include("./datatypes/inundation_model/inundation_model_functions.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile_exposure.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile_damage_arbitrary_ddf.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile_exposure_modifications.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile_variable_modifications.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile_plot.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile_operators.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile_damage_standard_ddf.jl")
+include("./datatypes/coastal_model/local_coastal_model.jl")
+include("./datatypes/coastal_model/composed_coastal_model.jl")
+include("./datatypes/coastal_model/composed_coastal_model_generics.jl")
+include("./datatypes/geodatatype/nn.jl")
+include("./algorithms/conversion/sgr_to_hsp.jl")
+include("./algorithms/coastal/coastline.jl")
+include("./algorithms/coastal/coastplain.jl")
+include("./algorithms/statistics/gev_fits.jl")
+include("./algorithms/statistics/gpd_fits.jl")
+include("./algorithms/statistics/extreme_distributions_plot.jl")
+include("./algorithms/numerical/simple_integration.jl")
+include("./io/nc/HSPs_nc_load.jl")
+include("./io/nc/HSPs_nc_save.jl")
+include("./io/csv/ccm_indicator_datafame.jl")
+include("./io/jld/jld_load.jl")
+include("./tools/geotiff_tools.jl")
+include("./scenario/ssp_scenario_reader.jl")
+include("./scenario/slr_scenario_reader.jl")
 end
 
