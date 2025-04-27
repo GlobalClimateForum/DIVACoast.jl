@@ -310,7 +310,7 @@ end
 
 
 function insert_elevation_point(hspf::HypsometricProfile{DT}, el::Real, ind::Int64) where {DT<:Real}
-  ex = exposure_below(hspf, el)
+  ex = exposure(hspf, el)
   insert!(hspf.elevation, ind, el)
   insert!(hspf.cummulativeArea, ind, ex[1])
   # probably not efficient
