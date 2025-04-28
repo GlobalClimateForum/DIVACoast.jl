@@ -314,8 +314,8 @@ function insert_elevation_point(hspf::HypsometricProfile{DT}, el::Real, ind::Int
   insert!(hspf.elevation, ind, el)
   insert!(hspf.cummulativeArea, ind, ex[1])
   # probably not efficient
-  r::Array{DT,2} = hspf.cummulativeStaticExposure[ind:end, 1:end]
-  hspf.cummulativeStaticExposure = vcat(vcat(hspf.cummulativeStaticExposure[1:ind-1, 1:end], ex[2]'), r)
+  r::Array{DT,2} = hspf.cummulativeExposure[ind:end, 1:end]
+  hspf.cummulativeExposure = vcat(vcat(hspf.cummulativeExposure[1:ind-1, 1:end], ex[2]'), r)
 
   r = hspf.cummulativeExposure[ind:end, 1:end]
   hspf.cummulativeExposure = vcat(vcat(hspf.cummulativeExposure[1:ind-1, 1:end], ex[3]'), r)
