@@ -1,16 +1,16 @@
-using Pkg
-# Activates the DIVACoast.jl project environment (dependencies)
-Pkg.activate(joinpath(@__DIR__, "../."))
-Pkg.instantiate()
+# import Pkg
+# # Activates the DIVACoast.jl project environment (dependencies)
+# Pkg.activate(joinpath(@__DIR__, "../."))
+# Pkg.instantiate()
+
+module DIVACoast
 
 import YAML
 
 # Read local library configuration
-global config = YAML.load_file(joinpath(@__DIR__, "DIVACoast.jl.yml"), dicttype=Dict{Symbol,Any})
+config = YAML.load_file(joinpath(@__DIR__, "DIVACoast.jl.yml"), dicttype=Dict{Symbol,Any})
 
 export earth_circumference_km, earth_radius_km
-
-module DIVACoast
 
 export earth_circumference_km, earth_radius_km
 export HypsometricProfile,
@@ -25,13 +25,13 @@ export HypsometricProfile,
 # append!(LOAD_PATH, DEPOT_PATH)
 
 # Set constants from local config
-earth_circumference_km = Main.config[:earthCircumferenceKM]
-earth_radius_km = Main.config[:earthRadiusKM]
+earth_circumference_km = config[:earthCircumferenceKM]
+earth_radius_km = config[:earthRadiusKM]
 
 function __init__()
 
-    DRAW_HEADER = Main.config[:drawHeader]
-    SHORT_HEADER = Main.config[:shortHeader]
+    DRAW_HEADER = config[:drawHeader]
+    SHORT_HEADER = config[:shortHeader]
 
     # Header
     if DRAW_HEADER && SHORT_HEADER
