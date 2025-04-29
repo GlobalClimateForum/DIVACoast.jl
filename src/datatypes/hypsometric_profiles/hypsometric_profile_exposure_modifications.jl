@@ -205,7 +205,7 @@ function remove_exposure_below!(hspf::HypsometricProfile{DT}, below::Real)::Arra
     insert_elevation_point(hspf, below, ind)
   end
 
-  removed = exposure_below(hspf, hspf.elevation[ind])[2]
+  removed = exposure(hspf, hspf.elevation[ind])[2]
 
   for i in 1:ind
     for j in 1:size(hspf.cummulativeExposure, 2)
