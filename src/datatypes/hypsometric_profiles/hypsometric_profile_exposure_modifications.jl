@@ -205,7 +205,7 @@ function remove_exposure_below!(hspf::HypsometricProfile{DT}, below::Real)::Arra
     insert_elevation_point(hspf, below, ind)
   end
 
-  removed = exposure_below(hspf, hspf.elevation[ind])[3]
+  removed = exposure(hspf, hspf.elevation[ind])[2]
 
   for i in 1:ind
     for j in 1:size(hspf.cummulativeExposure, 2)
@@ -314,10 +314,8 @@ function insert_elevation_point(hspf::HypsometricProfile{DT}, el::Real, ind::Int
   insert!(hspf.elevation, ind, el)
   insert!(hspf.cummulativeArea, ind, ex[1])
   # probably not efficient
-  r::Array{DT,2} = hspf.cummulativeExposure[ind:end, 1:end]
-  hspf.cummulativeExposure = vcat(vcat(hspf.cummulativeExposure[1:ind-1, 1:end], ex[2]'), r)
 
-  r = hspf.cummulativeExposure[ind:end, 1:end]
-  hspf.cummulativeExposure = vcat(vcat(hspf.cummulativeExposure[1:ind-1, 1:end], ex[3]'), r)
+  r::Array{DT} = hspf.cummulativeExposure[ind:end, 1:end]
+  hspf.cummulativeExposure = vcat(vcat(hspf.cummulativeExposure[1:ind-1, 1:end], ex[2]'), r)
 end
 
