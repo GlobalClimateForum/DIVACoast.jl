@@ -1,34 +1,16 @@
 # About
-DIVACoast.jl is a julia library for coastal impact and adaptation modelling. The library provides data types and algorithms to quickly script assessments for different coastal impact and adaptation research questions. DIVACoast.jl is provided by the [Global Climate Forum](https://globalclimateforum.org/) via [GitLab](https://gitlab.com/globalclimateforum/diva_library).
+DIVACoast.jl is a Julia library for coastal impact and adaptation modelling. The library provides data types and algorithms to quickly script assessments for different **coastal impact and adaptation** research questions. DIVACoast.jl is provided by the [Global Climate Forum](https://globalclimateforum.org/) via [GitHub](https://github.com/globalclimateforum/DIVACoast.jl).
 
-# Download & Installation
-Ensure you have Julia installed on your system. You can download Julia from the official [julia website](https://julialang.org). 
+# Getting started
+Ensure you have Julia installed on your system. You can download Julia from the official [julia website](https://julialang.org). DIVACoast is currently under Development you can install the latest (**unstable**) version from GitHub. 
 
-You can get the latest (unstable) version by cloning the library repository to your machine. Since there is no stable version at the moment you have to switch to the development branch afterwards.
-
-```
-git clone https://gitlab.com/globalclimateforum/DIVACoast.jl.git
-git checkout development
-```
-
-The DIVA library has several dependencies with multiple ways to install them:
-
-1. __Install requirements to local environment__
-    If you want to install all required packages to your local environment, easiest is to execute the `install_packages.jl` script within the parent directory of the repository.
-
-2. __Instantiate diva_library project__
-    If you want to use the diva_library project environment you can execute the `DIVACoast.jl` script in the './src' directory. The script will activate the project and install all (instantiate) dependencies automatically to a environment called diva_library.
-
-3. __Setting environment variables__
-    We recommend to setup environment variables for the DIVA library directory and your data directory.
-    ```
-
-You can include the diva library in your script by:
-```
-include(<path_to_diva>/diva_library/src/DIVACoast.jl); using .jdiva
+```julia
+using Pkg
+Pkg.add(url = "https://github.com/globalclimateforum/DIVACoast.jl")
+using DIVACoast
 ```
 
-# Core concepts
+# Concept
 
 ![DIVACoast_Concept](DIVACoast_FloodRiskConcept.svg)
 
@@ -77,6 +59,8 @@ Currently the main way to represent exposure in `DIVACoast.jl` is as `Hypsometri
 
 
 ## Hypsometric Profiles
+
+![HypsometricProfileConcept](DIVACoast_HypsometricProfile.svg)
 A hypsometric profile represents a cross-section of the coastal zone as a function that maps elevation to  the cumulative exposure below this elevation. Hyposmetric profiles are derived from a Digital Elevation Model (DEM) considering hydrological connectivity.
 <!-- add the math -->
 
@@ -94,6 +78,8 @@ Main.DIVACoast.HypsometricProfile
 Main.DIVACoast.load_hsps_nc
 Main.DIVACoast.to_hypsometric_profile
 Base.:+
+Main.DIVACoast.unit
+Main.DIVACoast.compress!
 ```
 
 ### Querying Hypsometric Profiles
@@ -108,8 +94,10 @@ Main.DIVACoast.multiply_exposure!
 Main.DIVACoast.multiply_exposure_above!
 Main.DIVACoast.multiply_exposure_below!
 Main.DIVACoast.remove_exposure_below!
-add_exposure_above!
-add_exposure_between!
+Main.DIVACoast.add_exposure_between!
+Main.DIVACoast.add_exposure_variable!
+Main.DIVACoast.remove_exposure_variable!
+Main.DIVACoast.add_exposure_above!
 ```
 
 ## Two-dimensional gridded exposure
@@ -170,30 +158,16 @@ Main.DIVACoast.coords_to_wide
 
 Currently `DIVACoast.jl` supports the **bathtub model** and the **attenuated bathtub model**. Attenuation refers to the reduction of water levels while floods propagate inland across the landscape. The magnitude of attenuation is a function of land cover such as vegetation, buildings and infrastructure which slow down and hence reduce the extent of flooding.
 
-## Damage of a single event
 ```@docs
-Main.DIVACoast.damage_bathtub
-Main.DIVACoast.damage_bathtub_standard_ddf
-```
-
-## Expected damages
-```@docs
-Main.DIVACoast.expected_damage_bathtub
 Main.DIVACoast.expected_damage_bathtub_standard_ddf
-```
+Main.DIVACoast.expected_damage_bathtub
+Main.DIVACoast.damage_bathtub_standard_ddf
+Main.DIVACoast.damage_bathtub
 
-<font color="red">Remark JH: Do we or will we also have the following functions:</font>
-
-```@docs
-Main.DIVACoast.damage_attenuated
-Main.DIVACoast.damage_attenuated_standard_ddf
-Main.DIVACoast.expected_damage_attenuated
-Main.DIVACoast.expected_damage_attenuated_standard_ddf
 
 ```
 
-
-<font color="red">Remark JH: I could also imagine that we provide additional methods for these functions in a way the structure of our library becomes clearer. 
+<!-- <font color="red">Remark JH: I could also imagine that we provide additional methods for these functions in a way the structure of our library becomes clearer. 
 
 For example we could define different types of flood propagation models:
 
@@ -214,7 +188,7 @@ end
 
 And then have generic methods operating on them
 ```
-damage(hspf::HypsometricProfile{DT}, wl::DT, model::FloodPropagationModel)
+Main.DIVACoast.damage(hspf::HypsometricProfile{DT}, wl::DT, model::FloodPropagationModel)
 
 ```
 
@@ -226,7 +200,7 @@ damage(hspf, wl, Attenuated([.1,.2,.4,.6,.5]))
 damage(hspf, wl, HydroDynamicModel())
 ```
 Thoughts?
-</font>
+</font> -->
 
 
 # Coastal models
@@ -243,7 +217,7 @@ A `CoastalFloodModel` combines all information necessary for computing flood exp
 Main.DIVACoast.LocalCoastalImpactModel
 Main.DIVACoast.ComposedImpactModel
 ```
- <font color="red">Remark JH: Can we change the above to:</font>
+ <!-- <font color="red">Remark JH: Can we change the above to:</font> -->
 ```
 Main.DIVACoast.CoastalFloodModel
 Main.DIVACoast.ComposedCoastalFloodModel
@@ -261,12 +235,12 @@ mutable struct CoastalFloodModel{DT<:Real,IDT,DATA} <: CoastalImpactUnit
 end
 ```
 
- <font color="red">Remark JH: According to the definition of risk above, it would make sense to also include vulnerability in a coastal model, because then we have all three components included in a CoastalFloodModel. Plus we could then write convenience functions such as:</font>
+ <!-- <font color="red">Remark JH: According to the definition of risk above, it would make sense to also include vulnerability in a coastal model, because then we have all three components included in a CoastalFloodModel. Plus we could then write convenience functions such as:</font> -->
 
-```
+<!-- ```
 function damage(cfm::CoastalFloodModel, x::Real)
 function expected_damage(cfm::CoastalFloodModel)
-```
+``` -->
 
 # Drivers
 DIVA provides convenient data readers for external drivers such as sea-level rise and socio-economic development. These readers provide values for any future point in time by **interpolating** piecewise linearly between time steps and **extrapolating** linearly from the last available time step. All readers also provide growth rates between two points in time. Growth rates can be returned in three different ways as AnnualGrowthPercentage, AnnualGrowth, GrowthFactor. 
@@ -275,10 +249,12 @@ DIVA provides convenient data readers for external drivers such as sea-level ris
 **Socio-economic-scenarios** often come as deterministic scenarios and can be handled using the `DeterministicScenarioReader`.
 
 
-```@docs
+
+<!-- ```@docs
 Main.DIVACoast.ScenarioReader
-```
-<font color="red">I propose to generalise this data structure and all associated functions to the following</font>
+``` 
+<font color="red">I propose to generalise this data structure and all associated functions to the following</font> 
+
 
 ```
 Main.DIVACoast.DeterministicScenarioReader
@@ -288,11 +264,13 @@ growth_absolute(sw::DeterministicScenarioReader, time_from::Real, time_to::Real)
 growth_relative(sw::DeterministicScenarioReader, time_from::Real, time_to::Real)
 ...
 
-```
+``` -->
+
 
 ## 2D probabilistic scenarios
 
 ```@docs
+Main.DIVACoast.SSPScenarioReader
 Main.DIVACoast.SLRScenarioReader
 Main.DIVACoast.get_slr_value
 Main.DIVACoast.get_slr_value_from_grid_cell
