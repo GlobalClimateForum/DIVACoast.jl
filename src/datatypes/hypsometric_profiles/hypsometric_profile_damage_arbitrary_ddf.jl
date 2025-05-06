@@ -1,6 +1,24 @@
 using QuadGK
 
 # General case
+"""
+    damage_bathtub(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_other::Vector{Function}) where {DT<:Real}
+    damage_bathtub(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_other::Vector{Any}) where {DT<:Real}
+    damage_bathtub(hspf::HypsometricProfile{DT}, wl::T, ddf::Function, s::Symbol) where {DT<:Real,T<:Real}
+
+Calculates the damage using the bathtub model for a given water level wl based on a provided damage function ddf_area and additional damage functions ddfs_other.
+
+# Arguments
+- `hspf::HypsometricProfile{DT}`: The hypsometric profile.
+- `wl::DT`: The water level for which the damage is calculated.
+- `ddf_area::Function`: The damage function for the area.
+- `ddfs_other::Vector{Function}`: Additional damage functions for other exposures.
+
+# Example
+```julia
+  damage = damage_bathtub(hspf, 1.5, (x) -> x^2, [(x) -> x, (x) -> x^3])
+```
+"""
 function damage_bathtub(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_other::Vector{Function}) where {DT<:Real}
   dam = exposure_below(hspf, wl)
   if complete_zero(dam) return dam end

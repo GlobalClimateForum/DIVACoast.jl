@@ -4,6 +4,22 @@ using CoordinateTransformations
 using StaticArrays
 
 """
+    SparseGeoArray{DT,IT}(filename::String, band::Integer=1) where {DT <: Real, IT <: Integer}
+
+A `SparseGeoArray` combines spatial data with geospatial information for referencing. The data itself is stored in a efficient (sparse) format, so only the non-empty grid cells are stored. The geospatial information is stored in a `CoordinateTransformations.AffineMap` object, which is used to transform between pixel coordinates and geospatial coordinates. 
+
+The `SparseGeoArray` is a mutable struct that contains the following attributes:
+- `data`: a dictionary that stores the data values for each pixel in the grid. The keys are tuples of pixel coordinates (x,y), and the values are the data values.
+- `nodatavalue`: a value that represents missing or invalid data in the grid. This value is used to identify empty cells in the grid.
+- `f`: a `CoordinateTransformations.AffineMap` object that defines the transformation between pixel coordinates and geospatial coordinates.
+- `crs`: a `GeoFormatTypes.WellKnownText` object that defines the coordinate reference system (CRS) for the data. This is used to interpret the geospatial coordinates correctly.
+- `metadata`: a dictionary that stores additional metadata about the data, such as the source of the data or the date it was collected.
+- `xsize`: the number of pixels in the x-direction (width) of the grid.
+- `ysize`: the number of pixels in the y-direction (height) of the grid.
+- `projref`: a string that represents the projection reference for the data.
+- `filename`: a string that represents the filename of the data file.
+
+  
 """
 Base.@kwdef mutable struct SparseGeoArray{DT <: Real, IT <: Integer}  # <: AbstractGeoArray? 
   data :: Dict{Tuple{IT, IT}, DT}

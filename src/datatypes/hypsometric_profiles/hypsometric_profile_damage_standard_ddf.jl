@@ -1,6 +1,8 @@
 using QuadGK
 
 # special case ddf = d/(d+hdd)
+"""
+"""
 function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_other::Array{DT}) :: Tuple{DT, Vector{DT}} where {DT<:Real}
   dam = exposure(hspf, wl)
   if complete_zero(dam) return dam end
