@@ -1,7 +1,15 @@
-# cd(@__DIR__)
-#include("../src/DIVACoast.jl")
-#using .DIVACoast
-#using Test
+cd(@__DIR__)
+
+using Pkg
+# Activate enviroment (checks dependencies)
+Pkg.activate("../.")
+# Installs missing dependencies
+Pkg.instantiate()
+# Includes DIVACoast.jl module
+include("../src/DIVACoast.jl")
+# Adds DIVACoast.jl module to the current namespace
+using .DIVACoast
+using Test
 
 println(DIVACoast.earth_circumference_km)
 
