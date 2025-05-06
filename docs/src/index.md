@@ -30,6 +30,8 @@ include(<path_to_diva>/diva_library/src/DIVACoast.jl); using .jdiva
 
 # Core concepts
 
+![DIVACoast_Concept](DIVACoast_FloodRiskConcept.svg)
+
 The key concept of `DIVACoast.jl` is the concept of risk. Following the definition of the Intergovernmental Panel on Climate Change (IPCC), risk constituted by the three components of hazard, exposure and vulnerability (Oppenheimer et al., 2019; Wong et al., 2014). While on the long run the package is meant to serve multiple coastal risks including the risk of flooding, erosion, salinity intrusion and wetland change, the current release concentrates on flood risk. 
 
 ## Flood risk
@@ -96,33 +98,19 @@ Base.:+
 
 ### Querying Hypsometric Profiles
 ```@docs
-Main.DIVACoast.exposure_below_bathtub
-Main.DIVACoast.exposure_below_attenuated
-Main.DIVACoast.attenuate
+Main.DIVACoast.exposure
 ```
 ### Modifying Hypsometric Profiles
 Socio-economic development and adaptation changes exposure. For example, socio-economic growth increases the number of people and their assets in the coastal zone, while retreat reduces assets and people in the costal zone. To represent those process in DIVACoast, we provide the following functions.
 
 ```@docs
-Main.DIVACoast.add_exposure_dimension!
-Main.DIVACoast.remove_exposure_dimension!
-Main.DIVACoast.growth_exposure!
-Main.DIVACoast.growth_exposure_above!
-Main.DIVACoast.growth_exposure_below!
+Main.DIVACoast.multiply_exposure!
+Main.DIVACoast.multiply_exposure_above!
+Main.DIVACoast.multiply_exposure_below!
 Main.DIVACoast.remove_exposure_below!
-Main.DIVACoast.add_exposure_above!
-Main.DIVACoast.add_exposure_between!
-Main.DIVACoast.compress!
+add_exposure_above!
+add_exposure_between!
 ```
-
-<font color="red">Remark JH: 
-Can we change the _sed functions above to:
-
-`Main.DIVACoast.multiply_above!`
-
-`Main.DIVACoast.multiply_below!`
-</font>
-
 
 ## Two-dimensional gridded exposure
 Currently, `DIVACoast.jl` only provides limited support for representing coastal exposure on a two-dimensional (2D) grid, but this will be added in future releases. In the current release, the main purpose of representing two-dimensional exposure data is to convert these to hypsometric profiles. 
