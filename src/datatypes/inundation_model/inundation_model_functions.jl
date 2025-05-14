@@ -1,3 +1,25 @@
+"""
+    function inundate(hspf::HypsometricProfile, wl::Number, im::IM)  where {DT<:Real,IM<:InundationModel}
+
+The `inundate` function models the flood inundation for each elevation of a given HypsometricProfile and a given water level and InundationModel.
+
+output: tuple of two arrays, first array gives elevation, second one water level per respective elevation (the arrays stop when no inundation happens)
+
+
+# Arguments
+- `hspf::HypsometricProfile`: the hypsometric profile object which will be flooded.
+- `wl::Number`: the water level that is propagated on the hypsometric profile.
+- `im::IM`: the inundation model defining how the water is propagated on the hypsometric profile.
+
+# Output
+- two tuple of arrays, the first array returns the elevation of the hypsometric profile, the second array returns the water level per respective elevation (the arrays stop when no inundation happens)
+
+
+# Example
+```julia
+inundate(hspf, 2.0, BathtubInundation)
+```
+"""
 function inundate(hspf::HypsometricProfile{DT}, wl::Number, im::IM) ::Tuple{Array{DT}, Array{DT}} where {DT<:Real,IM<:InundationModel}
     @error("fallback")
 end

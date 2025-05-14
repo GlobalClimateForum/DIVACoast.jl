@@ -8,8 +8,8 @@ Pkg.instantiate()
 # Includes DIVACoast.jl module
 include("../src/DIVACoast.jl")
 # Adds DIVACoast.jl module to the current namespace
-using .DIVACoast
-using Test
+#using .DIVACoast
+#using Test
 
 println(DIVACoast.earth_circumference_km)
 
