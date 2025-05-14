@@ -1,5 +1,6 @@
 """
     exposure(hspf::HypsometricProfile{DT}, wl::Real, im::IM) where {DT<:Real, IM<:InundationModel}
+    exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Symbol, im::IM) where {DT<:Real, IM<:InundationModel}
 
 Calculate the cumulative area, static exposure, and dynamic exposure below elevation (`e`) for a hypsometric profile. The function handles different cases based on the elevation's presence in the profile and its position.
 # Arguments
@@ -10,6 +11,12 @@ Calculate the cumulative area, static exposure, and dynamic exposure below eleva
 
 # Returns
 Exposed area and exposure for elevations smaller than `e`.
+
+  # Example
+```julia
+function exposure(hspf, 2.0, BathtubInundation())
+function exposure(hspf, 100, "population", BathtubInundation())
+```
 
 """
 function exposure(hspf::HypsometricProfile{DT}, wl::Number, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}

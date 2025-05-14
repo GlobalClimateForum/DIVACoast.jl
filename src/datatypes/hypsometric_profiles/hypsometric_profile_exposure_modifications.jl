@@ -4,7 +4,7 @@
   function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::String)
 
   The `multiply_exposure!` function applies factors to all exposure data of a HypsometricProfile, where different factors 
-  for different variables are possible. This can be used to implement soci-economic growth. Versions for single varaibles exist.
+  for different variables are possible. This can be used to implement soci-economic growth. Versions for single variables exist.
 
 # Arguments
 - `hspf::HypsometricProfile`: the hypsometric profile to modify
@@ -46,7 +46,7 @@ function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::Symbol) 
   end
 end
 
-multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::String) where {DT<:Real,T<:Real} = multiply_exposure!(hspf, Symbol(s))
+multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::String) where {DT<:Real,T<:Real} = multiply_exposure!(hspf, factor, Symbol(s))
 
 
 """
@@ -54,7 +54,7 @@ multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::String) where {DT
   function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, factor::T, s::Symbol) where {DT<:Real,T<:Real}
   function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, factor::T, s::String)
 
-  The `multiply_exposure!` function applies factors to all exposure data above a given elevation of a HypsometricProfile, 
+  The `multiply_exposure_above!` function applies factors to all exposure data above a given elevation of a HypsometricProfile, 
   where different factors for different variables are possible. Versions for single varaibles exist.
 
 # Arguments
@@ -97,14 +97,14 @@ function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factors
   end
 end
 
-function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factors::Real, s::Symbol)
+function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factor::Real, s::Symbol)
   p = get_position(hspf, s)
   if (p[1] == -1)
     @error "profile ($hspf) has no variable $(s)"
   end
   if (p[1] == 2)
     if (above < hspf.elevation[1])
-      multiply_exposure!(hspf, factors)
+      multiply_exposure!(hspf, factor)
       return
     end
     if (above > hspf.elevation[size(hspf.elevation, 1)])
@@ -116,9 +116,9 @@ function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factors
     if !(above in hspf.elevation)
       insert_elevation_point(hspf, above, ind)
     end
-
-    for j in 1:(size(hspf.cummulativeExposure, 2))
-      hspf.cummulativeExposure[p[2], j] *= factors[j]
+    #is i loop missing here and then j should be p[2], i.e. the name of the variabel instead?
+    for i in (ind+1):(size(hspf.cummulativeExposure, 1))
+      hspf.cummulativeExposure[i, p[2]] *= factor
     end
   end
 end
@@ -133,10 +133,31 @@ function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factors
   multiply_exposure_above!(hspf, above, fac_array)
 end
 
+multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, factor::T, s::String) where {DT<:Real,T<:Real} = multiply_exposure_above!(hspf, above, factor, Symbol(s))
+
 
 
 """
-Applies socio-economic development (factor) below a certain elevation.
+  function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, factors::Array{T}) where {DT<:Real,T<:Real}
+  function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, factor::T, s::Symbol) where {DT<:Real,T<:Real}
+  function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, factor::T, s::String)
+
+  The `multiply_exposure_below!` function applies factors to all exposure data below a given elevation of a HypsometricProfile, 
+  where different factors for different variables are possible. Versions for single varaibles exist.
+
+# Arguments
+- `hspf::HypsometricProfile`: the hypsometric profile to modify
+- below: the elvation, only exposure above this elevation is affected
+- factors: an array of factors, one for each variable of the profile
+- factor: one factor for a specific exposure variable
+- s: The name of the exposure variable to modify (apply the factor to)
+
+# Example
+```julia
+function multiply_exposure_below!(hspf, 2.0, [1.0, 1.1])
+function multiply_exposure_below!(hspf, 2.0, 1.0, :assets)
+function multiply_exposure_below!(hspf, 2.0, 1.1, "population")
+```
 """
 function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factors::Array{T}) where {T<:Real}
   if (size(hspf.cummulativeExposure, 2) != length(factors))
@@ -170,6 +191,31 @@ function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factors
   #end
 end
 
+function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factor::Real, s::Symbol)
+  p = get_position(hspf, s)
+  if (p[1] == -1)
+    @error "profile ($hspf) has no variable $(s)"
+  end
+  if (p[1] == 2)
+    if (below < hspf.elevation[1])
+      return
+    end
+    if (below > hspf.elevation[size(hspf.elevation, 1)])
+      multiply_exposure!(hspf, factor)
+      return
+    end
+
+    ind::Int64 = searchsortedfirst(hspf.elevation, below)
+
+    if !(below in hspf.elevation)
+      insert_elevation_point(hspf, below, ind)
+    end
+
+    for i in 1:ind
+      hspf.cummulativeExposure[i, p[2]] *= factor
+    end
+  end
+end
 
 function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below, factors) where {DT<:Real}
   if (size(hspf.cummulativeExposure, 2) != length(factors))
@@ -181,11 +227,23 @@ function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below, factors) 
 end
 
 
+multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, factor::T, s::String) where {DT<:Real,T<:Real} = multiply_exposure_below!(hspf, below, factor, Symbol(s))
 
 
 
 """
-Removes expoexposure_growth assets / population below a certain elevation.
+  function remove_exposure_below!(hspf::HypsometricProfile{DT}, below::Real) where {DT<:Real}
+
+  The `remove_exposure_below!` function removes exposure (assets and population) below a certain elevation.
+
+# Arguments
+- `hspf::HypsometricProfile`: the hypsometric profile to modify
+- below: the elvation, only exposure below this elevation is removed
+
+# Example
+```julia
+function remove_exposure_below!(hspf, 2.0)
+```
 """
 function remove_exposure_below!(hspf::HypsometricProfile{DT}, below::Real)::Array{DT} where {DT<:Real}
   if (below < hspf.elevation[1])
@@ -231,6 +289,20 @@ end
 
 """
 Adds assets / population above a certain elevation.
+
+  function add_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, values::Array{T}) where {T<:Real}
+
+  The `add_exposure_above!` function adds exposure (assets / population) above a certain elevation.
+
+# Arguments
+- `hspf::HypsometricProfile`: the hypsometric profile to modify
+- above: the elvation, exposure gets only added above this elevation
+- values: the exposure values that get added
+
+# Example
+```julia
+function add_exposure_above!(hspf, 2.0, [1000, 250000])
+```
 """
 function add_exposure_above!(hspf::HypsometricProfile, above::Real, values::Array{T}) where {T<:Real}
   if (size(hspf.cummulativeExposure, 2) != length(values))
@@ -253,11 +325,26 @@ function add_exposure_above!(hspf::HypsometricProfile, above::Real, values::Arra
     end
   end
 
+  #i think the adding part is missing here, compared to function below?
+
   compress!(hspf)
 end
 
 """
-Adds assets / population between certain elevations.
+  function add_exposure_between!(hspf::HypsometricProfile{DT}, above::Real, below::Real, values::Array{T}) where {T<:Real}
+
+  The `add_exposure_between!` function adds assets / population between certain elevations.
+
+# Arguments
+- `hspf::HypsometricProfile`: the hypsometric profile to modify
+- above: the elvation, exposure gets only added above this elevation
+- below: the elvation, exposure gets only added below this elevation
+- values: the exposure values that get added
+
+# Example
+```julia
+function add_exposure_between!(hspf, 2.0, 3.0, [1000, 250000])
+```
 """
 function add_exposure_between!(hspf::HypsometricProfile, above::Real, below::Real, values::Array{T}) where {T<:Real}
   if (below < above)
