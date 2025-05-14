@@ -20,7 +20,7 @@ using DIVACoast
 The key concept of `DIVACoast.jl` is the concept of risk. Following the definition of the Intergovernmental Panel on Climate Change (IPCC), risk constituted by the three components of hazard, exposure and vulnerability (Oppenheimer et al., 2019; Wong et al., 2014). While on the long run the package is meant to serve multiple coastal risks including the risk of flooding, erosion, salinity intrusion and wetland change, the current release concentrates on flood risk. 
 
 ## Flood Risk
-![DIVACoast_Concept](DIVACoast_FloodRiskConcept.svg)
+![DIVACoast_Concept](DIVACoast_Concept_CoastalRisks.jpg)
 
 Coastal flood risk assessment involves at least the following five components: 
 
@@ -90,7 +90,6 @@ A `HyposmetricProfile` holds two different types of exposure:
 
 Currently, Hypsometric Profiles can constructed directly through a constructor, or indirectly from a NetCDF file.
 
-<!--- rename "load" to "read" -->
 ```@docs
 Main.DIVACoast.HypsometricProfile
 Main.DIVACoast.load_hsps_nc
@@ -121,117 +120,6 @@ Main.DIVACoast.add_exposure_above!
 ## Two-dimensional gridded exposure
 Currently, `DIVACoast.jl` only provides limited support for representing coastal exposure on a two-dimensional (2D) grid, but this **will be added in future** releases. In the current release, the main purpose of representing two-dimensional exposure data is to convert these to hypsometric profiles.
 
-### SparseGeoArray (SGA)
-**Gridded geodata** is stored and processed using the `SparseGeoArray` data structure. This structure retains the necessary geospatial meta-information for accurate referencing and stores the data in a memory-efficient sparse array format. By storing only non-empty grid cells, it is well-suited for coastal datasets, where large areas—such as open ocean or inland regions—often contain no or non relevant data for the analysis.
-
-```@docs
-Main.DIVACoast.SparseGeoArray
-```
-#### Initialisation
-`SparseGeoArrays` can be constructing by multiple ways:
-
-1. From a **GeoTIFF**
-```julia
-Main.DIVACoast.SparseGeoArray{Float32, Int32}("path/to/file.tif")
-```
-
-2. Init an **empty** `SparseGeoArray`<br>
-**Note:** _If you init an empty `SparseGeoArray` you need to specify the geospatial-metadata yourself to perform geo-Operations._
-```julia 
-Main.DIVACoast.SparseGeoArray{Float32, Int32}()
-sga[(x, y)] = value # Fill the SparseGeoArray
-```
-
-3. Init an empty `SparseGeoArray` with the meta-information **from another** `SparseGeoArray`
-```@docs
-Main.DIVACoast.emptySGAfromSGA
-```
-
-4. **Manual** init a `SparseGeoArray`
-If you have your data as a dictionary and know the georeferencing, you can construct it directly:
-```julia
-sga = Main.DIVACoast.SparseGeoArray(
-    data,          # Dict{Tuple{Int,Int}, Float64}
-    nodatavalue,   # e.g., -9999.0
-    affine_map,    # CoordinateTransformations.AffineMap
-    crs,           # GeoFormatTypes.WellKnownText
-    metadata,      # Dict{String,Any}
-    xsize, ysize,  # grid dimensions
-    projref,       # projection string
-    circular,      # Bool
-    filename       # String
-)
-```
-
-#### Operations
-A set of core spatial operations is provided for `SparseGeoArray` objects, enabling manipulation and analysis of gridded exposure data. These functions allow you to combine, compare, and summarize spatial datasets efficiently:
-
-```@docs
-Main.DIVACoast.sga_union
-Main.DIVACoast.sga_intersect
-Main.DIVACoast.sga_diff
-Main.DIVACoast.sga_summarize_within
-```
-
-There are multiple options to access the data based on an index or on a coordinate.
-
-1. Indexing `SparseGeoArrays`
-```@docs
-Main.DIVACoast.getindex
-Main.DIVACoast.coords
-Main.DIVACoast.indices
-```
-
-2. Neighbourhood and Distance Functions
-```@docs
-Main.DIVACoast.nh4
-Main.DIVACoast.nh8
-Main.DIVACoast.distance
-Main.DIVACoast.go_direction
-```
-
-3. Spatial Extent
-```@docs
-Main.DIVACoast.bounding_boxes
-Main.DIVACoast.area
-Main.DIVACoast.get_extent
-```
-
-4. Combine `SparseGeoArrays`
-```@docs
-Main.DIVACoast.sga_union
-Main.DIVACoast.sga_intersect
-Main.DIVACoast.sga_diff
-Main.DIVACoast.sga_summarize_within
-```
-
-5. Coordinate Reference System (CRS)
-```@docs
-Main.DIVACoast.epsg2wkt
-Main.DIVACoast.proj2wkt
-Main.DIVACoast.str2wkt
-Main.DIVACoast.epsg!
-Main.DIVACoast.is_rotated
-Main.DIVACoast.bbox!
-```
-6. Operations for .GeoTIFF
-Operations process (multiple) GeoTIFF rasters using a user-defined function, enabling custom analysis or aggregation across several input files.
-
-**Operation overview**
-
-| Function            | Inputs              | Output   | Operation                                                              |
-| ------------------- | ------------------- | -------- | ---------------------------------------------------------------------- |
-| `geotiff_connect`   | 2 rasters, function | 1 raster | Combine two rasters pixel-wise using a function                        |
-| `geotiff_transform` | 1 raster, function  | 1 raster | Transform one raster pixel-wise using a function                       |
-| `geotiff_collect`   | mask, rasters, func | (custom) | Collect values from multiple rasters and mask, process with a function |
-
-**Operation-specific documentation**
-
-```@docs
-Main.DIVACoast.geotiff_connect
-Main.DIVACoast.geotiff_transform
-Main.DIVACoast.geotiff_collect
-```
 # Flood damage assessment
 
 ## Flood propagation model
@@ -267,6 +155,8 @@ mutable struct CoastalFloodModel{DT<:Real,IDT,DATA} <: CoastalImpactUnit
 end
 ```
 
+---
+
 # Drivers
 `DIVACoast.jl` provides convenient data readers for external drivers such as sea-level rise and socio-economic development. These readers provide values for any future point in time by **interpolating** piecewise linearly between time steps and **extrapolating** linearly from the last available time step. All readers also provide growth rates between two points in time. Growth rates can be returned in three different ways as AnnualGrowthPercentage, AnnualGrowth, GrowthFactor. The readers can be used with the `get_value()` and `get_value_from_cell()` functions to retrieve the relevant data. The reader takes a **NetCDF** file as input, which must include the following dimensions:
 
@@ -281,3 +171,125 @@ Main.DIVACoast.SLRScenarioReader
 Main.DIVACoast.get_slr_value
 Main.DIVACoast.get_slr_value_from_grid_cell
 ```
+---
+
+# GeoData
+
+## SparseGeoArray (SGA)
+Within `DIVACoast.jl`, **Gridded geodata** is stored and processed using the `SparseGeoArray` data structure. This structure retains the necessary geospatial meta-information for accurate referencing and stores the data in a memory-efficient sparse array format. By storing only non-empty grid cells, it is well-suited for coastal datasets, where large areas—such as open ocean or inland regions—often contain no or non relevant data for the analysis.
+
+```@docs
+Main.DIVACoast.SparseGeoArray
+```
+### SparseGeoArrays - Construct 
+`SparseGeoArrays` can be constructing by multiple ways:
+
+**From GeoTIFF**
+```julia
+Main.DIVACoast.SparseGeoArray{Float32, Int32}("path/to/file.tif")
+```
+
+**Construct (empty)**<br>
+**Note:** _If you init an empty `SparseGeoArray` you need to specify the geospatial-metadata yourself to perform geo-Operations._
+```julia 
+Main.DIVACoast.SparseGeoArray{Float32, Int32}()
+sga[(x, y)] = value # Fill the SparseGeoArray
+```
+**Construct (empty)** with meta-information **from another** `SparseGeoArray`
+```@docs
+Main.DIVACoast.emptySGAfromSGA
+```
+
+**Manually** construct a `SparseGeoArray`<br>
+If you have your data as a dictionary and know the georeferencing, you can construct it directly:
+```julia
+sga = Main.DIVACoast.SparseGeoArray(
+    data,          # Dict{Tuple{Int,Int}, Float64}
+    nodatavalue,   # e.g., -9999.0
+    affine_map,    # CoordinateTransformations.AffineMap
+    crs,           # GeoFormatTypes.WellKnownText
+    metadata,      # Dict{String,Any}
+    xsize, ysize,  # grid dimensions
+    projref,       # projection string
+    circular,      # Bool
+    filename       # String
+)
+```
+
+### SparseGeoArray - Operations
+A set of core spatial operations is provided for `SparseGeoArray` objects, enabling manipulation and analysis of gridded exposure data. These functions allow you to combine, compare, and summarize spatial datasets efficiently:
+
+```@docs
+Main.DIVACoast.sga_union
+Main.DIVACoast.sga_intersect
+Main.DIVACoast.sga_diff
+Main.DIVACoast.sga_summarize_within
+```
+
+There are multiple options to access the data based on an index or on a coordinate.
+
+#### Indexing `SparseGeoArrays`
+```@docs
+Main.DIVACoast.getindex
+Main.DIVACoast.coords
+Main.DIVACoast.indices
+```
+
+#### Neighbourhood and Distance Functions
+```@docs
+Main.DIVACoast.nh4
+Main.DIVACoast.nh8
+Main.DIVACoast.distance
+Main.DIVACoast.go_direction
+```
+
+#### Spatial Extent
+```@docs
+Main.DIVACoast.bounding_boxes
+Main.DIVACoast.area
+Main.DIVACoast.get_extent
+```
+
+#### Coordinate Reference System (CRS)
+```@docs
+Main.DIVACoast.epsg2wkt
+Main.DIVACoast.proj2wkt
+Main.DIVACoast.str2wkt
+Main.DIVACoast.epsg!
+Main.DIVACoast.is_rotated
+Main.DIVACoast.bbox!
+```
+
+## GeoTIFF
+As described above `SparseGeoArray` is the structure used by `DIVACoast.jl` to handle GeoData. In addition, `DIVACoast.jl` provides several functions
+to read, modify and export files in the common GeoData Format `.geotiff`.
+
+### Operations
+The following operations process (multiple) GeoTIFF rasters using a user-defined function, enabling custom analysis or aggregation across several input files.
+
+| Function            | Inputs              | Output   | Operation                                                              |
+| ------------------- | ------------------- | -------- | ---------------------------------------------------------------------- |
+| `geotiff_connect`   | 2 rasters, function | 1 raster | Combine two rasters pixel-wise using a function                        |
+| `geotiff_transform` | 1 raster, function  | 1 raster | Transform one raster pixel-wise using a function                       |
+| `geotiff_collect`   | mask, rasters, func | (custom) | Collect values from multiple rasters and mask, process with a function |
+
+```@docs
+Main.DIVACoast.geotiff_connect
+Main.DIVACoast.geotiff_transform
+Main.DIVACoast.geotiff_collect
+```
+
+## Point Data
+GeoData is often provided by coordinates. In most cases you can transform the provided data into a `DataFrame` object with a coordinate or langitude and latitude column. `DIVACoast.jl` provides a structure called `Neighbour` to perform Nearest Neighbour searches on `DataFrames` in a convinient and efficient way.
+
+```@docs
+Main.DIVACoast.Neighbour
+```
+Nearest Neighbour search can be performed using:
+
+```@docs
+Main.DIVACoast.nearest
+Main.DIVACoast.nearest_coord
+```
+
+---
