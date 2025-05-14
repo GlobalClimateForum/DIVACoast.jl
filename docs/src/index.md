@@ -1,3 +1,7 @@
+```@meta
+CollapsedDocStrings = true
+Description = "DIVACoast.jl is a Julia library for coastal impact and adaptation modelling. The library provides data types and algorithms to quickly script assessments for different **coastal impact and adaptation** research questions. DIVACoast.jl is provided by the [Global Climate Forum](https://globalclimateforum.org/) via [GitHub](https://github.com/globalclimateforum/DIVACoast.jl)."
+```
 # About
 DIVACoast.jl is a Julia library for coastal impact and adaptation modelling. The library provides data types and algorithms to quickly script assessments for different **coastal impact and adaptation** research questions. DIVACoast.jl is provided by the [Global Climate Forum](https://globalclimateforum.org/) via [GitHub](https://github.com/globalclimateforum/DIVACoast.jl).
 
@@ -77,10 +81,6 @@ Currently the main way to represent exposure in `DIVACoast.jl` is as `Hypsometri
 
 ![HypsometricProfileConcept](DIVACoast_HypsometricProfile.svg)
 A hypsometric profile represents a cross-section of the coastal zone as a function that maps elevation to  the cumulative exposure below this elevation. Hyposmetric profiles are derived from a Digital Elevation Model (DEM) considering hydrological connectivity.
-
-```
-add math.
-```
 
 A `HyposmetricProfile` holds two different types of exposure:
 1. **Static Exposure**, which is exposure that **cannot be relocated**. An example is land (area). 
@@ -189,7 +189,7 @@ Main.DIVACoast.SparseGeoArray
 Main.DIVACoast.SparseGeoArray{Float32, Int32}("path/to/file.tif")
 ```
 
-**Construct (empty)**<br>
+**Construct (empty)**\
 **Note:** _If you init an empty `SparseGeoArray` you need to specify the geospatial-metadata yourself to perform geo-Operations._
 ```julia 
 Main.DIVACoast.SparseGeoArray{Float32, Int32}()
@@ -200,7 +200,7 @@ sga[(x, y)] = value # Fill the SparseGeoArray
 Main.DIVACoast.emptySGAfromSGA
 ```
 
-**Manually** construct a `SparseGeoArray`<br>
+**Manually** construct a `SparseGeoArray`\
 If you have your data as a dictionary and know the georeferencing, you can construct it directly:
 ```julia
 sga = Main.DIVACoast.SparseGeoArray(
@@ -291,5 +291,3 @@ Nearest Neighbour search can be performed using:
 Main.DIVACoast.nearest
 Main.DIVACoast.nearest_coord
 ```
-
----
