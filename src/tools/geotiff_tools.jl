@@ -1,12 +1,27 @@
 export geotiff_connect, geotiff_transform, geotiff_collect
 
 """
-This function connect two geotiffs by a given operation. 
-    infilename1::String
-    infilename2::String
-    outfilename::String
-    f::Function
+        geotiff_connect(infilename1::String, infilename2::String, outfilename::String, f::Function)
 
+Takes two geofiffs and connects (combines) them pixelwise by a given function. The result is saved in a new geotiff file.
+
+# Arguments
+- `infilename1::String` : The path to the first input geotiff file.
+- `infilename2::String` : The path to the second input geotiff file.
+- `outfilename::String` : The path to the output geotiff file.
+- `f::Function` : A function that will be applied pixelwise. Function definition must match the signature: <br> `f(value1::Float32, value2::Float32, sga1::SparseGeoArray, sga2::SparseGeoArray)`
+  where `value1` and `value2` are the pixel values from the two input rasters, and `sga1` and `sga2` are the corresponding SparseGeoArray objects.
+  <br>**Note:** _The SparseGeoArrays will be created from the input files_
+
+# Example
+```julia	
+path1 = "path/to/input1.tif"
+path2 = "path/to/input2.tif"
+path_out = "path/to/output.tif"
+
+takemaximum = (x, y, sga1, sga2) -> x > y ? x : y  # Takes the maximum of both files
+geotiff_connect(path1, path2, path_out, takemaximum) 
+```
 """
 function geotiff_connect(infilename1::String, infilename2::String, outfilename::String, f::Function)
 
@@ -64,7 +79,26 @@ function geotiff_connect(infilename1::String, infilename2::String, outfilename::
     GDAL.gdalclose(dataset_out)
 end
 
+"""
+        function geotiff_transform(infilename1::String, outfilename::String, f::Function)
 
+Applies a function pixelwise to a geotiff file and saves the result in a new geortiff file.
+
+# Arguments
+- `infilename1::String` : The path to the input geotiff file.
+- `outfilename::String` : The path to the output geotiff file.
+- `f::Function` : A function that will be applied pixelwise. Function definition must match the signature: <br> `f(value1::Float32, sga::SparseGeoArray, r::Int, i::Int)`
+  where `value1` is the pixel value from the input raster, and `sga` is the corresponding SparseGeoArray object. `r` represents the row number and `i` represents the column number of the pixel in the raster.
+  <br>**Note:** _The SparseGeoArray will be created from the input file_
+
+# Example
+```julia
+input_path = "path/to/input.tif"
+output_path = "path/to/output.tif"
+square = (x, sga, r, i) -> x * x # Squares the pixel value
+geotiff_transform(input_path, output_path, square)
+```
+"""
 function geotiff_transform(infilename1::String, outfilename::String, f::Function)
 
     sga_in1 = SparseGeoArray{Float32,Int32}()
@@ -111,7 +145,19 @@ function geotiff_transform(infilename1::String, outfilename::String, f::Function
     GDAL.gdalclose(dataset_out)
 end
 
+"""
+        function geotiff_collect(maskfilename::String, infilenames::Array{String}, f::Function)
 
+Applies a function pixelwise to one ore multiple geotiff's (`infilenames`) and saves the result in a new geotiff file. The function is applied only to the pixels that are not
+masked by the mask geotiff (`maskfilename`). The result is saved in a new geotiff file.
+
+# Arguments
+- `maskfilename::String` : The path to the mask geotiff file.
+- `infilenames::Array{String}` : An array of paths to the input geotiff files.
+- `f::Function` : A function that will be applied pixelwise. Function definition must match the signature: <br> `f(mask_value::Float32, values::Array{Float32}, sga_mask::SparseGeoArray, sga_ins::Array{SparseGeoArray})`
+  where `mask_value` is the pixel value from the mask raster, `values` is an array of pixel values from the input rasters, and `sga_mask` and `sga_ins` are the corresponding SparseGeoArray objects.
+  <br>**Note:** _The SparseGeoArrays will be created from the input files_
+"""
 function geotiff_collect(maskfilename::String, infilenames::Array{String}, f::Function)
 
     sga_mask = SparseGeoArray{Float32,Int32}()
