@@ -1,5 +1,5 @@
 using Distributions
-using StatsPlots
+#using StatsPlots
 
 export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integration
 
@@ -101,11 +101,11 @@ end
 
 Plot the distribution
 """
-function StatsPlots.plot(d::LinInt)
-    scatter(support(d),probs(d), label="Data points")
-    plot!([support(d);2*support(d)[end]],cdf.(d,[support(d);2*support(d)[end]]), label="Linear Interpolation")
+#function StatsPlots.plot(d::LinInt)
+    #scatter(support(d),probs(d), label="Data points")
+    #plot!([support(d);2*support(d)[end]],cdf.(d,[support(d);2*support(d)[end]]), label="Linear Interpolation")
 
-end
+#end
 
 """
     Naive PDF via approximate differentiation of CDF.
