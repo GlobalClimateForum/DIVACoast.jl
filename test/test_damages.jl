@@ -45,11 +45,6 @@ function runTests()
     end
 end
 
+runTests()
 
-for profile in ["fixedClassic", "fixedStrArr", ""]
 
-  println("Test Hypsometric Profile: $profile")
-
-  runTests()
-
-end
