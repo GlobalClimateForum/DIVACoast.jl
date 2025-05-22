@@ -1,19 +1,26 @@
 using JLD2
 using Dates
-export save, load
-include("../nc/HSPs_nc_load.jl")
+export save, load, load_hsps, load_local_coastal_impact_model, load_composed_impact_model
 
 
 # Define a union type for the allowed DIVA types
-const DIVACoastTypes = Union{HypsometricProfile, ComposedImpactModel, LocalCoastalImpactModel}
+const DIVACoastTypes = Union{HypsometricProfile, Dict{Int32, HypsometricProfile{Float32}},  ComposedImpactModel, LocalCoastalImpactModel}
 const DIVACoastLoadFuncs = Union{typeof(load_hsps_nc)}
 
-function save(object::Type{T}, path::Union{String, IO}) where {T<:DIVACoastTypes}
+function save(object::T, path::Union{String, IO}) where {T<:DIVACoastTypes}
     metadata = Dict(
         "created" => string(Dates.now()),
         "DIVACoastType" => typeof(object),
         "author" => "DIVACoast.jl"
     )
+    if typeof(object) == Dict{Number, Any}
+        jldopen(path, "a+") do file
+            file["meta"] = metadata
+            for (key, value) in keys(object)
+                file[key] = value
+            end
+        end
+    end
     jldsave(path; data=object, meta=metadata)
     @info "Saved $(metadata["DIVACoastType"]) to $path"
 end
@@ -68,5 +75,10 @@ function load(path::Union{String, IO}, load_func::F, load_args::A = []) where {F
         return data
     end
 end
+
+# Type specific load function aliases
+load_hsps(path::String) = load(path, HypsometricProfile)
+load_local_coastal_impact_model(path::String) = load(path, LocalCoastalImpactModel)
+load_composed_impact_model(path::String) = load(path, ComposedImpactModel)
 
 
