@@ -47,6 +47,9 @@ function runTests()
       @testset "exposure()" begin
         #@test exposure_below_bathtub(hpTest, maximum(hpSettings[2])) == exposure_below_bathtub(hpTest, maximum(hpSettings.elevation))
         @test exposure(hpTest, 0, BathtubInundation()) == (0.0f0, Float32[0.0, 0.0])
+        
+        #exposure with attenuated not implemented yet
+        #@test exposure(hpTest, 0, LinearDistanceAttenuatedInundation(0.1)) == (0.0f0, Float32[0.0, 0.0])
         #@test exposure_below_bathtub(hpTest, 100) == (sum(hpTest.area), sum(hpTest.exposure_data[1]), sum(hpTest.exposure_data[2]))
         @test exposure(hpTest, 100, BathtubInundation())[1] == sum(hpSettings[3])
         @test exposure(hpTest, 100, BathtubInundation())[2][1] == sum(hpSettings[4])
@@ -96,11 +99,5 @@ function runTests()
     end
 end
 
+runTests()
 
-for profile in ["fixedClassic", "fixedStrArr", ""]
-
-  println("Test Hypsometric Profile: $profile")
-
-  runTests()
-
-end
