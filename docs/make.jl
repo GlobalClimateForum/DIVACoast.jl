@@ -1,8 +1,8 @@
 # Inside make.jl
-include("$(ENV["DIVA_LIB"])/src/DIVACoast.jl")
-push!(LOAD_PATH, "../src/")
+# include("$(ENV["DIVA_LIB"])/src/DIVACoast.jl")
+# push!(LOAD_PATH, "../src/")
 
-import .DIVACoast
+# import .DIVACoast
 using Documenter
 
 makedocs(
