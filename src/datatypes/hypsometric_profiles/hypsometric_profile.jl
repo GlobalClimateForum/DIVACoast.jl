@@ -299,13 +299,6 @@ end
 unit(hspf::HypsometricProfile, n::String) = unit(hspf, Symbol(n))
 
 
-function named(f::Function; kwargs...)
-  t = f(kwargs...)
-  @inbounds return (NamedTuple{Symbol("area")}(t[1]), NamedTuple{hspf.exposureSymbols}(t[2]))
-end
-
-
-
 function complete_zero(exposure)
   if (exposure[1] != 0)
     return false
