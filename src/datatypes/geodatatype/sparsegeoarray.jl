@@ -44,13 +44,6 @@ function SparseGeoArray{DT,IT}(filename :: String, band :: Integer = 1) where {D
   sga
 end
 
-function SparseGeoArray{DT,IT}(filename :: String, band :: Integer = 1) where {DT <: Real, IT <: Integer} 
-  sga = SparseGeoArray{DT,IT}()
-  sga.filename = filename
-  read_geotiff_data_complete!(sga,filename,band,1)
-  sga
-end
-
 function empty_copy(sga :: SparseGeoArray{DT,IT}) :: SparseGeoArray{DT,IT} where {DT <: Real, IT <: Integer} 
   return SparseGeoArray{DT,IT}(Dict{Tuple{IT,IT},DT}(), sga.nodatavalue,sga.f,sga.crs,sga.metadata,sga.xsize,sga.ysize,sga.projref,sga.circular,sga.filename)
 end
