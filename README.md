@@ -7,17 +7,8 @@ The library is  provided by the [Global Climate Forum](https://globalclimateforu
 
 # Download & Installation
 
-1. Ensure you have Julia installed on your system. You can download Julia from the official [julia website](https://julialang.org). 
-
-2. Clone the library to your local machine
-
+You can install DIVACoast library by: 
+```@julia
+using Pkg
+Pkg.add(url = "https://github.com/GlobalClimateForum/DIVACoast.jl")
 ```
-git clone https://gitlab.com/globalclimateforum/DIVACoast.jl.git
-```
-
-3. Include the library in your script
-```
-include('<path_to_library_repository>/src/DIVACoast.jl')
-using .DIVACoast
-```
-4. Inlcuding the `DIVACoast.jl` script will activate the DIVACoast project environment and install all required packages.

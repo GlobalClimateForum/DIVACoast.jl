@@ -91,3 +91,32 @@ exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Symbol, im::IM=BathtubInunda
 exposure(hspf::HypsometricProfile{DT}, wl::Real, s::String, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = exposure(hspf, wl, Symbol(s), im)
 exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = exposure(hspf, wl, map(x -> Symbol(x), s), im)
 
+"""
+    function named(f::F, args::Tuple) where {F<:Union{typeof(exposure)}}
+
+Named returns the results of the function `f` as named tuple. Currently `named()` is only 
+implemented for the function `exposure()`.
+
+# Arguments
+- `f::F`: The function to be called.
+- `args::Tuple`: The arguments to be passed to the function. **Note**: Arguments must be passed in right order.
+
+# Returns
+A named tuple with the results of the function `f`.
+
+# Example
+```julia
+named(exposure, (hspf, 5, BathtubInundation()))
+```
+"""
+function named(f::F, args::Tuple) where {F<:Union{typeof(exposure)}}
+  t = f(args...)
+  if isa(f, typeof(exposure))
+    hspf, _ = args
+    exposures  = [expKey_ => expVal for (expKey_, expVal) in zip(hspf.exposureSymbols, t[2])]
+    return @inbounds (; cummulativeArea = t[1], exposures...)
+  elseif not isa(f, typeof(exposure))
+    @warn "No named version available for $(f) returned unnamed results instead"
+    @inbounds return t
+  end
+end
