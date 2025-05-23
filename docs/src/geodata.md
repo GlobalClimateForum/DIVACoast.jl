@@ -2,7 +2,7 @@
 CollapsedDocStrings = true
 Description = "DIVACoast.jl is a Julia library for coastal impact and adaptation modelling. The library provides data types and algorithms to quickly script assessments for different **coastal impact and adaptation** research questions. DIVACoast.jl is provided by the [Global Climate Forum](https://globalclimateforum.org/) via [GitHub](https://github.com/globalclimateforum/DIVACoast.jl)."
 ```
-# GeoData
+# GeoData utilities
 
 ## SparseGeoArray (SGA)
 Within `DIVACoast.jl`, **Gridded geodata** is stored and processed using the `SparseGeoArray` data structure. This structure retains the necessary geospatial meta-information for accurate referencing and stores the data in a memory-efficient sparse array format. By storing only non-empty grid cells, it is well-suited for coastal datasets, where large areas—such as open ocean or inland regions—often contain no or non relevant data for the analysis.
