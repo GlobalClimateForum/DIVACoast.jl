@@ -14,7 +14,7 @@ function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_a
   if hspf.width > 0
     for ind in 1:size(hspf.elevation, 1)-1
       if hspf.elevation[ind] > wl
-        return (dam_area, dam_static, dam_other)
+        return (dam_area, dam_other)
       else
         sl = slope(hspf, ind + 1)
         wl_low = hspf.elevation[ind]
@@ -31,7 +31,7 @@ function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_a
 
           ρ_area = hspf.width / 1000
           ρ_exp_other = (Δ_exp_other / (Δ_area / hspf.width)) / 1000
-          dam_t = partial_damage_bathtub_standard_ddf(hspf, wl, hdd_area, hdds_static, hdds_dynamic, sl, wl_low, wl_high, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy)
+          dam_t = partial_damage_bathtub_standard_ddf(hspf, wl, hdd_area, hdds_other, sl, wl_low, wl_high, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy)
           dam_area = dam_area + dam_t[1]
           dam_other = (size(dam_t[2], 1) > 0) ? dam_other + dam_t[2] : dam_other
         end

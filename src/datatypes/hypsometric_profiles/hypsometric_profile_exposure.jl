@@ -19,7 +19,7 @@ function exposure(hspf, 100, "population", BathtubInundation())
 ```
 
 """
-function exposure(hspf::HypsometricProfile{DT}, wl::Number, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
+function exposure(hspf::HypsometricProfile{DT}, wl::Number, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
   water_levels = inundate(hspf, wl, im)
 
   #println(water_levels)
@@ -42,21 +42,24 @@ function exposure(hspf::HypsometricProfile{DT}, wl::Number, im::IM = BathtubInun
       return (ea, eo)
     end
     @inbounds r = (max_water_level - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
-    @inbounds ea = convert(DT,hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1]) * r))
-    @inbounds eo = convert(Array{DT},(size(hspf.cummulativeExposure, 1) > 0) ? hspf.cummulativeExposure[ind-1, :] + ((hspf.cummulativeExposure[ind, :] - hspf.cummulativeExposure[ind-1, :]) * r) : Array{DT}(undef, 0))
+    @inbounds ea = convert(DT, hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1]) * r))
+    @inbounds eo = convert(Array{DT}, (size(hspf.cummulativeExposure, 1) > 0) ? hspf.cummulativeExposure[ind-1, :] + ((hspf.cummulativeExposure[ind, :] - hspf.cummulativeExposure[ind-1, :]) * r) : Array{DT}(undef, 0))
     return (ea, eo)
   end
 
 end
 
-function exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Symbol, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
-  p = get_position(hspf, s)
-  exposure = zeros(DT, size(hspf.elevation,1))
-  if (p[1]==1)
-    exposure = hspf.cummulativeArea
-  end
-  if (p[1]==2)
-    exposure = hspf.cummulativeExposure[:, p[2]]
+function exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Array{Symbol}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
+  ps = map(x -> get_position(hspf, x), s)
+
+  exposure = zeros(DT, size(hspf.elevation, 1), size(s, 1))
+  for i in 1:size(s, 1)
+    if (ps[i][1] == 1)
+      exposure[:,i] = hspf.cummulativeArea
+    end
+    if (ps[i][1] == 2)
+      exposure[:,i] = hspf.cummulativeExposure[:, ps[i][2]]
+    end
   end
 
   water_levels = inundate(hspf, wl, im)
@@ -64,30 +67,29 @@ function exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Symbol, im::IM = Ba
   ind::Int64 = searchsortedfirst(hspf.elevation, wl)
 
   if (wl in hspf.elevation)
-    @inbounds e = exposure[ind]
+    @inbounds e = exposure[ind,:]
     return e
   else
     if (ind == 1)
-      @inbounds e = exposure[ind]
+      @inbounds e = exposure[ind,:]
       return e
     end
     if (ind > size(hspf.elevation, 1))
-      e = exposure[size(hspf.elevation, 1)]
+            println("case3")
+      e = exposure[size(hspf.elevation, 1),:]
       return e
     end
+          println("case4")
     @inbounds r = (wl - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
-    @inbounds e = convert(DT,exposure[ind-1] + (exposure[ind] - exposure[ind-1]) * r)
+    @inbounds e = convert(Array{DT}, exposure[ind-1,:] + (exposure[ind,:] - exposure[ind-1,:]) * r)
     return e
   end
 
 end
 
-function exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Array{Symbol}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
-  map(x -> exposure(hspf, x, wl, im), s)
-end
-
-exposure(hspf::HypsometricProfile{DT}, wl::Real, s::String, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = exposure(hspf, wl, Symbol(s), im)
-exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = exposure(hspf, wl, map(x -> Symbol(x),s), im)
+exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Symbol, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = exposure(hspf, wl, [s], im)[1]
+exposure(hspf::HypsometricProfile{DT}, wl::Real, s::String, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = exposure(hspf, wl, Symbol(s), im)
+exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = exposure(hspf, wl, map(x -> Symbol(x), s), im)
 
 """
     function named(f::F, args::Tuple) where {F<:Union{typeof(exposure)}}

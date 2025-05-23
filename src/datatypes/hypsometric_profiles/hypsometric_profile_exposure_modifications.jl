@@ -124,7 +124,7 @@ function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factor:
 end
 
 
-function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factors)
+function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, factors) where {DT<:Real}
   if (size(hspf.cummulativeExposure, 2) != length(factors))
     @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
   end
