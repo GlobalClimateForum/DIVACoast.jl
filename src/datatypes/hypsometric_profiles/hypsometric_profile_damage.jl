@@ -1,8 +1,22 @@
+export damage
 
-function damage(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_other::Vector{Function}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
+function damage(hspf::HypsometricProfile{DT}, wl::DT, s::Array{String}, ddfs::Vector{Function}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
+
+end
+
+function damage(hspf::HypsometricProfile{DT}, wl::DT, s::Array{Symbol}, ddfs::Vector{Function}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
 
 end
 
-function damage(hspf::HypsometricProfile{DT}, wl::DT, ddf_area::Function, ddfs_other::Vector{Function}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
+function damage(hspf::HypsometricProfile{DT}, wl::DT, s::Array{String}, ddfs::Vector{StandardDDF}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
 
 end
+
+function damage(hspf::HypsometricProfile{DT}, wl::DT, s::Array{Symbol}, ddfs::Vector{StandardDDF}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel}
+
+end
+
+damage(hspf::HypsometricProfile{DT}, wl::Real, s::String, ddf::Function, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = damage(hspf, wl, [Symbol(s)], [ddf], im)
+damage(hspf::HypsometricProfile{DT}, wl::Real, s::Symbol, ddf::Function, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = damage(hspf, wl, [s], [ddf], im)
+
+

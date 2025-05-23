@@ -1,9 +1,0 @@
-export standard_ddf
-
-standard_ddf(hdd :: Real) = function (d :: Real) 
-  d / (d + hdd)
-end
-
-struct StandardDDF <: Function
-   hdd :: Real
-end
