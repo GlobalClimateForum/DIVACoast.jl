@@ -18,6 +18,19 @@ Main.DIVACoast.estimate_gp_distribution
 Main.DIVACoast.estimate_exponential_distribution
 
 Main.DIVACoast.plot_comparison_extreme_distributions
+Distributions.cdf
+Distributions.support
+Distributions.probs
+Base.rand
+Statistics.quantile
+```
+Instead of fitting parametric extreme value distributions to the point-wise list of water levels and associated return periods, `DIVACoast.jl` also provides a linear interpolation option.
+
+```@docs
+Main.DIVACoast.LinInt
+Main.DIVACoast.linear_interp
+Main.DIVACoast.manual_integration
+Main.DIVACoast.trapezoidal_approximation
 ```
 
 An **InundationModel** defines how the flood extent of an extreme still water level is determined. 
