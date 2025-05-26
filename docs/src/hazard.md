@@ -19,3 +19,16 @@ Main.DIVACoast.estimate_exponential_distribution
 
 Main.DIVACoast.plot_comparison_extreme_distributions
 ```
+
+An **InundationModel** defines how the flood extent of an extreme still water level is determined. 
+
+```@docs
+Main.DIVACoast.InundationModel
+Main.DIVACoast.BathtubInundation 
+Main.DIVACoast.LinearDistanceAttenuatedInundation
+```
+
+To get the flood extent under an extreme still water level on a hypsometric profile for a specific InundationModel, one can use the following function.
+```@docs
+Main.DIVACoast.inundate
+```
