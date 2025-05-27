@@ -38,10 +38,10 @@ end
 
 function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::Symbol) where {DT<:Real,T<:Real}
   p = get_position(hspf, s)
-  if (p[1] == 2)
-    hspf.cummulativeExposure[:, p[2]] *= factor
+  if (p > 0)
+    hspf.cummulativeExposure[:, p] *= factor
   end
-  if (p[1] == -1)
+  if (p == -1)
     @error "profile ($hspf) has no variable $(s)"
   end
 end
@@ -284,7 +284,7 @@ end
 
 
 function remove_exposure_below_named!(hspf::HypsometricProfile, below::Real)
-  return NamedTuple{hspf.exposureSymbols}(remove_below(hspf, below))
+  return NamedTuple{map(x->Symbol(x),hspf.exposureNames)}(remove_below(hspf, below))
 end
 
 """
@@ -385,8 +385,8 @@ function match_factors(hspf::HypsometricProfile{DT}, factors)::Array{DT} where {
   fac_array::Array{DT} = fill(1.0f0, size(hspf.cummulativeExposure, 2))
 
   for k in keys(factors)
-    for i in 1:length(hspf.exposureSymbols)
-      if (k == hspf.exposureSymbols[i])
+    for i in 1:length(hspf.exposureNames)
+      if (String(k) == hspf.exposureNames[i])
         fac_array[i] = factors[k]
       end
     end
