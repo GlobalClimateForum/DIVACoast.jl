@@ -32,7 +32,18 @@ struct LinInt{T<:Real,P<:Real,Ts<:AbstractVector{T},Ps<:AbstractVector{P}} <: Co
     end
 end
 
-#linear interpolation function
+
+"""
+    linear_interp(x_vals, y_vals, x_query)
+
+This function returns the interpolated y value for x_query based on a 
+linear interpolation between data points x_vals and y_vals and uses a 
+flat extrapolation beyond the range of input data points.
+
+```julia
+linear_interp([2.1, 2.5, 3.4], [0.9, 0.99, 0.999], 3.0)
+```
+"""
 function linear_interp(x_vals, y_vals, x_query)
     idx = findlast(x -> x <= x_query, x_vals)
 
