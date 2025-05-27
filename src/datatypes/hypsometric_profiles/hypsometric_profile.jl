@@ -15,38 +15,11 @@ mutable struct HypsometricProfile{DT<:Real}
   cummulativeArea::Array{DT}
   area_unit::String
   cummulativeExposure::Array{DT,2}
-  exposureSymbols
+  exposureNames::Array{String}
   exposureUnits::Array{String}
   doLog::Bool
 
   # Constructors
-  function HypsometricProfile(coast_length::DT, coast_length_unit::String,
-    elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
-    exposure_data::StructArray{T}, exposure_units::Array{String}) where {DT<:Real,T}
-    if (length(elevations) != length(area))
-      @error "length(elevations) != length(area) as length($elevations) != length($area) as $(length(elevations)) != $(length(area))"
-    end
-    if (length(elevations) != size(exposure_data, 1))
-      @error "length(elevations) != size(exposure_data,1)  as length($elevations) != size($exposure_data,1)  as $(length(elevations)) != $(size(exposure_data,1))"
-    end
-    if (length(elevations) < 2)
-      @error "length(elevations) = length($elevations) = $(length(elevations)) < 2 which is not allowed"
-    end
-    if (!issorted(elevations))
-      @error "elevations is not sorted: $elevations"
-    end
-
-    if (area[1] != 0)
-      @error "area[1] should be zero, but its not: $area"
-    end
-    if (values(exposure_data[1]) != tuple(zeros(length(exposure_data[1]))...))
-      @error "exposure_data first column should be zero, but its not: $exposure_data"
-    end
-
-    exposure_arrays = private_convert_strarray_to_array(DT, exposure_data)
-    new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_arrays, dims=1), keys(fieldarrays(exposure_data)), exposure_units)
-  end
-
   function HypsometricProfile(coast_length::DT, coast_length_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
     exposure_data::Array{DT,2}, exposure_units::Array{String}) where {DT<:Real}
@@ -67,7 +40,7 @@ mutable struct HypsometricProfile{DT<:Real}
       @error " area[1] should be zero, but its not: $area"
     end
 
-    new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_data, dims=1), ntuple(i -> Symbol("exposure_data_name_$i"), size(exposure_data, 2)), exposure_units)
+    new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_data, dims=1), map(i -> Symbol("exposure_data_name_$i"), collect(1:size(exposure_data, 2))), exposure_units)
   end
 
 
@@ -94,9 +67,8 @@ mutable struct HypsometricProfile{DT<:Real}
       @error "area[1] should be zero, but its not: $area"
     end
 
-    new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_data, dims=1), Tuple(map(x -> Symbol(x), exposure_names)), exposure_units)
+    new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_data, dims=1), exposure_names, exposure_units)
   end
-
 end
 
 
@@ -106,7 +78,7 @@ end
 Compute the distance of elevation e (given in m) from the coastline in hspf. disatnce is returned in km.
 """
 function distance(hspf::HypsometricProfile{DT}, e::Real)::DT where {DT<:Real}
-  # internal note: this might be inefficient - it would be more efficient 
+  # internal note: this might be inefficient 
   if (e <= hspf.elevation[1])
     return 0.0
   end
@@ -127,16 +99,6 @@ function distance(hspf::HypsometricProfile{DT}, e::Real)::DT where {DT<:Real}
     d += sqrt((Δ_area / hspf.width) * (Δ_area / hspf.width) - (Δ_el * Δ_el))
   end
   return d
-end
-
-function private_convert_strarray_to_array(::Type{DT}, sarr::StructArray{T1})::Array{DT} where {DT,T1}
-  ret::Array{DT,2} = Array{DT,2}(undef, length(sarr), length(fieldarrays(sarr)))
-  for i in 1:size(ret, 1)
-    for j in 1:size(ret, 2)
-      ret[i, j] = convert(DT, fieldarrays(sarr)[j][i])
-    end
-  end
-  return ret
 end
 
 function slope(hspf::HypsometricProfile{DT}, i::Int) where {DT<:Real}
@@ -267,17 +229,17 @@ function compress_multithread!(hspf::HypsometricProfile{DT}, mtlock) where {DT<:
   end
 end
 
-function get_position(hspf::HypsometricProfile, s::Symbol)
-  if (s == :area)
-    return (1, 1)
+function get_position(hspf::HypsometricProfile, s::String)
+  if (s == "area")
+    return 0
   end
-  if (findfirst(==(s), hspf.exposureSymbols) != nothing)
-    return (2, findfirst(==(s), hspf.exposureSymbols))
+  if (findfirst(==(s), hspf.exposureNames) != nothing)
+    return findfirst(==(s), hspf.exposureNames)
   end
-  return (-1, 0)
+  return -1
 end
 
-get_position(hspf::HypsometricProfile, n::String) = get_position(hspf, Symbol(n))
+get_position(hspf::HypsometricProfile, n::Symbol) = get_position(hspf, String(n))
 
 """
     unit(hspf::HypsometricProfile, s::Symbol)  
@@ -285,18 +247,18 @@ get_position(hspf::HypsometricProfile, n::String) = get_position(hspf, Symbol(n)
 
     returns the unit (of type String) of the exposure variable with name s (where s can be a string or a symbol)
 """
-function unit(hspf::HypsometricProfile, s::Symbol)
+function unit(hspf::HypsometricProfile, s::String)
   p = get_position(hspf, s)
-  if (p[1] == 1)
+  if (p == 0)
     return hspf.area_unit
   end
-  if (p[1] == 2)
-    return hspf.exposureUnits[p[2]]
+  if (p > 0)
+    return hspf.exposureUnits[p]
   end
   return "unknown symbol: $s"
 end
 
-unit(hspf::HypsometricProfile, n::String) = unit(hspf, Symbol(n))
+unit(hspf::HypsometricProfile, n::Symbol) = unit(hspf, String(n))
 
 
 function complete_zero(exposure)
