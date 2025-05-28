@@ -1,8 +1,5 @@
-# Inside make.jl
-# include("$(ENV["DIVA_LIB"])/src/DIVACoast.jl")
-# push!(LOAD_PATH, "../src/")
-
-# import .DIVACoast
+using Pkg
+Pkg.add("Documenter")
 using Documenter
 
 makedocs(
