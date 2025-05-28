@@ -43,6 +43,7 @@ Main.DIVACoast.add_exposure_between!
 Main.DIVACoast.add_exposure_variable!
 Main.DIVACoast.remove_exposure_variable!
 Main.DIVACoast.add_exposure_above!
+Main.DIVACoast.land_raising!
 ```
 
 ## Two-dimensional gridded exposure
