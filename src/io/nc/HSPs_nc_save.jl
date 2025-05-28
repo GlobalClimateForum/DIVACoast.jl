@@ -55,8 +55,8 @@ function save_hsps_nc(data :: Dict{Int32, HypsometricProfile{Float32}}, filename
   end
   nv[:] = exp_data
 
-  for (index, es) in enumerate(string.(first(data)[2].exposureSymbols))
-    nv = defVar(ds_new,es,Float32,("ids","elevations"), attrib = OrderedDict("units" => first(data)[2].staticExposureUnits[index], "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value),"_FillValue" => Float32(my_missing_value)))  
+  for (index, es) in enumerate(string.(first(data)[2].exposureNames))
+    nv = defVar(ds_new,es,Float32,("ids","elevations"), attrib = OrderedDict("units" => first(data)[2].exposureUnits[index], "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value),"_FillValue" => Float32(my_missing_value)))  
     for i in 1:size(ids_data,1)
       exp_data[i,:]=get_exposures(data[convert(Int32, ids_data[i])],elevations,2,index)
     end
