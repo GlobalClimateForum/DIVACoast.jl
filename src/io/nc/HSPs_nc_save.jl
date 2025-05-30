@@ -6,7 +6,7 @@ export save_hsps_nc
 function get_area_exposures(hspf :: HypsometricProfile{Float32}, elevations :: Array{DT}) where {DT <: Real}
   ret :: Array{Float32} = zeros(Float32, size(elevations,1)+1)
   for j in 1:size(elevations,1)
-    ret[j+1] = exposure_below_bathtub(hspf,elevations[j])[1]
+    ret[j+1] = exposure(hspf,elevations[j])[1]
   end
   for j in size(elevations,1):-1:1
     ret[j+1] = ret[j+1] - ret[j]
@@ -17,7 +17,7 @@ end
 function get_exposures(hspf :: HypsometricProfile{Float32}, elevations :: Array{DT}, t :: Int, pos :: Int) where {DT <: Real}
   ret :: Array{Float32} = zeros(Float32, size(elevations,1)+1)
   for j in 1:size(elevations,1)
-    ret[j+1] = exposure_below_bathtub(hspf,elevations[j])[t][pos]
+    ret[j+1] = exposure(hspf,elevations[j])[t][pos]
   end
   for j in size(elevations,1):-1:1
     ret[j+1] = ret[j+1] - ret[j]
@@ -55,18 +55,10 @@ function save_hsps_nc(data :: Dict{Int32, HypsometricProfile{Float32}}, filename
   end
   nv[:] = exp_data
 
-  for (index, se) in enumerate(string.(first(data)[2].staticExposureSymbols))
-    nv = defVar(ds_new,se,Float32,("ids","elevations"), attrib = OrderedDict("units" => first(data)[2].staticExposureUnits[index], "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value),"_FillValue" => Float32(my_missing_value),"dynamic" => "false"))  
+  for (index, es) in enumerate(string.(first(data)[2].exposureNames))
+    nv = defVar(ds_new,es,Float32,("ids","elevations"), attrib = OrderedDict("units" => first(data)[2].exposureUnits[index], "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value),"_FillValue" => Float32(my_missing_value)))  
     for i in 1:size(ids_data,1)
       exp_data[i,:]=get_exposures(data[convert(Int32, ids_data[i])],elevations,2,index)
-    end
-    nv[:] = exp_data
-  end
-
-  for (index, de) in enumerate(string.(first(data)[2].dynamicExposureSymbols))
-    nv = defVar(ds_new,de,Float32,("ids","elevations"), attrib = OrderedDict("units" => first(data)[2].dynamicExposureUnits[index], "missing_value" => Float32(my_missing_value), "_FillValue" => Float32(my_missing_value),"_FillValue" => Float32(my_missing_value),"dynamic" => "true"))  
-    for i in 1:size(ids_data,1)
-      exp_data[i,:]=get_exposures(data[convert(Int32, ids_data[i])],elevations,3,index)
     end
     nv[:] = exp_data
   end

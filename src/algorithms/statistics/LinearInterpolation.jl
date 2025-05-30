@@ -1,7 +1,6 @@
 using Distributions
 #using StatsPlots
 
-export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integration
 
 """
     LinInt(xs, ps)

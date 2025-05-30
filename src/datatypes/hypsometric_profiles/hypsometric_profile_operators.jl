@@ -1,6 +1,24 @@
 using DataFrames
 using CSV
 
+"""
+    function land_raising!(hspf::HypsometricProfile{Float32}, min_e::DT) where {DT<:Real}
+
+The `land_raising!` function raises the elevation of a hypsometric profile to a minimum elevation height min_e.
+
+# Arguments
+- `hspf::HypsometricProfile`: the hypsometric profile object where the land will be raised.
+- `min_elevation::Array{DT}`: the elevation increments that are below this threshold will be raised to this value.
+
+# Example
+```julia
+land_raising!(hspf, 2.0)
+```
+"""
+function land_raising!(hspf::HypsometricProfile{Float32}, min_elevation::DT) where {DT<:Real}
+    hspf.elevation = [maximum([i,min_elevation]) for i in hspf.elevation] 
+end
+
 # Function to add two exposure tuples exposure_1 and exposure_2
 function add_exposures(exposure_1::Tuple{Vararg{Union{Number, AbstractArray{<:Number}}}},
     exposure_2::Tuple{Vararg{Union{Number, AbstractArray{<:Number}}}})::Vector{Union{Array, Number}}

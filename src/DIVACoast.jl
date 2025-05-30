@@ -19,7 +19,9 @@ export HypsometricProfile, to_DF,
     remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
     add_exposure_variable!, remove_exposure_variable!,
     damage_bathtub_standard_ddf, damage_bathtub,
-    compress!, compress_multithread!
+    compress!, compress_multithread!, land_raising!
+export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integration
+
 
 # append depot path (local packages) to project load path
 # append!(LOAD_PATH, DEPOT_PATH)
