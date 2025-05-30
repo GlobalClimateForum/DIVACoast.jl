@@ -61,5 +61,47 @@ function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{F
     return hspfc
 end
 
+"""
+        to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
 
+Convert a `HypsometricProfile` to a DataFrame. The DataFrame will contain the following columns: 
+- elevation
+- cummulativeArea
+- a column for each exposure
 
+# Arguments
+- hspf::HypsometricProfile{DT}: The `HypsometricProfile` to convert.
+
+# Returns
+- df::DataFrame: A DataFrame containing the elevation, cummulativeArea, and exposure values of the `HypsometricProfile`.
+
+# Example
+```julia
+hspf = load_hspf_nc(Int32, Float32, "./testdata/UKIRL/nc/UKIRL_hspfs_floodplains.nc")[42]
+df = to_DF(hspf)
+```
+"""
+function to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
+    df = DataFrame()
+    df.elevation = hspf.elevation
+    df.cummulativeArea = hspf.cummulativeArea
+    # Try both cummulativeStaticExposure and cummulativeExposure for compatibility
+    exposure_field = hasproperty(hspf, :cummulativeExposure) ? :cummulativeExposure : :cummulativeStaticExposure
+    exposures = getfield(hspf, exposure_field)
+    symbols = hasproperty(hspf, :exposureSymbols) ? hspf.exposureSymbols : []
+    for i in 1:size(exposures, 2)
+        colname = string(symbols[i])
+        df[!, colname] = exposures[:, i]
+    end
+    return df
+end
+
+function to_DF(hspfs::Dict{Int32, Main.DIVACoast.HypsometricProfile{Float32}})
+
+    dfs = [nothing for _ in 1:size(hspf, 1)]
+
+    for (id, hspf) in hspfs
+        pritnln(id)
+    end
+    return dfs
+end
