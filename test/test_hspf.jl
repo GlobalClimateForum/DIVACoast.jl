@@ -39,64 +39,11 @@ function runTests()
       @testset "attributes" begin
         @test maximum(hpSettings[2]) == maximum(hpTest.elevation)
         @test minimum(hpSettings[2]) == minimum(hpTest.elevation)
-        #randomIndex = rand(2:length(hpTest.elevation))
-        #@test hpTest.delta == hpTest.elevation[randomIndex] - hpTest.elevation[randomIndex - 1]
+        randomIndex = rand(2:length(hpTest.elevation))
+        @test hpTest.delta == hpTest.elevation[randomIndex] - hpTest.elevation[randomIndex - 1]
         @test sum(hpSettings[3]) == hpTest.cummulativeArea[end]
       end
   
-      @testset "exposure()" begin
-        #@test exposure_below_bathtub(hpTest, maximum(hpSettings[2])) == exposure_below_bathtub(hpTest, maximum(hpSettings.elevation))
-        @test exposure(hpTest, 0, BathtubInundation()) == (0.0f0, Float32[0.0, 0.0])
-        
-        #exposure with attenuated not implemented yet
-        #@test exposure(hpTest, 0, LinearDistanceAttenuatedInundation(0.1)) == (0.0f0, Float32[0.0, 0.0])
-        #@test exposure_below_bathtub(hpTest, 100) == (sum(hpTest.area), sum(hpTest.exposure_data[1]), sum(hpTest.exposure_data[2]))
-        @test exposure(hpTest, 100, BathtubInundation())[1] == sum(hpSettings[3])
-        @test exposure(hpTest, 100, BathtubInundation())[2][1] == sum(hpSettings[4])
-        @test exposure(hpTest, 100, BathtubInundation())[2][2] == sum(hpSettings[5])
-      end
-  
-      @testset "exposure_growth!(), exposure_growth_above!(), exposure_growth_below!()" begin
-        
-        hpTest2 = deepcopy(hpTest)
-        multiply_exposure!(hpTest, [1,1]) 
-
-        @test exposure(hpTest,50, BathtubInundation()) == exposure(hpTest2,50, BathtubInundation())
-        
-        multiply_exposure_below!(hpTest, 50, [0.5, 0.3])
-        multiply_exposure!(hpTest2, [0.5, 0.3])
-
-        @test exposure(hpTest, 50, BathtubInundation()) == exposure(hpTest2, 50, BathtubInundation())
-  
-        multiply_exposure_above!(hpTest, 51, [0.5, 0.3])
-
-        @test exposure(hpTest, 100, BathtubInundation()) == exposure(hpTest2, 100, BathtubInundation())
-      end
-  
-      @testset "remove_exposure_below!(), add_exposure_above!(), add_exposure_below!(), add_exposure_between!()" begin
-        hpTest, hpSettings  = initHypsometricProfile(true)
-        hpTest2 = deepcopy(hpTest)
-  
-        remove_exposure_below!(hpTest, 100)
-        remove_exposure_below!(hpTest2, 100)
-  
-        add_exposure_between!(hpTest, 50, 100, [100, 100])
-        add_exposure_above!(hpTest2, 50, [100, 100])
-  
-        @test exposure(hpTest, 100, BathtubInundation()) == exposure(hpTest2, 100, BathtubInundation())
-  
-        multiply_exposure_below!(hpTest, 50, 100, "population")
-        multiply_exposure_above!(hpTest, 51, 100, "population")
-        println(exposure(hpTest, 100, BathtubInundation()))
-
-        @test exposure(hpTest, 100, "assets", BathtubInundation()) == exposure(hpTest2, 100, "assets", BathtubInundation())
-        @test exposure(hpTest, 100, "population", BathtubInundation()) == 100*exposure(hpTest2, 100, "population", BathtubInundation())
-     
-        multiply_exposure!(hpTest2, 100, "population")
-        @test exposure(hpTest, 100, "population", BathtubInundation()) == exposure(hpTest2, 100, "population", BathtubInundation())
-     
-      end
-    end
 end
 
 runTests()

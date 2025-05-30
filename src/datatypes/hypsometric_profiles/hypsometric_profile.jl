@@ -40,7 +40,7 @@ mutable struct HypsometricProfile{DT<:Real}
       @error " area[1] should be zero, but its not: $area"
     end
 
-    new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_data, dims=1), map(i -> Symbol("exposure_data_name_$i"), collect(1:size(exposure_data, 2))), exposure_units)
+    new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_data, dims=1), map(i -> "exposure_data_name_$i", collect(1:size(exposure_data, 2))), exposure_units)
   end
 
 
