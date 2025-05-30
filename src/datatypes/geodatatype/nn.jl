@@ -15,7 +15,7 @@ for Nearest Neighbour matching.
 # Return
 - returns created matrix and DataFrame the matrix is based on (omitted NA values).
 """
-function coords_to_wide(df::DataFrame, dtype::Type; 
+function coords_to_wide(df::AbstractDataFrame, dtype::Type; 
   lonlatCols::Tuple{Union{String, Symbol}, Union{String, Symbol}} = (:lon, :lat), dropna::Bool = true)
 
     lon, lat = lonlatCols # get the (optional) symbols for lon, lat colum
