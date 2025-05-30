@@ -30,7 +30,7 @@ function add_exposure_variable!(hspf::HypsometricProfile, elevation::Array{DT}, 
     logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n exposure_data first column should be zero, but its not: $exposure_data")
   end
 
-  hspf.exposureSymbols = (hspf.exposureSymbols..., Symbol(exposure_name))
+  push!(hspf.exposureNames, exposure_name)
   push!(hspf.exposureUnits, exposure_unit)
   hspf.cummulativeExposure = hcat(hspf.cummulativeExposure, cumsum(exposure_data))
 

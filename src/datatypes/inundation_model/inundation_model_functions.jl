@@ -45,8 +45,9 @@ end
 
 function inundate(hspf::HypsometricProfile{DT}, wl::Real, im::IM)::Tuple{Array{DT}, Array{DT}} where {DT<:Real,IM<:LinearDistanceAttenuatedInundation}
 
+    println
     if (wl <= hspf.elevation[1])
-        return (hspf.elevation[1],wl)
+        return ([hspf.elevation[1]] , [wl])
     end
 
     wl_attenuated = copy(hspf.elevation)
