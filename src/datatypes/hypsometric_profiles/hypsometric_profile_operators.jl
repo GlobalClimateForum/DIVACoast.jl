@@ -79,5 +79,88 @@ function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{F
     return hspfc
 end
 
+"""
+        to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
 
+Convert a `HypsometricProfile` to a DataFrame. The DataFrame will contain the following columns: 
+- elevation
+- cummulativeArea
+- a column for each exposure
 
+# Arguments
+- hspf::HypsometricProfile{DT}: The `HypsometricProfile` to convert.
+
+# Returns
+- df::DataFrame: A DataFrame containing the elevation, cummulativeArea, and exposure values of the `HypsometricProfile`.
+
+# Example
+```julia
+hspf = load_hspf_nc(Int32, Float32, "./testdata/UKIRL/nc/UKIRL_hspfs_floodplains.nc")[42]
+df = to_DF(hspf)
+```
+"""
+function to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
+    
+    # Init DataFrame
+    df = DataFrame()
+
+    # Add elevation and cummulativeArea columns
+    df.elevation = hspf.elevation
+    df.cummulativeArea = hspf.cummulativeArea
+    df.width = fill(hspf.width, size(df, 1))
+    
+    # Get cummulativeExposure values
+    exposures = getfield(hspf, :cummulativeExposure)
+   
+    # Add cummulativeExposure columns to DataFrame
+    symbols = hasproperty(hspf, :exposureNames) ? hspf.exposureNames : []
+    for i in 1:size(exposures, 2)
+        colname = string(symbols[i])
+        df[!, colname] = exposures[:, i]
+    end
+    return df
+end
+
+function to_DF(hspfs::Dict{Int32, Main.DIVACoast.HypsometricProfile{Float32}})
+    dfs = [begin
+        hspf = to_DF(value)
+        hspf.HP_ID = fill(key, size(hspf, 1)) # Add the key as ID for the HypsometricProfile
+        hspf
+        select!(hspf, :HP_ID, :) # re-order columns to have HP_ID first
+        end for (key, value) in hspfs
+            ]
+    return vcat(dfs...) # Concatenate all HypsometricProfile DataFrames into one DataFrame
+end
+
+# Not working yer, needs to be fixed
+function HypsometricProfile(df::DataFrame, ref::HypsometricProfile, exposureCols = Symbol[])
+
+    hspf = deepcopy(ref)
+    
+    # Set the properties of the HypsometricProfile
+    hspf.elevation = df.elevation
+    hspf.cummulativeArea = df.cummulativeArea
+    hspf.width = df.width[1]
+    
+    # Set the exposure values
+    if isempty(exposureCols)
+        @warn "No exposure columns provided, using all columns except elevation, cummulativeArea, and width."
+        exposureCols = filter(x -> !(x in [:elevation, :cummulativeArea, :width]), names(df))
+    else
+        exposureCols = filter(x -> (x in names(df)) && !(x in [:elevation, :cummulativeArea, :width]), exposureCols)
+    end
+    
+    exposures = [df[!, col] for col in exposureCols] 
+    hspf.cummulativeExposure = hcat(exposures...)
+    
+    fnames = filter(x -> !(x in [:cummulativeExposure, :elevation, :cummulativeArea, :width]), fieldnames(typeof(hspf)))
+    
+    # Copy other properties from the reference HypsometricProfile
+    for field in fnames
+        if hasproperty(hspf, field)
+            setfield!(hspf, field, getfield(ref, field))
+        end
+    end
+    
+    return hspf
+end
