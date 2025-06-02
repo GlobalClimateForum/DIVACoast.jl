@@ -54,9 +54,10 @@ function runTests()
         @test exposure(hpTest, 100, BathtubInundation())[1] == sum(hpSettings[3])
         @test exposure(hpTest, 100, BathtubInundation())[2][1] == sum(hpSettings[4])
         @test exposure(hpTest, 100, BathtubInundation())[2][2] == sum(hpSettings[5])
+        @test exposure(hpTest, 100, LinearDistanceAttenuatedInundation(0.2))[1] < exposure(hpTest, 100, BathtubInundation())[1]
       end
   
-      @testset "exposure_growth!(), exposure_growth_above!(), exposure_growth_below!()" begin
+      @testset "multiply_exposure!(), multiply_exposure_above!(), multiply_exposure_below!()" begin
         
         hpTest2 = deepcopy(hpTest)
         multiply_exposure!(hpTest, [1,1]) 
@@ -84,10 +85,13 @@ function runTests()
         add_exposure_above!(hpTest2, 50, [100, 100])
   
         @test exposure(hpTest, 100, BathtubInundation()) == exposure(hpTest2, 100, BathtubInundation())
-  
-        multiply_exposure_below!(hpTest, 50, 100, "population")
-        multiply_exposure_above!(hpTest, 51, 100, "population")
+        
         println(exposure(hpTest, 100, BathtubInundation()))
+        println(hpTest)
+        multiply_exposure_below!(hpTest, 50, 100, "population")
+        multiply_exposure_above!(hpTest, 51, [100,0])
+        println(exposure(hpTest, 100, BathtubInundation()))
+        println(hpTest)
 
         @test exposure(hpTest, 100, "assets", BathtubInundation()) == exposure(hpTest2, 100, "assets", BathtubInundation())
         @test exposure(hpTest, 100, "population", BathtubInundation()) == 100*exposure(hpTest2, 100, "population", BathtubInundation())

@@ -20,7 +20,7 @@ function initHypsometricProfile(returnSettings = false)
 
     settings = [1, elevation, area, population, asset]
 
-    profile = HypsometricProfile(width, "km", elevation, "m", area, "km2", exposure_data, ["people","USD"])
+    profile = HypsometricProfile(width, "km", elevation, "m", area, "km2", exposure_data, ["population", "assets"] ,["people","USD"])
 
     if returnSettings
       return((profile, settings))
