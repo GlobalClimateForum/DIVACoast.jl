@@ -1,4 +1,5 @@
 using Pkg
+Pkg.add("Documenter")
 using Documenter
 include("../src/DIVACoast.jl")
 using .DIVACoast

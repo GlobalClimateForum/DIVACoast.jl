@@ -45,17 +45,17 @@ end
 
 function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd::DT, s::Symbol)::DT where {DT<:Real}
   pos = get_position(hspf, s)
-  if (pos[1] == -1)
+  if (pos == -1)
     return zero(DT)
   end
 
   dam = exposure(hspf, first(hspf.elevation), s)
   my_exposure = zeros(DT, size(hspf.elevation, 1))
   
-  if (pos[1] == 1)
+  if (pos == 0)
     my_exposure = hspf.cummulativeArea
-  elseif (pos[1] == 2)
-    my_exposure = hspf.cummulativeExposure[:, pos[2]]
+  else
+    my_exposure = hspf.cummulativeExposure[:, pos]
   end
 
 
