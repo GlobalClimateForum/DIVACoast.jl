@@ -1,6 +1,5 @@
 using Pkg
-Pkg.add("Documenter")
-using Documenter
+Pkg.activate("../.")
 include("../src/DIVACoast.jl")
 using .DIVACoast
 
