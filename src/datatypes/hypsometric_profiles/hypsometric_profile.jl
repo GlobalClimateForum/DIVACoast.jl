@@ -1,4 +1,4 @@
-using StructArrays
+using StructArrays, DataFrames
 
 """
     HypsometricProfile(coast_length::DT, coast_length_unit::String,
@@ -69,6 +69,20 @@ mutable struct HypsometricProfile{DT<:Real}
 
     new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_data, dims=1), exposure_names, exposure_units)
   end
+
+  function HypsometricProfile(df::DataFrame; exposureCols = Symbol[], exposureUnits = String[], units = (width = "m", elevation = "m", area = "m²"))
+
+    exportData = vcat([hcat(values(row) ...) for row in eachrow(df[:, exposureCols])] ...)
+
+    new{Float32}(df.width[1], units.width,
+        df.elevation, units.elevation,
+        df.cummulativeArea, units.area,
+        exportData, 
+        String.(exposureCols),
+        exposureUnits)
+end
+
+
 end
 
 
