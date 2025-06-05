@@ -1,7 +1,10 @@
 using Pkg
 Pkg.activate("../.")
+Pkg.instantiate()
+
 include("../src/DIVACoast.jl")
 using .DIVACoast
+using Documenter
 
 makedocs(
     authors="Daniel Lincke et al <daniel.lincke@globalclimateforum.org>",
