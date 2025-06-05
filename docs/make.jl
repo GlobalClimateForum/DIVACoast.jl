@@ -1,11 +1,13 @@
 using Pkg
 using Documenter
+include("../src/DIVACoast.jl")
+using .DIVACoast
 
 makedocs(
     authors="Daniel Lincke et al <daniel.lincke@globalclimateforum.org>",
-    sitename="DIVACoast.jl Docs",
+    sitename="DIVACoast.jl Documentation",
     checkdocs = :none,
-    modules=[DIVACoast],
+    modules=[],
     remotes=nothing,
     pages=[
         "Home" => "index.md",
