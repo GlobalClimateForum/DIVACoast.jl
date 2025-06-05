@@ -107,10 +107,14 @@ function distance(hspf::HypsometricProfile{DT}, e::Real)::DT where {DT<:Real}
     end
   end
 
-  @inbounds Δ_area = exposure(hspf, e, :area) - hspf.cummulativeArea[ind-1]
-  @inbounds Δ_el = (e - hspf.elevation[ind-1]) / 1000
-  if (Δ_area != 0) && ((Δ_area / hspf.width) * (Δ_area / hspf.width) > (Δ_el * Δ_el))
-    d += sqrt((Δ_area / hspf.width) * (Δ_area / hspf.width) - (Δ_el * Δ_el))
+  if (ind <= size(hspf.elevation, 1))
+    @inbounds Δ_el = (e - hspf.elevation[ind-1]) / 1000
+    @inbounds Δ_el_rel = (e - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
+    @inbounds Δ_area = (hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1]) * Δ_el_rel
+
+    if (Δ_area != 0) && ((Δ_area / hspf.width) * (Δ_area / hspf.width) > (Δ_el * Δ_el))
+      d += sqrt((Δ_area / hspf.width) * (Δ_area / hspf.width) - (Δ_el * Δ_el))
+    end
   end
   return d
 end

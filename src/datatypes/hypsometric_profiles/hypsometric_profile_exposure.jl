@@ -22,7 +22,6 @@ function exposure(hspf, 100, "population", BathtubInundation())
 function exposure(hspf::HypsometricProfile{DT}, wl::Number, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
   water_levels = inundate(hspf, wl, im)
 
-  #println(water_levels)
   max_water_level = last(water_levels[2])
   ind::Int64 = searchsortedfirst(hspf.elevation, max_water_level)
 
@@ -50,35 +49,34 @@ function exposure(hspf::HypsometricProfile{DT}, wl::Number, im::IM=BathtubInunda
 end
 
 function exposure(hspf::HypsometricProfile{DT}, wl::Real, inds::Array{Int}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
-
   exposure = zeros(DT, size(hspf.elevation, 1), size(inds, 1))
   for i in 1:size(inds, 1)
     if (inds[i] == 0)
-      exposure[:,i] = hspf.cummulativeArea
+      exposure[:, i] = hspf.cummulativeArea
     end
     if (inds[i] > 0)
-      exposure[:,i] = hspf.cummulativeExposure[:, inds[i]]
+      exposure[:, i] = hspf.cummulativeExposure[:, inds[i]]
     end
   end
 
   water_levels = inundate(hspf, wl, im)
   max_water_level = last(water_levels[2])
-  ind::Int64 = searchsortedfirst(hspf.elevation, wl)
+  ind::Int64 = searchsortedfirst(hspf.elevation, max_water_level)
 
-  if (wl in hspf.elevation)
-    @inbounds e = exposure[ind,:]
+  if (max_water_level in hspf.elevation)
+    @inbounds e = exposure[ind, :]
     return e
   else
     if (ind == 1)
-      @inbounds e = exposure[ind,:]
+      @inbounds e = exposure[ind, :]
       return e
     end
     if (ind > size(hspf.elevation, 1))
-      e = exposure[size(hspf.elevation, 1),:]
+      e = exposure[size(hspf.elevation, 1), :]
       return e
     end
-    @inbounds r = (wl - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
-    @inbounds e = convert(Array{DT}, exposure[ind-1,:] + (exposure[ind,:] - exposure[ind-1,:]) * r)
+    @inbounds r = (max_water_level - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
+    @inbounds e = convert(Array{DT}, exposure[ind-1, :] + (exposure[ind, :] - exposure[ind-1, :]) * r)
     return e
   end
 end
@@ -87,6 +85,7 @@ exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Array{Symbol}, im::IM=Bathtu
 exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Symbol, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = exposure(hspf, wl, [String(s)], im)[1]
 exposure(hspf::HypsometricProfile{DT}, wl::Real, s::String, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = exposure(hspf, wl, [s], im)
 exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = exposure(hspf, wl, map(x -> get_position(hspf, x), s), im)
+
 
 
 """
