@@ -111,7 +111,7 @@ function named(f::F, args::Tuple) where {F<:Union{typeof(exposure)}}
   t = f(args...)
   if isa(f, typeof(exposure))
     hspf, _ = args
-    exposures  = [expKey_ => expVal for (expKey_, expVal) in zip(hspf.exposureSymbols, t[2])]
+    exposures  = [Symbol(expKey_) => expVal for (expKey_, expVal) in zip(hspf.exposureNames, t[2])]
     return @inbounds (; cummulativeArea = t[1], exposures...)
   elseif not isa(f, typeof(exposure))
     @warn "No named version available for $(f) returned unnamed results instead"
