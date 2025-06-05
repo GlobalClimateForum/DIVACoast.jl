@@ -114,10 +114,6 @@ function runTests()
       el = convert(Float32, rand() * 50)
       multiply_exposure_below!(hpTest, el, [0.75, 0.9])
 
-      #println(exposure(hpTest, el, BathtubInundation()), " - ", exposure(hpTest2, el, BathtubInundation()))
-      #println(exposure(hpTest, el, :assets, BathtubInundation()), " - ", exposure(hpTest2, el, :assets, BathtubInundation()))
-      #println(exposure(hpTest, el + 10, :assets, BathtubInundation()), " - ", exposure(hpTest2, el + 10, :assets, BathtubInundation()))
-
       @test isapprox(exposure(hpTest, el, :assets, BathtubInundation()), exposure(hpTest2, el, :assets, BathtubInundation()) * 0.9, atol=0.001)
       @test isapprox(exposure(hpTest, el, :assets, LinearDistanceAttenuatedInundation(0.25)), exposure(hpTest2, el, :assets, LinearDistanceAttenuatedInundation(0.25)) * 0.9, atol=0.001)
       @test isapprox(exposure(hpTest, el, :population, BathtubInundation()), exposure(hpTest2, el, :population, BathtubInundation()) * 0.75, atol=0.001)
@@ -128,8 +124,12 @@ function runTests()
       @test exposure(hpTest, el + 10, :population, BathtubInundation()) < exposure(hpTest2, el + 10, :population, BathtubInundation())
       @test exposure(hpTest, el + 10, :population, LinearDistanceAttenuatedInundation(0.25)) < exposure(hpTest2, el + 10, :population, LinearDistanceAttenuatedInundation(0.25))
 
-      # multiply_exposure_above!(hpTest, 51, [0.5, 0.3])
-      #@test exposure(hpTest, 100, BathtubInundation()) == exposure(hpTest2, 100, BathtubInundation())
+      multiply_exposure_below!(hpTest, el, :population, 1/0.75)
+      @test isapprox(exposure(hpTest, el, :population, BathtubInundation()), exposure(hpTest2, el, :population, BathtubInundation()), atol=0.001)
+      @test isapprox(exposure(hpTest, el, :population, LinearDistanceAttenuatedInundation(0.25)), exposure(hpTest2, el, :population, LinearDistanceAttenuatedInundation(0.25)), atol=0.001)
+      @test isapprox(exposure(hpTest, el + 10, :population, BathtubInundation()), exposure(hpTest2, el + 10, :population, BathtubInundation()), atol=0.001)
+      @test isapprox(exposure(hpTest, el + 10, :population, LinearDistanceAttenuatedInundation(0.25)), exposure(hpTest2, el + 10, :population, LinearDistanceAttenuatedInundation(0.25)), atol=0.001)
+
     end
   end
 

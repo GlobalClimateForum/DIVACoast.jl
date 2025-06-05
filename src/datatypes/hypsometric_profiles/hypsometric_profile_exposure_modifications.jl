@@ -162,17 +162,17 @@ function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factors
   ind::Int64 = searchsortedfirst(hspf.elevation, below)
   insert_elevation_point(hspf, below, ind)
 
+  before = hspf.cummulativeExposure[ind, :]
   for i in 1:ind
     for j in 1:size(hspf.cummulativeExposure, 2)
       hspf.cummulativeExposure[i, j] *= factors[j]
     end
   end
+  after = hspf.cummulativeExposure[ind, :]
 
-  #  for i in (ind+1):size(hspf.cummulativeExposure, 1)
-  #    for j in 1:size(hspf.cummulativeExposure, 2)
-  #      hspf.cummulativeExposure[i, j] *= hspf.cummulativeExposure[i, j] + (hspf.cummulativeExposure[ind, j] - (1 / factors[j]) * hspf.cummulativeExposure[ind, j])
-  #    end
-  #  end
+  for i in (ind+1):size(hspf.cummulativeExposure, 1)
+    hspf.cummulativeExposure[i, :] += (after - before)
+  end
 end
 
 function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factor::Real, s::Symbol)
@@ -210,8 +210,21 @@ function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below, factors) 
   multiply_exposure_below!(hspf, below, fac_array)
 end
 
+function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, s::String, factor::Real)
+  p = get_position(hspf, s)
+  if (p == -1)
+    @error "profile ($hspf) has no variable $(s)"
+  end
 
-multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, factor::T, s::String) where {DT<:Real,T<:Real} = multiply_exposure_below!(hspf, below, factor, Symbol(s))
+  if p > 0
+    factors = ones(size(hspf.cummulativeExposure, 2))
+    factors[p] = factor
+    multiply_exposure_below!(hspf, below, factors)
+  end
+end
+
+multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, s::Symbol, factor::T) where {DT<:Real,T<:Real} = multiply_exposure_below!(hspf, below, String(s), factor)
+
 
 
 
@@ -262,7 +275,6 @@ function remove_exposure_below!(hspf::HypsometricProfile{DT}, below::Real)::Arra
 
   return removed
 end
-
 
 function remove_exposure_below_named!(hspf::HypsometricProfile, below::Real)
   return NamedTuple{map(x -> Symbol(x), hspf.exposureNames)}(remove_below(hspf, below))
