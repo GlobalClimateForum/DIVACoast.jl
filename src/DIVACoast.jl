@@ -13,12 +13,12 @@ config = YAML.load_file(joinpath(@__DIR__, "DIVACoast.jl.yml"), dicttype=Dict{Sy
 export earth_circumference_km, earth_radius_km
 
 export earth_circumference_km, earth_radius_km
-export HypsometricProfile, to_DF,
+export HypsometricProfile, to_DF, slope,
     unit, exposure, named,
     multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!,
     remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
-    add_exposure_variable!, remove_exposure_variable!,
-    damage_bathtub_standard_ddf, damage_bathtub,
+    add_exposure_variable!, remove_exposure_variable!, StandardDDF,
+    damage_bathtub_standard_ddf, damage_bathtub, damage,
     compress!, compress_multithread!, land_raising!
 export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integration
 
@@ -49,40 +49,6 @@ function __init__()
         println("│~~~~~~~~~~~~~~~~[©GLOBAL CLIMATE FORUM]~~~~~~~~~~~~~~~│")
         println("└                                                      ┘")
     end
-
-    # Include functions
-    #=
-    include("./logger/logger.jl")
-    include("./datatypes/geodatatype/SparseGeoArrays.jl")
-    include("./datatypes/inundation_model/inundation_model.jl")
-    include("./datatypes/hypsometric_profiles/hypsometric_profile.jl")
-    include("./datatypes/inundation_model/inundation_model_functions.jl")
-    include("./datatypes/hypsometric_profiles/hypsometric_profile_exposure.jl")
-    include("./datatypes/hypsometric_profiles/hypsometric_profile_damage_arbitrary_ddf.jl")
-    include("./datatypes/hypsometric_profiles/hypsometric_profile_exposure_modifications.jl")
-    include("./datatypes/hypsometric_profiles/hypsometric_profile_variable_modifications.jl")
-    include("./datatypes/hypsometric_profiles/hypsometric_profile_plot.jl")
-    include("./datatypes/hypsometric_profiles/hypsometric_profile_operators.jl")
-    include("./datatypes/hypsometric_profiles/hypsometric_profile_damage_standard_ddf.jl")
-    include("./datatypes/coastal_model/local_coastal_model.jl")
-    include("./datatypes/coastal_model/composed_coastal_model.jl")
-    include("./datatypes/coastal_model/composed_coastal_model_generics.jl")
-    include("./datatypes/geodatatype/nn.jl")
-    include("./algorithms/conversion/sgr_to_hsp.jl")
-    include("./algorithms/coastal/coastline.jl")
-    include("./algorithms/coastal/coastplain.jl")
-    include("./algorithms/statistics/gev_fits.jl")
-    include("./algorithms/statistics/gpd_fits.jl")
-    include("./algorithms/statistics/extreme_distributions_plot.jl")
-    include("./algorithms/numerical/simple_integration.jl")
-    include("./io/nc/HSPs_nc_load.jl")
-    include("./io/nc/HSPs_nc_save.jl")
-    include("./io/csv/ccm_indicator_datafame.jl")
-    include("./io/jld/jld_load.jl")
-    include("./tools/geotiff_tools.jl")
-    include("./scenario/ssp_scenario_reader.jl")
-    include("./scenario/slr_scenario_reader.jl")
-    =#
 end
 
 
@@ -92,7 +58,9 @@ include("./datatypes/geodatatype/SparseGeoArrays.jl")
 include("./datatypes/inundation_model/inundation_model.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile.jl")
 include("./datatypes/inundation_model/inundation_model_functions.jl")
+include("./datatypes/depth_damage_functions/standard_ddf.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile_exposure.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile_damage.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile_damage_arbitrary_ddf.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile_exposure_modifications.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile_variable_modifications.jl")

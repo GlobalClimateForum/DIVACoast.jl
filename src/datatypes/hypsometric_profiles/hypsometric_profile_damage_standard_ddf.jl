@@ -1,11 +1,74 @@
-using QuadGK
-
 # special case ddf = d/(d+hdd)
+
+function damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::Vector{StandardDDF}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
+  # test: size(s,1) = size(ddfs,1)
+
+  inds = map(x -> get_position(hspf, x), s)
+  dam = exposure(hspf, wl, inds, im)
+  if complete_zero(dam)
+    return dam
+  end
+
+  dam = exposure(hspf, first(hspf.elevation), inds, im)
+  water_levels = inundate(hspf, wl, im)
+  max_water_level = last(water_levels[2])
+
+  if hspf.width > 0
+    for ind in 1:size(water_levels[1], 1)-1
+      sl = slope(hspf, ind + 1)
+      wl_low = water_levels[2][ind]
+      wl_high = water_levels[2][ind+1]
+      el_low = water_levels[1][ind]
+      el_high = water_levels[1][ind+1]
+      exposure_low_area = exposure(hspf, el_low, :area)
+      exposure_high_area = exposure(hspf, el_high, :area)
+      exposure_low = exposure(hspf, el_low, inds)
+      exposure_high = exposure(hspf, el_high, inds)
+
+      Δ_area = exposure_high_area - exposure_low_area
+      if (Δ_area != 0)
+        Δ_exp = exposure_high - exposure_low
+        ρ_area = hspf.width / 1000
+        ρ_exp = (Δ_exp / (Δ_area / hspf.width)) / 1000
+
+        dam_t = partial_damage_standard_ddf(hspf, ddfs, el_low, el_high, wl_low, wl_high, sl, ρ_area, ρ_exp)
+        dam += dam_t
+      end
+      dam
+    end
+  end
+
+  return (dam)
+end
+
+function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, ddfs::Vector{StandardDDF},
+  el_low::DT, el_high::DT, wl_low::DT, wl_high::DT, sl::DT, ρ_area::DT, ρ_exp::Array{DT}) where {DT<:Real}
+  d_low = wl_high - el_high
+  d_high = wl_low - el_low
+  factors = map(f -> (f.hdd == 0.0) ? (d_high - d_low) : convert(DT, f.hdd * log((f.hdd + d_low) / (f.hdd + d_high)) + (d_high - d_low)), ddfs)
+  return (factors .* (ρ_exp / sl))
+end
+
+
+
+
+
+
+
+
+
+
+
+
+# OLD STUFF!
+
 """
 """
-function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_other::Array{DT}) :: Tuple{DT, Vector{DT}} where {DT<:Real}
+function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_area::DT, hdds_other::Array{DT})::Tuple{DT,Vector{DT}} where {DT<:Real}
   dam = exposure(hspf, wl)
-  if complete_zero(dam) return dam end
+  if complete_zero(dam)
+    return dam
+  end
 
   dam = exposure(hspf, first(hspf.elevation))
   dam_area = dam[1]
@@ -31,7 +94,7 @@ function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd_a
 
           ρ_area = hspf.width / 1000
           ρ_exp_other = (Δ_exp_other / (Δ_area / hspf.width)) / 1000
-          dam_t = partial_damage_bathtub_standard_ddf(hspf, wl, hdd_area, hdds_other, sl, wl_low, wl_high, Δ_area, Δ_exp_st, Δ_exp_dy, ρ_area, ρ_exp_st, ρ_exp_dy)
+          dam_t = partial_damage_bathtub_standard_ddf(hspf, wl, hdd_area, hdds_other, sl, wl_low, wl_high, Δ_area, Δ_exp_other, ρ_area, ρ_exp_other)
           dam_area = dam_area + dam_t[1]
           dam_other = (size(dam_t[2], 1) > 0) ? dam_other + dam_t[2] : dam_other
         end
@@ -51,17 +114,16 @@ function damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT, hdd::
 
   dam = exposure(hspf, first(hspf.elevation), s)
   my_exposure = zeros(DT, size(hspf.elevation, 1))
-  
+
   if (pos == 0)
     my_exposure = hspf.cummulativeArea
   else
     my_exposure = hspf.cummulativeExposure[:, pos]
   end
 
-
   if hspf.width > 0
     for ind in 1:size(hspf.elevation, 1)-1
-     if hspf.elevation[ind] > wl
+      if hspf.elevation[ind] > wl
         return dam
       else
         sl = slope(hspf, ind + 1)
@@ -99,7 +161,7 @@ damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::T1, hdd::T2, s::Sy
 
 # @inline
 function partial_damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::DT,
-  hdd_area::DT, hdds_other::Array{DT},  sl::DT, wl_low::DT, wl_high::DT,
+  hdd_area::DT, hdds_other::Array{DT}, sl::DT, wl_low::DT, wl_high::DT,
   Δ_area::DT, Δ_exp::Array{DT}, ρ_area::DT, ρ_exp::Array{DT}) where {DT<:Real}
 
   Δ_elevation1 = wl - wl_high
@@ -110,7 +172,7 @@ function partial_damage_bathtub_standard_ddf(hspf::HypsometricProfile{DT}, wl::D
 
   # catch all evil cases
   for fsi in eachindex(factor_other)
-    factor_other[fsi] = isnan(factor_other[fsi]) ? (ρ_exp_st[fsi] != 0 ? sl / ρ_exp_st[fsi] * Δ_exp_st[fsi] : 0) : factor_other[fsi]
+    factor_other[fsi] = isnan(factor_other[fsi]) ? (ρ_exp[fsi] != 0 ? sl / ρ_exp[fsi] * Δ_exp[fsi] : 0) : factor_other[fsi]
   end
 
   return (factor_area * ρ_area / sl, factor_other .* ρ_exp / sl)

@@ -47,7 +47,6 @@ Addtion of two Hypsometric Profiles. Adds (combines) the folling properties of t
 - width: Adds the width of both HypsometricProfiles
 - cummulativeArea: Adds the cummulative are of both HypsometricProfiles
 - static Exposure: Adds the cummulative static exposure of both HypsometricProfiles
-- dynamic Exposure: Adds the dynamic exposure of both HypsometricProfiles
 """
 function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{Float32})
 
@@ -64,13 +63,12 @@ function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{F
         hspfc.elevation = vcat(hspf1.elevation, hspf2.elevation) |> sort |> unique
         
         # Get Exposure Values at elevation increment & combine assets
-        hspf1_exposures  = map(e -> exposure_below(hspf1, e), hspfc.elevation)
-        hspf2_exposures  = map(e -> exposure_below(hspf2, e), hspfc.elevation)
+        hspf1_exposures  = map(e -> exposure(hspf1, e), hspfc.elevation)
+        hspf2_exposures  = map(e -> exposure(hspf2, e), hspfc.elevation)
         exposures = map(add_exposures, hspf1_exposures, hspf2_exposures)
 
         hspfc.cummulativeArea = getindex.(exposures, 1)
-        hspfc.cummulativeStaticExposure =  reduce(hcat, getindex.(exposures, 2))
-        hspfc.cummulativeDynamicExposure  = reduce(hcat, getindex.(exposures, 3))
+        hspfc.cummulativeExposure =  reduce(hcat, getindex.(exposures, 2))
         
         # hspfc.cummulativeDynamicExposure = reduce(hcat, [exp[3] for exp in exposures])
         
