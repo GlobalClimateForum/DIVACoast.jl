@@ -15,8 +15,51 @@ The `land_raising!` function raises the elevation of a hypsometric profile to a 
 land_raising!(hspf, 2.0)
 ```
 """
+#function land_raising!(hspf::HypsometricProfile{Float32}, min_elevation::DT) where {DT<:Real}
+ #   hspf.elevation = [maximum([i,min_elevation]) for i in hspf.elevation] 
+#end
 function land_raising!(hspf::HypsometricProfile{Float32}, min_elevation::DT) where {DT<:Real}
-    hspf.elevation = [maximum([i,min_elevation]) for i in hspf.elevation] 
+    hp = deepcopy(hspf) # Create a copy of the HypsometricProfile
+    idx = searchsortedfirst(hspf.elevation, min_elevation)
+    # check if min_elevation is higher than current lowest elevation
+    if min_elevation < hp.elevation[1]
+        @warn "Minimum elevation $(min_elevation) is lower than current lowest elevation $(hspf.elevation[1]). No land raising applied."
+        return
+    end
+    #if min elevation is between two element values of the elevation array, insert interpolated values
+    if idx <= length(hspf.elevation) && min_elevation != hspf.elevation[idx] 
+        insert!(hspf.elevation, idx, min_elevation)
+        # Insert new values in exposure arrays
+        hspf.cummulativeArea = [hspf.cummulativeArea[1:idx-1, :]; exposure(hp, min_elevation)[1]; hspf.cummulativeArea[idx:end, :]]
+        hspf.cummulativeExposure = [hspf.cummulativeExposure[1:idx-1, :]; exposure(hp, min_elevation)[2]'; hspf.cummulativeExposure[idx:end, :]]
+    end
+
+    #calculate volume needed to raise land
+    area = vcat(0,[hspf.cummulativeArea[i]-hspf.cummulativeArea[i-1] for i in 2:length(hspf.cummulativeArea)])
+    volume = sum([area[i] .* 1000000 .* (2.0.*min_elevation.-hspf.elevation[i-1].- hspf.elevation[i])./2 for i in 2:minimum([idx,length(hspf.elevation)])])
+    
+    if min_elevation > hp.elevation[end]
+        # if new elevation is higher than entire floodplain, create new hp values that contain zero and entire area/exposure
+        hspf.elevation = [min_elevation, min_elevation]
+        hspf.cummulativeArea = [0f0, hspf.cummulativeArea[end]]
+        hspf.cummulativeExposure = vcat(zeros(eltype(hspf.cummulativeExposure), 1, size(hspf.cummulativeExposure, 2)), hspf.cummulativeExposure[end,:]')
+        
+        #return volume of land raised
+        return volume
+    else
+        #Remove all elements < min_elevation in elevation and cummulated area/exposure 
+        deleteat!(hspf.elevation, 1:idx-1)
+        hspf.cummulativeArea = hspf.cummulativeArea[idx:end,:]
+        hspf.cummulativeExposure = hspf.cummulativeExposure[idx:end,:]
+        
+        # Insert new values with min_elevation and zero area/exposure
+        insert!(hspf.elevation, 1, min_elevation)
+        hspf.cummulativeArea = vcat(0f0, hspf.cummulativeArea) 
+        hspf.cummulativeExposure = vcat(zeros(eltype(hspf.cummulativeExposure), 1, size(hspf.cummulativeExposure, 2)), hspf.cummulativeExposure)
+        
+        #return volume of land raised 
+        return volume
+    end
 end
 
 # Function to add two exposure tuples exposure_1 and exposure_2
