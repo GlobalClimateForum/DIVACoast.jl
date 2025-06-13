@@ -12,8 +12,8 @@ jobs:
       - uses: actions/checkout@v4
 
       # Build your docs here, if needed. Example for Julia:
-      # - name: Build docs
-      #   run: julia --project=. -e 'using Pkg; Pkg.instantiate(); include("docs/make.jl")'
+      - name: Build docs
+        run: julia --project=. -e 'using Pkg; Pkg.instantiate(); include("docs/make.jl")'
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
