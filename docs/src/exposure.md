@@ -8,7 +8,7 @@ Currently the main way to represent exposure in `DIVACoast.jl` is as `Hypsometri
 ## Hypsometric Profiles
 
 ![HypsometricProfileConcept](DIVACoast_HypsometricProfile.svg)
-A hypsometric profile represents a cross-section of the coastal zone as a function that maps elevation to  the cumulative exposure below this elevation. Hyposmetric profiles are derived from a Digital Elevation Model (DEM) considering hydrological connectivity.
+A hypsometric profile represents a cross-section of the coastal zone, mapping elevation to the cumulative exposure below that elevation. It is calculated by incrementally increasing the water level and accumulating the exposures and exposed area at each step. For further analysis on the `HypsometricPofil` exposure values are linear interpolated between the initial waterlevel increments.
 
 A `HyposmetricProfile` holds two different types of exposure:
 1. **Static Exposure**, which is exposure that **cannot be relocated**. An example is land (area). 
