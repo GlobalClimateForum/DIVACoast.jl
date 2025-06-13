@@ -104,8 +104,7 @@ function sga_union(sgaArray::Array{SparseGeoArray{DT,IT}})::SparseGeoArray{DT,IT
     union = deepcopy(sgaArray[1])
     clear_data!(union)
     t = SVector(unionExtent.uppL[1], unionExtent.uppL[2])
-    l = union.f.linear * SMatrix{2,2}([1 0; 0 1]Crop a SGA to an extent defined by a radius around a point p.
-)
+    l = union.f.linear * SMatrix{2,2}([1 0; 0 1])
     union.xsize = unionSize[1]
     union.ysize = unionSize[2]
     union.f = AffineMap(l, t)
@@ -377,7 +376,8 @@ end
 """
         get_box_around(sga::SparseGeoArray{DT,IT}, p::Tuple{Real,Real}, radius::Real)::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
 
-Crop a `SparseGeoArray` to an extent defined by a radius around a point `p`. The function calculates the bounding box around the point `p` based on the specified radius and returns a new `SparseGeoArray` containing only the data within that bounding box.
+Crop a `SparseGeoArray` to an extent defined by a radius around a point `p`. The function calculates the bounding box around the point `p` 
+based on the specified radius and returns a new `SparseGeoArray` containing only the data within that bounding box.
 
 # Arguments
 - `sga::SparseGeoArray{DT,IT}`: The SparseGeoArray to be cropped.
