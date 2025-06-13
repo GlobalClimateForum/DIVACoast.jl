@@ -14,7 +14,7 @@ export earth_circumference_km, earth_radius_km
 
 export earth_circumference_km, earth_radius_km
 export HypsometricProfile, to_DF, slope,
-    unit, exposure, named,
+    unit, exposure, named, display,
     multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!,
     remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
     add_exposure_variable!, remove_exposure_variable!, StandardDDF,

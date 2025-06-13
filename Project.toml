@@ -36,6 +36,7 @@ StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 StyledStrings = "f489334b-da3d-4c2e-b8f0-e476e12c162b"
 Suppressor = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
 ThreadPools = "b189fb0b-2eb5-4ed4-bc0c-d34c51242431"
+UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
@@ -48,3 +49,4 @@ Logging = "1.11.0"
 Revise = "3.8.0"
 Statistics = "1.11.1"
 StatsPlots = "0.15.7"
+UnicodePlots = "3.7.2"

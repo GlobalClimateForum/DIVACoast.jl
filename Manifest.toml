@@ -2,7 +2,7 @@
 
 julia_version = "1.11.5"
 manifest_format = "2.0"
-project_hash = "32de33299d850e584dddcc0a7bd2cc5d5231b969"
+project_hash = "e6cc48857e817e64cc62be37839df6f6520600f7"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "e2478490447631aedba0823d4d7a80b2cc8cdb32"
@@ -1057,6 +1057,12 @@ git-tree-sha1 = "72aebe0b5051e5143a079a4685a46da330a40472"
 uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 version = "0.5.15"
 
+[[deps.MarchingCubes]]
+deps = ["PrecompileTools", "StaticArrays"]
+git-tree-sha1 = "0e893025924b6becbae4109f8020ac0e12674b01"
+uuid = "299715c1-40a9-479a-aaf9-4a633d36f717"
+version = "0.1.11"
+
 [[deps.Markdown]]
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
@@ -1737,6 +1743,27 @@ deps = ["REPL"]
 git-tree-sha1 = "53915e50200959667e78a92a418594b428dffddf"
 uuid = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 version = "0.4.1"
+
+[[deps.UnicodePlots]]
+deps = ["ColorSchemes", "ColorTypes", "Contour", "Crayons", "Dates", "LinearAlgebra", "MarchingCubes", "NaNMath", "PrecompileTools", "Printf", "SparseArrays", "StaticArrays", "StatsBase"]
+git-tree-sha1 = "24c0e2df19eb3f894d28a64e7486926f38de8a49"
+uuid = "b8865327-cd53-5732-bb35-84acbb429228"
+version = "3.7.2"
+
+    [deps.UnicodePlots.extensions]
+    FreeTypeExt = ["FileIO", "FreeType"]
+    ImageInTerminalExt = "ImageInTerminal"
+    IntervalSetsExt = "IntervalSets"
+    TermExt = "Term"
+    UnitfulExt = "Unitful"
+
+    [deps.UnicodePlots.weakdeps]
+    FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+    FreeType = "b38be410-82b0-50bf-ab77-7b57e271db43"
+    ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
+    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
+    Term = "22787eb5-b846-44ae-b979-8e399b8463ab"
+    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.Unitful]]
 deps = ["Dates", "LinearAlgebra", "Random"]
