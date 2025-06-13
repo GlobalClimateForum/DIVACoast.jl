@@ -55,7 +55,6 @@ function inundate(hspf::HypsometricProfile{DT}, wl::Real, im::IM)::Tuple{Array{D
 
     Δ_wl_att_sum = Δ_wl_att_part
 
-
     while ((Δ_wl_att_sum <= wl) && (ind <= size(hspf.elevation, 1)) && (wl - Δ_wl_att_sum >= hspf.elevation[ind]))
         wl_attenuated[ind] = wl - Δ_wl_att_sum
         ind += 1

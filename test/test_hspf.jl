@@ -1,6 +1,4 @@
 # Test Hypsometric Profiles
-#include("../src/DIVACoast.jl")
-#using .DIVACoast
 
 
 # Creates a random Hypsometric Profile

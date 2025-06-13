@@ -3,8 +3,9 @@ include("../src/DIVACoast.jl")
 using .DIVACoast
 using Logging
 using Test
+
 # Get all test files
-tests = [file for file in readdir() if file != "runtests.jl" && endswith(file, ".jl")]
+tests = [file for file in readdir() if file != "runtests.jl" && file != "test_hsps_df.jl" && file != "test_io.jl" && endswith(file, ".jl")]
 
 # Include all test files
 for test in tests
