@@ -43,6 +43,34 @@ function runTests()
         @test sum(hpSettings[3]) == hpTest.cummulativeArea[end]
       end
     end
+
+    @testset "Modify hypsometric profiles" begin
+      ## Test land raising
+      @testset "land raising" begin
+        hp = deepcopy(hpTest)
+        hp2 = deepcopy(hpTest)
+        volume2 = land_raising!(hp2, 20.0f0)
+        volume = land_raising!(hp, 20.5f0)
+        @test volume2 > 0
+        @test volume > 0
+        @test volume > volume2
+        @test hp.elevation[1] == 20.5f0
+        @test hp.cummulativeArea[1] == 0f0
+        @test hp.cummulativeArea[end] == sum(hpSettings[3])
+        @test hp.cummulativeArea[50] == hp2.cummulativeArea[50] 
+        @test hp.cummulativeExposure[50] == hp2.cummulativeExposure[50]
+        @test hp.cummulativeExposure[end,:] == [sum(hpSettings[4]), sum(hpSettings[5])]  
+        @test hp.cummulativeExposure[end,:] == hp2.cummulativeExposure[end,:]
+
+        # Test land raising to a higher elevation than the highest point
+        volume = land_raising!(hp, 105f0)
+        @test volume > 0
+        @test hp.elevation[1] == 105f0
+        @test hp.cummulativeArea[1] == 0f0
+        @test hp.cummulativeArea[end] == sum(hpSettings[3])
+        @test hp.cummulativeExposure[end,:] == [sum(hpSettings[4]), sum(hpSettings[5])] 
+      end
+    end
 end
 
 runTests()
