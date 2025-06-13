@@ -13,7 +13,7 @@ jobs:
 
       # Build your docs here, if needed. Example for Julia:
       # - name: Build docs
-      #   run: julia --project=docs -e 'using Pkg; Pkg.instantiate(); include("docs/make.jl")'
+      #   run: julia --project=. -e 'using Pkg; Pkg.instantiate(); include("docs/make.jl")'
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
