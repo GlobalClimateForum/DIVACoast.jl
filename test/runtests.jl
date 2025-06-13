@@ -8,7 +8,6 @@ using Test
 excluded = Set(["runtests.jl", "test_hsps_df.jl", "test_damages.jl", "test_io.jl"])
 tests = [file for file in readdir() if endswith(file, ".jl") && file ∉ excluded]
 
-tests = ["test_exposure.jl"]
 #run tests
 for test in tests
     Main.global_logger(DIVALogger())
