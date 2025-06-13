@@ -4,7 +4,8 @@ using CSV
 """
     function land_raising!(hspf::HypsometricProfile{Float32}, min_e::DT) where {DT<:Real}
 
-The `land_raising!` function raises the elevation of a hypsometric profile to a minimum elevation height min_e.
+The `land_raising!` function raises the elevation of a given hypsometric profile to a minimum elevation height min_e. 
+The function returns the volume of land raised in m³.
 
 # Arguments
 - `hspf::HypsometricProfile`: the hypsometric profile object where the land will be raised.
@@ -12,12 +13,9 @@ The `land_raising!` function raises the elevation of a hypsometric profile to a 
 
 # Example
 ```julia
-land_raising!(hspf, 2.0)
+volume = land_raising!(hspf, 2.0)
 ```
 """
-#function land_raising!(hspf::HypsometricProfile{Float32}, min_elevation::DT) where {DT<:Real}
- #   hspf.elevation = [maximum([i,min_elevation]) for i in hspf.elevation] 
-#end
 function land_raising!(hspf::HypsometricProfile{Float32}, min_elevation::DT) where {DT<:Real}
     hp = deepcopy(hspf) # Create a copy of the HypsometricProfile
     idx = searchsortedfirst(hspf.elevation, min_elevation)
@@ -28,10 +26,11 @@ function land_raising!(hspf::HypsometricProfile{Float32}, min_elevation::DT) whe
     end
     #if min elevation is between two element values of the elevation array, insert interpolated values
     if idx <= length(hspf.elevation) && min_elevation != hspf.elevation[idx] 
-        insert!(hspf.elevation, idx, min_elevation)
+        #insert!(hspf.elevation, idx, min_elevation)
         # Insert new values in exposure arrays
-        hspf.cummulativeArea = [hspf.cummulativeArea[1:idx-1, :]; exposure(hp, min_elevation)[1]; hspf.cummulativeArea[idx:end, :]]
-        hspf.cummulativeExposure = [hspf.cummulativeExposure[1:idx-1, :]; exposure(hp, min_elevation)[2]'; hspf.cummulativeExposure[idx:end, :]]
+        #hspf.cummulativeArea = [hspf.cummulativeArea[1:idx-1, :]; exposure(hp, min_elevation)[1]; hspf.cummulativeArea[idx:end, :]]
+        #hspf.cummulativeExposure = [hspf.cummulativeExposure[1:idx-1, :]; exposure(hp, min_elevation)[2]'; hspf.cummulativeExposure[idx:end, :]]
+        insert_elevation_point(hspf, min_elevation, idx)
     end
 
     #calculate volume needed to raise land
