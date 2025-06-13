@@ -26,10 +26,11 @@ function land_raising!(hspf::HypsometricProfile{Float32}, min_elevation::DT) whe
     end
     #if min elevation is between two element values of the elevation array, insert interpolated values
     if idx <= length(hspf.elevation) && min_elevation != hspf.elevation[idx] 
-        insert!(hspf.elevation, idx, min_elevation)
+        #insert!(hspf.elevation, idx, min_elevation)
         # Insert new values in exposure arrays
-        hspf.cummulativeArea = [hspf.cummulativeArea[1:idx-1, :]; exposure(hp, min_elevation)[1]; hspf.cummulativeArea[idx:end, :]]
-        hspf.cummulativeExposure = [hspf.cummulativeExposure[1:idx-1, :]; exposure(hp, min_elevation)[2]'; hspf.cummulativeExposure[idx:end, :]]
+        #hspf.cummulativeArea = [hspf.cummulativeArea[1:idx-1, :]; exposure(hp, min_elevation)[1]; hspf.cummulativeArea[idx:end, :]]
+        #hspf.cummulativeExposure = [hspf.cummulativeExposure[1:idx-1, :]; exposure(hp, min_elevation)[2]'; hspf.cummulativeExposure[idx:end, :]]
+        insert_elevation_point(hspf, min_elevation, idx)
     end
 
     #calculate volume needed to raise land
