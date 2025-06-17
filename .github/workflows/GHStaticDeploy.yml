@@ -20,6 +20,13 @@ jobs:
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v3
 
+      - name: Verify static files
+        run: |
+          if [ ! -d docs/build ]; then
+            echo "Error: docs/build directory does not exist."
+            exit 1
+          fi
+
       - name: Upload static files
         uses: actions/upload-pages-artifact@v3
         with:
