@@ -1,10 +1,12 @@
 using DataFrames
 using CSV
+using Tables
 
 """
     function land_raising!(hspf::HypsometricProfile{Float32}, min_e::DT) where {DT<:Real}
 
-The `land_raising!` function raises the elevation of a hypsometric profile to a minimum elevation height min_e.
+The `land_raising!` function raises the elevation of a given hypsometric profile to a minimum elevation height min_e. 
+The function returns the volume of land raised in m³.
 
 # Arguments
 - `hspf::HypsometricProfile`: the hypsometric profile object where the land will be raised.
@@ -12,11 +14,52 @@ The `land_raising!` function raises the elevation of a hypsometric profile to a 
 
 # Example
 ```julia
-land_raising!(hspf, 2.0)
+volume = land_raising!(hspf, 2.0)
 ```
 """
 function land_raising!(hspf::HypsometricProfile{Float32}, min_elevation::DT) where {DT<:Real}
-    hspf.elevation = [maximum([i,min_elevation]) for i in hspf.elevation] 
+    hp = deepcopy(hspf) # Create a copy of the HypsometricProfile
+    idx = searchsortedfirst(hspf.elevation, min_elevation)
+    # check if min_elevation is higher than current lowest elevation
+    if min_elevation < hp.elevation[1]
+        @warn "Minimum elevation $(min_elevation) is lower than current lowest elevation $(hspf.elevation[1]). No land raising applied."
+        return
+    end
+    #if min elevation is between two element values of the elevation array, insert interpolated values
+    if idx <= length(hspf.elevation) && min_elevation != hspf.elevation[idx] 
+        #insert!(hspf.elevation, idx, min_elevation)
+        # Insert new values in exposure arrays
+        #hspf.cummulativeArea = [hspf.cummulativeArea[1:idx-1, :]; exposure(hp, min_elevation)[1]; hspf.cummulativeArea[idx:end, :]]
+        #hspf.cummulativeExposure = [hspf.cummulativeExposure[1:idx-1, :]; exposure(hp, min_elevation)[2]'; hspf.cummulativeExposure[idx:end, :]]
+        insert_elevation_point(hspf, min_elevation, idx)
+    end
+
+    #calculate volume needed to raise land
+    area = vcat(0,[hspf.cummulativeArea[i]-hspf.cummulativeArea[i-1] for i in 2:length(hspf.cummulativeArea)])
+    volume = sum([area[i] .* 1000000 .* (2.0.*min_elevation.-hspf.elevation[i-1].- hspf.elevation[i])./2 for i in 2:minimum([idx,length(hspf.elevation)])])
+    
+    if min_elevation > hp.elevation[end]
+        # if new elevation is higher than entire floodplain, create new hp values that contain zero and entire area/exposure
+        hspf.elevation = [min_elevation, min_elevation]
+        hspf.cummulativeArea = [0f0, hspf.cummulativeArea[end]]
+        hspf.cummulativeExposure = vcat(zeros(eltype(hspf.cummulativeExposure), 1, size(hspf.cummulativeExposure, 2)), hspf.cummulativeExposure[end,:]')
+        
+        #return volume of land raised
+        return volume
+    else
+        #Remove all elements < min_elevation in elevation and cummulated area/exposure 
+        deleteat!(hspf.elevation, 1:idx-1)
+        hspf.cummulativeArea = hspf.cummulativeArea[idx:end,:]
+        hspf.cummulativeExposure = hspf.cummulativeExposure[idx:end,:]
+        
+        # Insert new values with min_elevation and zero area/exposure
+        insert!(hspf.elevation, 1, min_elevation)
+        hspf.cummulativeArea = vcat(0f0, hspf.cummulativeArea) 
+        hspf.cummulativeExposure = vcat(zeros(eltype(hspf.cummulativeExposure), 1, size(hspf.cummulativeExposure, 2)), hspf.cummulativeExposure)
+        
+        #return volume of land raised 
+        return volume
+    end
 end
 
 # Function to add two exposure tuples exposure_1 and exposure_2
@@ -71,34 +114,28 @@ function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{F
         hspfc.cummulativeExposure =  reduce(hcat, getindex.(exposures, 2))
         
         # hspfc.cummulativeDynamicExposure = reduce(hcat, [exp[3] for exp in exposures])
-        
-        # Adding / recalc of distances is missing
     end
     return hspfc
 end
 
-"""
-        to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
+function Base.convert(::Type{DataFrame}, hp::HypsometricProfile)
+    return private_to_DF(hp)
+end
 
-Convert a `HypsometricProfile` to a DataFrame. The DataFrame will contain the following columns: 
-- elevation
-- cummulativeArea
-- a column for each exposure
+# TODO: Instead of concatenation sum up HypsometricProfiles
+function Base.convert(::Type{DataFrame}, hspfs::Dict{Int32, Main.DIVACoast.HypsometricProfile{Float32}})
+    dfs = [begin
+        hspf = private_to_DF(value)
+        hspf.HP_ID = fill(key, size(hspf, 1)) # Add the key as ID for the HypsometricProfile
+        hspf
+        select!(hspf, :HP_ID, :) # re-order columns to have HP_ID first
+        end for (key, value) in hspfs
+            ]
+    return vcat(dfs...) # Concatenate all HypsometricProfile DataFrames into one DataFrame
+end
 
-# Arguments
-- hspf::HypsometricProfile{DT}: The `HypsometricProfile` to convert.
+function private_to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
 
-# Returns
-- df::DataFrame: A DataFrame containing the elevation, cummulativeArea, and exposure values of the `HypsometricProfile`.
-
-# Example
-```julia
-hspf = load_hspf_nc(Int32, Float32, "./testdata/UKIRL/nc/UKIRL_hspfs_floodplains.nc")[42]
-df = to_DF(hspf)
-```
-"""
-function to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
-    
     # Init DataFrame
     df = DataFrame()
 
@@ -120,13 +157,11 @@ function to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
     return df
 end
 
-function to_DF(hspfs::Dict{Int32, Main.DIVACoast.HypsometricProfile{Float32}})
-    dfs = [begin
-        hspf = to_DF(value)
-        hspf.HP_ID = fill(key, size(hspf, 1)) # Add the key as ID for the HypsometricProfile
-        hspf
-        select!(hspf, :HP_ID, :) # re-order columns to have HP_ID first
-        end for (key, value) in hspfs
-            ]
-    return vcat(dfs...) # Concatenate all HypsometricProfile DataFrames into one DataFrame
-end
+# Implement Tables.jl interface for HypsometricProfile
+# -> misses Interface for HypsometricProfileCollection
+Tables.istable(::Type{<:HypsometricProfile}) = true
+Tables.rowaccess(::Type{<:HypsometricProfile}) = true
+Tables.rows(hp::HypsometricProfile) = Tables.rows(private_to_DF(hp))
+Tables.schema(hp::HypsometricProfile) = Tables.schema(private_to_DF(hp))
+
+

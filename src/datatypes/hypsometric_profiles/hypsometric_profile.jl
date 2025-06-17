@@ -283,12 +283,16 @@ function complete_zero(exposure::Tuple{DT, Vector{DT}}) where {DT<:Real}
   if (exposure[1] != 0)
     return false
   end
-  for i in 1:size(exposure[2], 1)
-    if exposure[2][i] != 0
-      return false
+  if length(exposure) == 1
+    return true
+  else
+    for i in 1:size(exposure[2], 1)
+      if exposure[2][i] != 0
+        return false
+      end
     end
+    return true
   end
-  return true
 end
 
 function complete_zero(exposure::Array{DT}) where {DT<:Real}

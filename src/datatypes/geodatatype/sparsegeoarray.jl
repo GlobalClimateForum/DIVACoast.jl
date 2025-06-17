@@ -148,7 +148,22 @@ function Base.show(io::IO, sga::SparseGeoArray)
   print(io, "aft: $(sga.f); nodatavalue: $(sga.nodatavalue); stored values: $(length(sga.data))")
 end
 
+"""
+    crop!(sga::SparseGeoArray{DT, IT}, bbox::NamedTuple{(:min_x, :min_y, :max_x, :max_y)}) where {DT <: Real, IT <: Integer}
+Crop a `SparseGeoArray` to the bounding box defined by `bbox`. The bounding box is defined by the minimum and maximum x and y coordinates. The function modifies the `SparseGeoArray` in place.
 
+# Arguments
+- `sga`: The `SparseGeoArray` to crop.
+- `bbox`: A `NamedTuple` with the keys `:min_x`, `:min_y`, `:max_x`, and `:max_y` defining the bounding box.
+
+# Returns
+- Returns nothing, since the function modifies the `SparseGeoArray` in place.
+
+# Example
+```julia
+crop!(sga, (min_x=10, min_y=20, max_x=30, max_y=40))
+```
+"""
 function crop!(sga::SparseGeoArray{DT, IT}, bbox::NamedTuple{(:min_x, :min_y, :max_x, :max_y)}) where {DT <: Real, IT <: Integer}
   for (coordinates, d) in sga.data
     if ((coordinates[1]<bbox.min_x) || (coordinates[1]>bbox.max_x) || (coordinates[2]<bbox.min_y) || (coordinates[2]>bbox.max_y))
@@ -170,7 +185,24 @@ function crop!(sga::SparseGeoArray{DT, IT}, bbox::NamedTuple{(:min_x, :min_y, :m
   sga.f = AffineMap(l, t)
 end 
 
+"""
+    crop!(sga::SparseGeoArray{DT, IT}; margin_x :: Integer = 0, margin_y :: Integer = 0) where {DT <: Real, IT <: Integer}
 
+Crop a `SparseGeoArray` to its minimum data extent and optional margins around the extent. 
+
+# Arguments
+- `sga`: The `SparseGeoArray` to crop.
+- `margin_x`: An optional integer specifying the margin to add to the left and right of the extent. Defaults to 0.
+- `margin_y`: An optional integer specifying the margin to add to the top and bottom of the extent. Defaults to 0.
+
+# Returns
+- Returns nothing, since the function modifies the `SparseGeoArray` in place.
+
+# Example
+```julia
+crop!(sga, margin_x=5, margin_y=10)
+```
+"""
 function crop!(sga::SparseGeoArray{DT, IT}; margin_x :: Integer = 0, margin_y :: Integer = 0) where {DT <: Real, IT <: Integer}
   max_x = 1
   min_x = sga.xsize
@@ -223,10 +255,23 @@ end
 """
     coords(sga::SparseGeoArray, p::SVector{2,<:Integer}, strategy::AbstractStrategy=Center())
     coords(sga::SparseGeoArray, p::Tuple{<:Integer,<:Integer}, strategy::AbstractStrategy=Center())
-    coords(sga::SparseGeoArray, p::CartesianIndex{2}, strategy::AbstractStrategy=Center())
+    coords(sga::SparseGeoArray, p::CartesianIndex{2}, strategy::AbstractStrategy=Center())`
 
-Retrieve coordinates of the cell index by `p`.
-See `indices` for the inverse function.
+Retrieve geospatial coordinates of the cell represented by indices `p` in a `SparseGeoArray`.
+The coordinates are returned as a `SVector{2}`. The `strategy` parameter determines how the coordinates are calculated, e.g., whether they are centered or aligned with the upper left corner of the cell. See `indices` for the inverse function.
+
+# Arguments
+- `sga`: The `SparseGeoArray` to retrieve coordinates from.
+- `p`: The pixel indices as a `SVector{2}` of integers, a tuple of integers, or a `CartesianIndex{2}`.
+- `strategy`: An optional parameter that determines how the coordinates are calculated. Defaults to `Center()`, which returns the center of the cell. Other strategies include `UpperLeft()`, `UpperRight()`, `LowerLeft()`, and `LowerRight()`.
+
+# Returns
+- Returns a `SVector{2}` containing the geospatial coordinates of the cell represented by the indices `p`.
+
+# Example
+```julia
+
+```
 """
 function coords(sga::SparseGeoArray, p::SVector{2,<:Integer}, strategy::AbstractStrategy)
     SVector{2}(sga.f(p .- (1,1) .+ strategy.offset))
@@ -238,8 +283,20 @@ coords(sga::SparseGeoArray, i :: IT, j :: IT, strategy::AbstractStrategy=Center(
 """
     indices(sga::SparseGeoArray, p::SVector{2,<:Real})
 
-Retrieve logical indices of the cell represented by coordinates `p`.
+Retrieve indices of the cell represented by geospatial coordinates `p`.
 See `coords` for the inverse function.
+
+# Arguments
+- `sga`: The `SparseGeoArray` to retrieve indices from.
+- `p`: The geospatial coordinates as a `SVector{2}` of real numbers, a tuple of real numbers, or an `AbstractVector{<:Real}`.
+
+# Returns
+- Returns a `Tuple{IT, IT}` containing the indices of the cell represented by the geospatial coordinates `p`.
+
+# Example
+```julia
+indices(sga, (12.34, 56.78))
+```
 """
 function indices(sga :: SparseGeoArray{DT, IT}, p::SVector{2,<:Real}) :: Tuple{IT,IT} where {DT <: Real, IT <: Integer} 
     Tuple(floor.(Int, inv(sga.f)(p)) .+ (1,1))
@@ -249,6 +306,23 @@ indices(sga::SparseGeoArray, p::Tuple{<:Real,<:Real}) = indices(sga, SVector{2}(
 indices(sga::SparseGeoArray, i :: R, j :: R, strategy::AbstractStrategy=Center()) where {R <: Real} = indices(sga, SVector{2}(i,j))
 
 """
+    area(sga::SparseGeoArray, i::I, j::I) where {I <: Integer}
+    area(sga :: SparseGeoArray, p::Tuple{<:Integer,<:Integer}) = area(sga, p[1], p[2])
+
+Calculate the area of the cell at pixel indices `(i, j)` in a `SparseGeoArray`. The area is calculated using the Haversine formula, which accounts for the curvature of the Earth.
+
+# Arguments
+- `sga`: The `SparseGeoArray` containing the geospatial data.
+- `i`: The pixel index in the x-direction.
+- `j`: The pixel index in the y-direction.
+
+# Returns
+- Returns the area of the cell.
+
+# Example
+```julia
+area(sga, 10, 20)
+```
 """
 function area(sga :: SparseGeoArray, i :: I, j :: I) where {I <: Integer} 
   ul = coords(sga,i,j,UpperLeft())

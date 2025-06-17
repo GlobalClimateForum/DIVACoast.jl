@@ -1,4 +1,26 @@
+"""
+    damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::Vector{Function}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
 
+Calculates the flood damage for a given water level wl based on provided damage functions ddfs for all exposure variables in s.
+The default inundation model is the bathtub model, if not specified.
+
+# Arguments
+- `hspf::HypsometricProfile{DT}`: The hypsometric profile.
+- `wl::Real`: The water level for which the damage is calculated.
+- `s::Array{String}`: An array of exposure variable names for which the damage is calculated. If only one variable is needed, it has to be a single string/symbol.
+- `ddfs::Vector{Function}`: A vector of damage functions corresponding to the exposure variables in s. 
+  StandardDDF(h) can be used for a standard depth-damage function 
+`f(d)= d/(d+h)`
+- `im::IM`: The inundation model to be used, default is BathtubInundation().
+
+
+# Example
+```julia
+  damage(hspf, 2.0, ["assets"], [d -> d/(d+1)])
+  damage(hspf, 2.0, ["population","assets"], [d -> 1, d -> d/(d+1)])
+  damage(hspf, 2.0, [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)])
+```
+"""
 function damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::Vector{Function}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
   # test: size(s,1) = size(ddfs,1)
   inds = map(x -> get_position(hspf, x), s)
