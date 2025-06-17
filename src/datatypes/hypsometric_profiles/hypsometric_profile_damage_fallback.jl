@@ -35,6 +35,7 @@ function damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::
 
   if hspf.width > 0
     for ind in 1:size(water_levels[1], 1)-1
+      #println("ind: ",ind)
       sl = slope(hspf, ind + 1)
       wl_low = water_levels[2][ind]
       wl_high = water_levels[2][ind+1]
@@ -51,7 +52,7 @@ function damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::
         ρ_area = hspf.width / 1000
         ρ_exp = (Δ_exp / (Δ_area / hspf.width)) / 1000
 
-        dam_t = partial_damage(hspf, ddfs, el_low, el_high, wl_low, wl_high, sl, ρ_area, ρ_exp)
+        dam_t = partial_damage(hspf, ddfs, el_low, el_high, wl, wl_low, wl_high, sl, ρ_area, ρ_exp, im)
         dam += dam_t
       end
       dam
@@ -62,8 +63,13 @@ function damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::
 end
 
 function partial_damage(hspf::HypsometricProfile{DT}, ddfs::Vector{Function},
-  el_low::DT, el_high::DT, wl_low::DT, wl_high::DT, sl::DT, ρ_area::DT, ρ_exp::Array{DT}) where {DT<:Real}
-
+  el_low::DT, el_high::DT, wl::Real, wl_low::DT, wl_high::DT, sl::DT, ρ_area::DT, ρ_exp::Array{DT}, im::IM) where {DT<:Real,IM<:BathtubInundation}
   factors = map(f -> (quadgk(d -> f(d), wl_high - el_high, wl_low - el_low, rtol=1e-4))[1], ddfs)
+  return (factors .* (ρ_exp / sl))
+end
+
+function partial_damage(hspf::HypsometricProfile{DT}, ddfs::Vector{Function},
+  el_low::DT, el_high::DT, wl::Real, wl_low::DT, wl_high::DT, sl::DT, ρ_area::DT, ρ_exp::Array{DT}, im::IM) where {DT<:Real,IM<:InundationModel}
+  factors = map(f -> (quadgk(el -> f(water_depth(hspf,wl,el,im)), el_low, el_high, rtol=1e-4))[1], ddfs)
   return (factors .* (ρ_exp / sl))
 end

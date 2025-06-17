@@ -30,7 +30,6 @@ function initHypsometricProfile(returnSettings=false)
 end
 
 
-
 function initSimpleProfile(returnSettings=false)
 
   elevation = [0,100]
@@ -54,8 +53,6 @@ function initSimpleProfile(returnSettings=false)
     return (profile)
   end
 end
-
-
 
 
 function runTests()
@@ -88,7 +85,6 @@ function runTests()
     end
   end
 
-
   @testset "damage() - test math" begin
     for i in 1:number_of_tests
       hpTest, hpSettings = initSimpleProfile(true)
@@ -96,6 +92,21 @@ function runTests()
       rho = (exposure(hpTest, 100, :assets, BathtubInundation()) / ((exposure(hpTest, 100, :area, BathtubInundation()) / hpTest.width))) / 1000
       sl = slope(hpTest, 2)
 
+      el = rand() * 50
+      @test isapprox(damage(hpTest, el, :assets, d -> d/(d+1))[1], rho/sl * (log(1/(1+el)) + el) , rtol=0.1)
+      @test isapprox(damage(hpTest, el, :population, d -> 1)[1], exposure(hpTest, el, BathtubInundation())[2][1] , rtol=0.1)
+
+println(damage(hpTest, el, :assets, StandardDDF(1.0)))
+println(damage(hpTest, el, :assets, d -> d/(d+1)))
+println(rho/sl * (log(1/(1+el)) + el))
+
+println(damage(hpTest, el, :assets, StandardDDF(1.0), LinearDistanceAttenuatedInundation(0.1)))
+println(damage(hpTest, el, :assets, d -> d/(d+1), LinearDistanceAttenuatedInundation(0.1)))
+println(rho/(sl+(0.1/1000)) * (log(1/(1+el)) + el))
+
+      @test isapprox(damage(hpTest, el, :assets, d -> d/(d+1), LinearDistanceAttenuatedInundation(0.1))[1], rho/(sl+(0.1/1000)) * (log(1/(1+el)) + el), atol=0.1)
+      @test isapprox(damage(hpTest, el, :assets, StandardDDF(1.0), LinearDistanceAttenuatedInundation(0.1))[1], rho/(sl+(0.1/1000)) * (log(1/(1+el)) + el), atol=0.1)
+      @test isapprox(damage(hpTest, el, :population, d -> 1, LinearDistanceAttenuatedInundation(0.1))[1], exposure(hpTest, el, LinearDistanceAttenuatedInundation(0.1))[2][1] , rtol=0.1)
       el = rand()*50
       @test isapprox(damage(hpTest, el, :assets, d -> d/(d+1))[1], rho/sl * (log(1/(1+el)) + el), rtol=1e-6)
       @test isapprox(damage(hpTest, el, "population", d -> 1)[1], exposure(hpTest, el, BathtubInundation())[2][1], rtol=1e-6)

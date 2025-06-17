@@ -41,7 +41,7 @@ function expected_damage_bathtub_standard_ddf(lcm::LocalCoastalImpactModel{DT,DA
   edam_other = Array{DT}(undef, size(lcm.coastal_plain_model.cummulativeExposure)[2])
 
   for ind in 1:size(lcm.coastal_plain_model.cummulativeExposure, 2)
-    edam_other[ind] = expected_damage_integral_computation(lcm, String(lcm.coastal_plain_model.exposureNames[ind]), x -> f_to_integrate(lcm, x, hdds_other[ind], lcm.coastal_plain_model.exposureNames[ind]), lower_limit, maximum(lcm.surge_model), tol)
+    edam_other[ind] = expected_damage_integral_computation(lcm, String(lcm.coastal_plain_model.exposureNames[ind]), x -> f_to_integrate(lcm, x, hdds_other[ind], Symbol(lcm.coastal_plain_model.exposureNames[ind])), lower_limit, maximum(lcm.surge_model), tol)
   end
 
   (edam_area, edam_other)
@@ -115,7 +115,8 @@ end
 
 
 exposure(lcm::LocalCoastalImpactModel{DT,DATA}, wl::Number, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel,DATA} = exposure(lcm.coastal_plain_model, wl, im)
-exposure(lcm::LocalCoastalImpactModel{DT,DATA}, wl::Number, s::Symbol, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel,DATA} = exposure(lcm.coastal_plain_model, s, wl, im)
+exposure(lcm::LocalCoastalImpactModel{DT,DATA}, wl::Number, s, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel,DATA} = exposure(lcm.coastal_plain_model, wl, s, im)
+damage(lcm::LocalCoastalImpactModel{DT,DATA}, wl::Real, s, ddfs, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel,DATA} = damage(lcm.coastal_plain_model, wl, s, ddfs, im) 
 
 damage_bathtub_standard_ddf(lcm::LocalCoastalImpactModel{DT,DATA}, wl, hdd_area, hdds_other) where {DT<:Real,DATA} = damage_bathtub_standard_ddf(lcm.coastal_plain_model, wl, hdd_area, hdds_other)
 damage_bathtub_standard_ddf(lcm::LocalCoastalImpactModel{DT,DATA}, wl::T1, hdd::T2, s::Symbol) where {DT<:Real,T1<:Real,T2<:Real,DATA} = damage_bathtub_standard_ddf(lcm.coastal_plain_model, convert(DT, wl), convert(DT, hdd), s)

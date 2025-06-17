@@ -119,6 +119,7 @@ function distance(hspf::HypsometricProfile{DT}, e::Real)::DT where {DT<:Real}
   return d
 end
 
+# Important: returned unit is km/km (or m/m ...)
 function slope(hspf::HypsometricProfile{DT}, i::Int) where {DT<:Real}
   if (i <= 1)
     return Inf
@@ -278,8 +279,7 @@ end
 
 unit(hspf::HypsometricProfile, n::Symbol) = unit(hspf, String(n))
 
-
-function complete_zero(exposure)
+function complete_zero(exposure::Tuple{DT, Vector{DT}}) where {DT<:Real}
   if (exposure[1] != 0)
     return false
   end
@@ -293,6 +293,15 @@ function complete_zero(exposure)
     end
     return true
   end
+end
+
+function complete_zero(exposure::Array{DT}) where {DT<:Real}
+  for i in 1:size(exposure, 1)
+    if exposure[i] != 0
+      return false
+    end
+  end
+  return true
 end
 
 function private_colinear_lines(hspf::HypsometricProfile, i1::Int64, i2::Int64, i3::Int64, check_zero::Bool)::Bool
