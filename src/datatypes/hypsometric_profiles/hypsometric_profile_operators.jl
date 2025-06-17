@@ -1,5 +1,6 @@
 using DataFrames
 using CSV
+using Tables
 
 """
     function land_raising!(hspf::HypsometricProfile{Float32}, min_e::DT) where {DT<:Real}
@@ -113,34 +114,28 @@ function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{F
         hspfc.cummulativeExposure =  reduce(hcat, getindex.(exposures, 2))
         
         # hspfc.cummulativeDynamicExposure = reduce(hcat, [exp[3] for exp in exposures])
-        
-        # Adding / recalc of distances is missing
     end
     return hspfc
 end
 
-"""
-        to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
+function Base.convert(::Type{DataFrame}, hp::HypsometricProfile)
+    return private_to_DF(hp)
+end
 
-Convert a `HypsometricProfile` to a DataFrame. The DataFrame will contain the following columns: 
-- elevation
-- cummulativeArea
-- a column for each exposure
+# TODO: Instead of concatenation sum up HypsometricProfiles
+function Base.convert(::Type{DataFrame}, hspfs::Dict{Int32, Main.DIVACoast.HypsometricProfile{Float32}})
+    dfs = [begin
+        hspf = private_to_DF(value)
+        hspf.HP_ID = fill(key, size(hspf, 1)) # Add the key as ID for the HypsometricProfile
+        hspf
+        select!(hspf, :HP_ID, :) # re-order columns to have HP_ID first
+        end for (key, value) in hspfs
+            ]
+    return vcat(dfs...) # Concatenate all HypsometricProfile DataFrames into one DataFrame
+end
 
-# Arguments
-- hspf::HypsometricProfile{DT}: The `HypsometricProfile` to convert.
+function private_to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
 
-# Returns
-- df::DataFrame: A DataFrame containing the elevation, cummulativeArea, and exposure values of the `HypsometricProfile`.
-
-# Example
-```julia
-hspf = load_hspf_nc(Int32, Float32, "./testdata/UKIRL/nc/UKIRL_hspfs_floodplains.nc")[42]
-df = to_DF(hspf)
-```
-"""
-function to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
-    
     # Init DataFrame
     df = DataFrame()
 
@@ -162,13 +157,11 @@ function to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
     return df
 end
 
-function to_DF(hspfs::Dict{Int32, Main.DIVACoast.HypsometricProfile{Float32}})
-    dfs = [begin
-        hspf = to_DF(value)
-        hspf.HP_ID = fill(key, size(hspf, 1)) # Add the key as ID for the HypsometricProfile
-        hspf
-        select!(hspf, :HP_ID, :) # re-order columns to have HP_ID first
-        end for (key, value) in hspfs
-            ]
-    return vcat(dfs...) # Concatenate all HypsometricProfile DataFrames into one DataFrame
-end
+# Implement Tables.jl interface for HypsometricProfile
+# -> misses Interface for HypsometricProfileCollection
+Tables.istable(::Type{<:HypsometricProfile}) = true
+Tables.rowaccess(::Type{<:HypsometricProfile}) = true
+Tables.rows(hp::HypsometricProfile) = Tables.rows(private_to_DF(hp))
+Tables.schema(hp::HypsometricProfile) = Tables.schema(private_to_DF(hp))
+
+

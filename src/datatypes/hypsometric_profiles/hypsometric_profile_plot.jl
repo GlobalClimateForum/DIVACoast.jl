@@ -1,33 +1,26 @@
 using Plots
 using UnicodePlots
 
-
 function RecipesBase.plot(hp::HypsometricProfile)
     plot(hp.cummulativeArea/hp.width,hp.elevation,xlabel="Distance from coastline (km)",ylabel="Elevation (m)")
 end
 
-# function Base.show(hp::HypsometricProfile)
-
-#     exp_ = ""
+function Base.show(io::IO, hp::HypsometricProfile)
+    basestr = ""
+    basestr *= "┌ HypsometricProfile\n"
+    basestr *= "├ Width: $(hp.width) $(hp.width_unit)\n"
+    basestr *= "├ Elevation: $(minimum(hp.elevation)) up to $(maximum(hp.elevation))$(hp.elevation_unit) at $(length(hp.elevation)) increments\n"
+    basestr *= "├ Cum. area (maximum): $(maximum(hp.cummulativeArea))$(hp.area_unit)\n"
+    basestr *= "└ Exposures:\n"
     
-#     for expName in hp.exposureNames
-#         exp_ *= "EXPOSURE - $expName\n"
-#         exp_ *= "$(hp.cummulativeExposure[:, Symbol(expName)])\n"
-#         exp_ *= "$(hp.exposureUnits[expName])\n"
-#     end
-#     println(exp_)
-# end
+    for (index, name) in enumerate(hp.exposureNames)
+        e_ = hp.cummulativeExposure[:, index]
+        basestr *= "  ├ $name: $(size(e_, 1)) values from $(minimum(e_)) to $(maximum(e_))$(hp.exposureUnits[index])\n"
+    end
+    print(io, basestr)
+end
 
-#   width::DT
-#   width_unit::String
-#   elevation::Array{DT}
-#   elevation_unit::String
-#   cummulativeArea::Array{DT}
-#   area_unit::String
-#   cummulativeExposure::Array{DT,2}
-#   exposureNames::Array{String}
-#   exposureUnits::Array{String}
-#   doLog::Bool
+Base.print(io::IO, hp::HypsometricProfile) = show(io, hp)
 
 function Base.display(hp::HypsometricProfile)
 
@@ -46,17 +39,14 @@ function Base.display(hp::HypsometricProfile)
         try
             display(plot(x, y, xlabel=xlabel, ylabel=ylabel))
         catch
-            println(lineplot(x, y, xlabel=xlabel, ylabel=ylabel))
+            println("- HypsometricProfile")
+            println("    " * ylabel)
+            println(lineplot(x, y, xlabel=xlabel, ylabel=""))
         end
     else
-        println(lineplot(x, y, xlabel=xlabel, ylabel=ylabel))
+        println("- HypsometricProfile")
+        println("    " * ylabel)
+        println(lineplot(x, y, xlabel=xlabel, ylabel=""))
     end
-end
 
-function Base.println(hp::HypsometricProfile)
-    display(to_DF(hp))
-end
-
-function Base.print(hp::HypsometricProfile)
-    display(to_DF(hp))
 end

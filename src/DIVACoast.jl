@@ -13,7 +13,7 @@ config = YAML.load_file(joinpath(@__DIR__, "DIVACoast.jl.yml"), dicttype=Dict{Sy
 export earth_circumference_km, earth_radius_km
 
 export earth_circumference_km, earth_radius_km
-export HypsometricProfile, to_DF, slope,
+export HypsometricProfile, convert, slope,
     unit, exposure, named, display,
     multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!,
     remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
