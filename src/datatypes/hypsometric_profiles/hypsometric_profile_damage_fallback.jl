@@ -8,7 +8,9 @@ The default inundation model is the bathtub model, if not specified.
 - `hspf::HypsometricProfile{DT}`: The hypsometric profile.
 - `wl::Real`: The water level for which the damage is calculated.
 - `s::Array{String}`: An array of exposure variable names for which the damage is calculated. If only one variable is needed, it has to be a single string/symbol.
-- `ddfs::Vector{Function}`: A vector of damage functions corresponding to the exposure variables in s. StandardDDF(h) can be used for a standard depth-damage function $ f(d)= \frac{d}{d+h}$ .
+- `ddfs::Vector{Function}`: A vector of damage functions corresponding to the exposure variables in s. 
+  StandardDDF(h) can be used for a standard depth-damage function 
+`f(d)= d/(d+h)`
 - `im::IM`: The inundation model to be used, default is BathtubInundation().
 
 
