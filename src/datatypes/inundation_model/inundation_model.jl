@@ -1,4 +1,3 @@
-export InundationModel, BathtubInundation, LinearDistanceAttenuatedInundation, inundate
 """
     InundationModel(coast_length::DT, coast_length_unit::String,
     elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,

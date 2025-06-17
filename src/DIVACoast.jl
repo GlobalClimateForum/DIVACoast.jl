@@ -18,10 +18,10 @@ export HypsometricProfile, to_DF, slope,
     multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!,
     remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
     add_exposure_variable!, remove_exposure_variable!, StandardDDF,
-    damage_bathtub_standard_ddf, damage_bathtub, damage,
+    damage, expected_damage,
     compress!, compress_multithread!, land_raising!
 export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integration
-
+export InundationModel, BathtubInundation, LinearDistanceAttenuatedInundation, inundate, water_depth
 
 # append depot path (local packages) to project load path
 # append!(LOAD_PATH, DEPOT_PATH)
@@ -61,7 +61,8 @@ include("./datatypes/inundation_model/inundation_model_functions.jl")
 include("./datatypes/depth_damage_functions/standard_ddf.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile_exposure.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile_damage.jl")
-include("./datatypes/hypsometric_profiles/hypsometric_profile_damage_arbitrary_ddf.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile_expected_damage.jl")
+# include("./datatypes/hypsometric_profiles/hypsometric_profile_damage_arbitrary_ddf.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile_exposure_modifications.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile_variable_modifications.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile_plot.jl")
