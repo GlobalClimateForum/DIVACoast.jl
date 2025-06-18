@@ -12,3 +12,10 @@ You can install DIVACoast library by:
 using Pkg
 Pkg.add(url = "https://github.com/GlobalClimateForum/DIVACoast.jl")
 ```
+Or by manually cloning it to your local machine:  `git clone https://github.com/GlobalClimateForum/DIVACoast.jl`
+and including it in your script:
+
+```@julia
+include("path_to_DIVACoast/src/DIVACoast.jl")
+using .DIVACoast
+```
