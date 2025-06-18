@@ -51,7 +51,6 @@ A set of core spatial operations is provided for `SparseGeoArray` objects, enabl
 ```@docs
 Main.DIVACoast.sga_union
 Main.DIVACoast.sga_intersect
-Main.DIVACoast.sga_diff
 Main.DIVACoast.sga_summarize_within
 ```
 
