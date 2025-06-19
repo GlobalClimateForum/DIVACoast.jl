@@ -7,10 +7,10 @@ using .DIVACoast
 using Documenter
 
 makedocs(
-    authors="Daniel Lincke et al <daniel.lincke@globalclimateforum.org>",
-    sitename="DIVACoast.jl Documentation",
+    authors="Daniel Lincke et al. <daniel.lincke@globalclimateforum.org>",
+    sitename="DIVACoast.jl",
     checkdocs = :none,
-    modules=[],
+    modules=[DIVACoast],
     remotes=nothing,
     pages=[
         "Home" => "index.md",
@@ -22,6 +22,6 @@ makedocs(
         "GeoData" => "geodata.md", ],
     format=Documenter.HTML(
         prettyurls=false,
-        repolink="https://gitlab.com/globalclimateforum/DIVACoast.jl",
+        repolink="https://github.com/GlobalClimateForum/DIVACoast.jl",
     )
 )

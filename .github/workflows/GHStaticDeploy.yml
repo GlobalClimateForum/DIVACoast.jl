@@ -1,4 +1,4 @@
-name: Deploy Static Site
+name: Deploy Documentation
 
 on:
   push:
@@ -8,18 +8,12 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload static files
-        uses: actions/upload-pages-artifact@v2
-        with:
-          path: docs/build
+      - name: Checkout repositor3
+        uses: actions/checkout@v2
 
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          branch: gh-pages
+          folder: ./docs/build/

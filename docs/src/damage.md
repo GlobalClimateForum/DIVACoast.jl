@@ -8,8 +8,5 @@ Description = "DIVACoast.jl is a Julia library for coastal impact and adaptation
 Currently `DIVACoast.jl` supports the **bathtub model** and the **attenuated bathtub model**. Attenuation refers to the reduction of water levels while floods propagate inland across the landscape. The magnitude of attenuation is a function of land cover such as vegetation, buildings and infrastructure which slow down and hence reduce the extent of flooding.
 
 ```@docs
-Main.DIVACoast.expected_damage_bathtub_standard_ddf
-Main.DIVACoast.expected_damage_bathtub
-Main.DIVACoast.damage_bathtub_standard_ddf
-Main.DIVACoast.damage_bathtub
+
 ```
