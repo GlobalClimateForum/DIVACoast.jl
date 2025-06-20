@@ -74,7 +74,7 @@ Distributions.probs(d::LinInt)  = d.p
 """
     Distributions.cdf(d::LinInt, x::Real)
 
-Cummulative distribution function.
+Cumulative distribution function.
 """
 function Distributions.cdf(d::LinInt, x::Real)
     return linear_interp(d.support, d.p, x)

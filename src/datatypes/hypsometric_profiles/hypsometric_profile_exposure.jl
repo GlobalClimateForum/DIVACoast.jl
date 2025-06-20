@@ -26,23 +26,23 @@ function exposure(hspf::HypsometricProfile{DT}, wl::Number, im::IM=BathtubInunda
   ind::Int64 = searchsortedfirst(hspf.elevation, max_water_level)
 
   if (max_water_level in hspf.elevation)
-    @inbounds ea = hspf.cummulativeArea[ind]
-    @inbounds eo = (size(hspf.cummulativeExposure, 1) > 0) ? hspf.cummulativeExposure[ind, :] : Array{DT}(undef, 0)
+    @inbounds ea = hspf.cumulativeArea[ind]
+    @inbounds eo = (size(hspf.cumulativeExposure, 1) > 0) ? hspf.cumulativeExposure[ind, :] : Array{DT}(undef, 0)
     return (ea, eo)
   else
     if (ind == 1)
-      @inbounds ea = hspf.cummulativeArea[ind]
-      @inbounds eo = (size(hspf.cummulativeExposure, 1) > 0) ? hspf.cummulativeExposure[ind, :] : Array{DT}(undef, 0)
+      @inbounds ea = hspf.cumulativeArea[ind]
+      @inbounds eo = (size(hspf.cumulativeExposure, 1) > 0) ? hspf.cumulativeExposure[ind, :] : Array{DT}(undef, 0)
       return (ea, eo)
     end
     if (ind > size(hspf.elevation, 1))
-      @inbounds ea = hspf.cummulativeArea[size(hspf.elevation, 1)]
-      @inbounds eo = (size(hspf.cummulativeExposure, 1) > 0) ? hspf.cummulativeExposure[size(hspf.elevation, 1), :] : Array{DT}(undef, 0)
+      @inbounds ea = hspf.cumulativeArea[size(hspf.elevation, 1)]
+      @inbounds eo = (size(hspf.cumulativeExposure, 1) > 0) ? hspf.cumulativeExposure[size(hspf.elevation, 1), :] : Array{DT}(undef, 0)
       return (ea, eo)
     end
     @inbounds r = (max_water_level - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
-    @inbounds ea = convert(DT, hspf.cummulativeArea[ind-1] + ((hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1]) * r))
-    @inbounds eo = convert(Array{DT}, (size(hspf.cummulativeExposure, 1) > 0) ? hspf.cummulativeExposure[ind-1, :] + ((hspf.cummulativeExposure[ind, :] - hspf.cummulativeExposure[ind-1, :]) * r) : Array{DT}(undef, 0))
+    @inbounds ea = convert(DT, hspf.cumulativeArea[ind-1] + ((hspf.cumulativeArea[ind] - hspf.cumulativeArea[ind-1]) * r))
+    @inbounds eo = convert(Array{DT}, (size(hspf.cumulativeExposure, 1) > 0) ? hspf.cumulativeExposure[ind-1, :] + ((hspf.cumulativeExposure[ind, :] - hspf.cumulativeExposure[ind-1, :]) * r) : Array{DT}(undef, 0))
     return (ea, eo)
   end
 
@@ -52,10 +52,10 @@ function exposure(hspf::HypsometricProfile{DT}, wl::Real, inds::Array{Int}, im::
   exposure = zeros(DT, size(hspf.elevation, 1), size(inds, 1))
   for i in 1:size(inds, 1)
     if (inds[i] == 0)
-      exposure[:, i] = hspf.cummulativeArea
+      exposure[:, i] = hspf.cumulativeArea
     end
     if (inds[i] > 0)
-      exposure[:, i] = hspf.cummulativeExposure[:, inds[i]]
+      exposure[:, i] = hspf.cumulativeExposure[:, inds[i]]
     end
   end
 
@@ -111,7 +111,7 @@ function named(f::F, args::Tuple) where {F<:Union{typeof(exposure)}}
   if isa(f, typeof(exposure))
     hspf, _ = args
     exposures  = [Symbol(expKey_) => expVal for (expKey_, expVal) in zip(hspf.exposureNames, t[2])]
-    return @inbounds (; cummulativeArea = t[1], exposures...)
+    return @inbounds (; cumulativeArea = t[1], exposures...)
   elseif not isa(f, typeof(exposure))
     @warn "No named version available for $(f) returned unnamed results instead"
     @inbounds return t

@@ -20,12 +20,12 @@ function multiply_exposure!(hspf, 1.1, "population")
 ```
 """
 function multiply_exposure!(hspf::HypsometricProfile{DT}, factors::Array{T}) where {DT<:Real,T<:Real}
-  if (size(hspf.cummulativeExposure, 2) != length(factors))
-    @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
+  if (size(hspf.cumulativeExposure, 2) != length(factors))
+    @error "size(hspf.cumulativeExposure,2)!=length(factors) \n as $(size(hspf.cumulativeExposure,2)) != $(length(factors))"
   end
 
-  for j in 1:(size(hspf.cummulativeExposure, 2))
-    hspf.cummulativeExposure[:, j] *= factors[j]
+  for j in 1:(size(hspf.cumulativeExposure, 2))
+    hspf.cumulativeExposure[:, j] *= factors[j]
   end
 end
 
@@ -39,7 +39,7 @@ end
 function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::Symbol) where {DT<:Real,T<:Real}
   p = get_position(hspf, s)
   if (p > 0)
-    hspf.cummulativeExposure[:, p] *= factor
+    hspf.cumulativeExposure[:, p] *= factor
   end
   if (p == -1)
     @error "profile ($hspf) has no variable $(s)"
@@ -72,8 +72,8 @@ function multiply_exposure_above!(hspf, 1.1, "population")
 ```
 """
 function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factors::Array{DT}) where {DT<:Real}
-  if (size(hspf.cummulativeExposure, 2) != length(factors))
-    @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
+  if (size(hspf.cumulativeExposure, 2) != length(factors))
+    @error "size(hspf.cumulativeExposure,2)!=length(factors) \n as $(size(hspf.cumulativeExposure,2)) != $(length(factors))"
   end
 
   if (above < hspf.elevation[1])
@@ -87,20 +87,20 @@ function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factors
   ind::Int64 = searchsortedfirst(hspf.elevation, above)
   insert_elevation_point(hspf, above, ind)
 
-  for j in 1:(size(hspf.cummulativeExposure, 2))
+  for j in 1:(size(hspf.cumulativeExposure, 2))
     sum = 0
-    for i in (ind+1):(size(hspf.cummulativeExposure, 1))
-      step = (hspf.cummulativeExposure[i, j] - sum - hspf.cummulativeExposure[i-1, j])
+    for i in (ind+1):(size(hspf.cumulativeExposure, 1))
+      step = (hspf.cumulativeExposure[i, j] - sum - hspf.cumulativeExposure[i-1, j])
       step_mult = step * factors[j]
       sum += (step - step_mult)
-      hspf.cummulativeExposure[i, j] = hspf.cummulativeExposure[i-1, j] + step_mult
+      hspf.cumulativeExposure[i, j] = hspf.cumulativeExposure[i-1, j] + step_mult
     end
   end
 end
 
 function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, factors) where {DT<:Real}
-  if (size(hspf.cummulativeExposure, 2) != length(factors))
-    @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
+  if (size(hspf.cumulativeExposure, 2) != length(factors))
+    @error "size(hspf.cumulativeExposure,2)!=length(factors) \n as $(size(hspf.cumulativeExposure,2)) != $(length(factors))"
   end
 
   fac_array::Array{DT} = match_factors(hspf, factors)
@@ -114,7 +114,7 @@ function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, s::Stri
   end
 
   if p > 0
-    factors = ones(size(hspf.cummulativeExposure, 2))
+    factors = ones(size(hspf.cumulativeExposure, 2))
     factors[p] = factor
     multiply_exposure_above!(hspf, above, factors)
   end
@@ -147,8 +147,8 @@ function multiply_exposure_below!(hspf, 2.0, 1.1, "population")
 ```
 """
 function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factors::Array{T}) where {T<:Real}
-  if (size(hspf.cummulativeExposure, 2) != length(factors))
-    @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
+  if (size(hspf.cumulativeExposure, 2) != length(factors))
+    @error "size(hspf.cumulativeExposure,2)!=length(factors) \n as $(size(hspf.cumulativeExposure,2)) != $(length(factors))"
   end
 
   if (below < hspf.elevation[1])
@@ -162,16 +162,16 @@ function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factors
   ind::Int64 = searchsortedfirst(hspf.elevation, below)
   insert_elevation_point(hspf, below, ind)
 
-  before = hspf.cummulativeExposure[ind, :]
+  before = hspf.cumulativeExposure[ind, :]
   for i in 1:ind
-    for j in 1:size(hspf.cummulativeExposure, 2)
-      hspf.cummulativeExposure[i, j] *= factors[j]
+    for j in 1:size(hspf.cumulativeExposure, 2)
+      hspf.cumulativeExposure[i, j] *= factors[j]
     end
   end
-  after = hspf.cummulativeExposure[ind, :]
+  after = hspf.cumulativeExposure[ind, :]
 
-  for i in (ind+1):size(hspf.cummulativeExposure, 1)
-    hspf.cummulativeExposure[i, :] += (after - before)
+  for i in (ind+1):size(hspf.cumulativeExposure, 1)
+    hspf.cumulativeExposure[i, :] += (after - before)
   end
 end
 
@@ -196,14 +196,14 @@ function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factor:
     end
 
     for i in 1:ind
-      hspf.cummulativeExposure[i, p[2]] *= factor
+      hspf.cumulativeExposure[i, p[2]] *= factor
     end
   end
 end
 
 function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below, factors) where {DT<:Real}
-  if (size(hspf.cummulativeExposure, 2) != length(factors))
-    @error "size(hspf.cummulativeExposure,2)!=length(factors) \n as $(size(hspf.cummulativeExposure,2)) != $(length(factors))"
+  if (size(hspf.cumulativeExposure, 2) != length(factors))
+    @error "size(hspf.cumulativeExposure,2)!=length(factors) \n as $(size(hspf.cumulativeExposure,2)) != $(length(factors))"
   end
 
   fac_array::Array{DT} = match_factors(hspf, factors)
@@ -217,7 +217,7 @@ function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, s::Stri
   end
 
   if p > 0
-    factors = ones(size(hspf.cummulativeExposure, 2))
+    factors = ones(size(hspf.cumulativeExposure, 2))
     factors[p] = factor
     multiply_exposure_below!(hspf, below, factors)
   end
@@ -244,13 +244,13 @@ function remove_exposure_below!(hspf, 2.0)
 """
 function remove_exposure_below!(hspf::HypsometricProfile{DT}, below::Real)::Array{DT} where {DT<:Real}
   if (below < hspf.elevation[1])
-    return (hspf.cummulativeExposure[1, :])
+    return (hspf.cumulativeExposure[1, :])
   end
 
   if (below >= hspf.elevation[size(hspf.elevation, 1)])
-    removed = hspf.cummulativeExposure[size(hspf.cummulativeExposure, 1), :]
+    removed = hspf.cumulativeExposure[size(hspf.cumulativeExposure, 1), :]
 
-    hspf.cummulativeExposure = zeros(size(hspf.cummulativeExposure, 1), size(hspf.cummulativeExposure, 2))
+    hspf.cumulativeExposure = zeros(size(hspf.cumulativeExposure, 1), size(hspf.cumulativeExposure, 2))
     return removed
   end
 
@@ -260,14 +260,14 @@ function remove_exposure_below!(hspf::HypsometricProfile{DT}, below::Real)::Arra
   removed = exposure(hspf, hspf.elevation[ind])[2]
 
   for i in 1:ind
-    for j in 1:size(hspf.cummulativeExposure, 2)
-      hspf.cummulativeExposure[i, j] = 0.0f0
+    for j in 1:size(hspf.cumulativeExposure, 2)
+      hspf.cumulativeExposure[i, j] = 0.0f0
     end
   end
 
-  for i in (ind+1):size(hspf.cummulativeExposure, 1)
-    for j in 1:size(hspf.cummulativeExposure, 2)
-      hspf.cummulativeExposure[i, j] -= removed[j]
+  for i in (ind+1):size(hspf.cumulativeExposure, 1)
+    for j in 1:size(hspf.cumulativeExposure, 2)
+      hspf.cumulativeExposure[i, j] -= removed[j]
     end
   end
 
@@ -298,8 +298,8 @@ function add_exposure_above!(hspf, 2.0, [1000, 250000])
 ```
 """
 function add_exposure_above!(hspf::HypsometricProfile, above::Real, values::Array{T}) where {T<:Real}
-  if (size(hspf.cummulativeExposure, 2) != length(values))
-    logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cummulativeExposure,2)!=length(values) as size($hspf.cummulativeExposure,2)!=length($values) as $(size(hspf.cummulativeExposure,2))!=$(length(values))")
+  if (size(hspf.cumulativeExposure, 2) != length(values))
+    logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n size(hspf.cumulativeExposure,2)!=length(values) as size($hspf.cumulativeExposure,2)!=length($values) as $(size(hspf.cumulativeExposure,2))!=$(length(values))")
   end
 
   if (above > hspf.elevation[size(hspf.elevation, 1)])
@@ -312,9 +312,9 @@ function add_exposure_above!(hspf::HypsometricProfile, above::Real, values::Arra
     insert_elevation_point(hspf, above, ind)
   end
 
-  for i in (ind+1):size(hspf.cummulativeExposure, 1)
-    for j in 1:size(hspf.cummulativeExposure, 2)
-      hspf.cummulativeExposure[i, j] += ((1 + i - (ind + 1)) * values[j] / (1 + size(hspf.cummulativeExposure, 1) - (ind + 1)))
+  for i in (ind+1):size(hspf.cumulativeExposure, 1)
+    for j in 1:size(hspf.cumulativeExposure, 2)
+      hspf.cumulativeExposure[i, j] += ((1 + i - (ind + 1)) * values[j] / (1 + size(hspf.cumulativeExposure, 1) - (ind + 1)))
     end
   end
 
@@ -355,14 +355,14 @@ function add_exposure_between!(hspf::HypsometricProfile, above::Real, below::Rea
   end
 
   for i in (ind1+1):ind2
-    for j in 1:size(hspf.cummulativeExposure, 2)
-      hspf.cummulativeExposure[i, j] += (((i - ind1) / (ind2 - ind1)) * values[j])
+    for j in 1:size(hspf.cumulativeExposure, 2)
+      hspf.cumulativeExposure[i, j] += (((i - ind1) / (ind2 - ind1)) * values[j])
     end
   end
 
-  for i in (ind2+1):size(hspf.cummulativeExposure, 1)
-    for j in 1:size(hspf.cummulativeExposure, 2)
-      hspf.cummulativeExposure[i, j] += values[j]
+  for i in (ind2+1):size(hspf.cumulativeExposure, 1)
+    for j in 1:size(hspf.cumulativeExposure, 2)
+      hspf.cumulativeExposure[i, j] += values[j]
     end
   end
 
@@ -371,11 +371,11 @@ end
 
 
 function match_factors(hspf::HypsometricProfile{DT}, factors)::Array{DT} where {DT<:Real}
-  if (size(hspf.cummulativeExposure, 2) != length(factors))
-    @error "\n size(hspf.cummulativeExposure,2)!=length(factors) as size($hspf.cummulativeExposure,2)!=length($factors) as $(size(hspf.cummulativeExposure,2))!=$(length(factors))"
+  if (size(hspf.cumulativeExposure, 2) != length(factors))
+    @error "\n size(hspf.cumulativeExposure,2)!=length(factors) as size($hspf.cumulativeExposure,2)!=length($factors) as $(size(hspf.cumulativeExposure,2))!=$(length(factors))"
   end
 
-  fac_array::Array{DT} = fill(1.0f0, size(hspf.cummulativeExposure, 2))
+  fac_array::Array{DT} = fill(1.0f0, size(hspf.cumulativeExposure, 2))
 
   for k in keys(factors)
     for i in 1:length(hspf.exposureNames)
@@ -392,26 +392,26 @@ function insert_elevation_point(hspf::HypsometricProfile{DT}, el::Real, ind::Int
   if hspf.elevation[ind] != el
     if (ind == 1)
       insert!(hspf.elevation, ind, el)
-      insert!(hspf.cummulativeArea, ind, 0)
-      hspf.cummulativeExposure = vcat(zeros(size(hspf.exposureNames, 1))', hspf.cummulativeExposure)
+      insert!(hspf.cumulativeArea, ind, 0)
+      hspf.cumulativeExposure = vcat(zeros(size(hspf.exposureNames, 1))', hspf.cumulativeExposure)
     elseif (ind > size(hspf.elevation, 1))
       push!(hspf.elevation, el)
-      push!(hspf.cummulativeArea, hspf.cummulativeArea[size(hspf.cummulativeArea, 1)])
-      hspf.cummulativeExposure = vcat(hspf.cummulativeExposure, hspf.cummulativeExposure[size(hspf.cummulativeExposure, 1), :]')
+      push!(hspf.cumulativeArea, hspf.cumulativeArea[size(hspf.cumulativeArea, 1)])
+      hspf.cumulativeExposure = vcat(hspf.cumulativeExposure, hspf.cumulativeExposure[size(hspf.cumulativeExposure, 1), :]')
     else
       #println("case3!")
-      #println(ind - 1, " el: ", hspf.elevation[ind-1], " area: ", hspf.cummulativeArea[ind-1])
-      #println(ind, " el: ", hspf.elevation[ind], " area: ", hspf.cummulativeArea[ind])
-      #println(ind + 1, " el: ", hspf.elevation[ind+1], " area: ", hspf.cummulativeArea[ind+1])
-      #println(ind + 2, " el: ", hspf.elevation[ind+2], " area: ", hspf.cummulativeArea[ind+2])
+      #println(ind - 1, " el: ", hspf.elevation[ind-1], " area: ", hspf.cumulativeArea[ind-1])
+      #println(ind, " el: ", hspf.elevation[ind], " area: ", hspf.cumulativeArea[ind])
+      #println(ind + 1, " el: ", hspf.elevation[ind+1], " area: ", hspf.cumulativeArea[ind+1])
+      #println(ind + 2, " el: ", hspf.elevation[ind+2], " area: ", hspf.cumulativeArea[ind+2])
       r = (el - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
       insert!(hspf.elevation, ind, el)
-      a = hspf.cummulativeArea[ind-1] + r * (hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1])
-      insert!(hspf.cummulativeArea, ind, a)
+      a = hspf.cumulativeArea[ind-1] + r * (hspf.cumulativeArea[ind] - hspf.cumulativeArea[ind-1])
+      insert!(hspf.cumulativeArea, ind, a)
       #println(r)
 
-      expo = hspf.cummulativeExposure[ind-1, :] + r * (hspf.cummulativeExposure[ind, :] - hspf.cummulativeExposure[ind-1, :])
-      hspf.cummulativeExposure = vcat(vcat(hspf.cummulativeExposure[1:(ind-1), 1:end], expo'), hspf.cummulativeExposure[ind:end, 1:end])
+      expo = hspf.cumulativeExposure[ind-1, :] + r * (hspf.cumulativeExposure[ind, :] - hspf.cumulativeExposure[ind-1, :])
+      hspf.cumulativeExposure = vcat(vcat(hspf.cumulativeExposure[1:(ind-1), 1:end], expo'), hspf.cumulativeExposure[ind:end, 1:end])
 
     end
   end

@@ -40,7 +40,7 @@ function runTests()
         @test maximum(hpSettings[2]) == maximum(hpTest.elevation)
         @test minimum(hpSettings[2]) == minimum(hpTest.elevation)
         randomIndex = rand(2:length(hpTest.elevation))
-        @test sum(hpSettings[3]) == hpTest.cummulativeArea[end]
+        @test sum(hpSettings[3]) == hpTest.cumulativeArea[end]
       end
     end
 
@@ -55,20 +55,20 @@ function runTests()
         @test volume > 0
         @test volume > volume2
         @test hp.elevation[1] == 20.5f0
-        @test hp.cummulativeArea[1] == 0f0
-        @test hp.cummulativeArea[end] == sum(hpSettings[3])
-        @test hp.cummulativeArea[50] == hp2.cummulativeArea[50] 
-        @test hp.cummulativeExposure[50] == hp2.cummulativeExposure[50]
-        @test hp.cummulativeExposure[end,:] == [sum(hpSettings[4]), sum(hpSettings[5])]  
-        @test hp.cummulativeExposure[end,:] == hp2.cummulativeExposure[end,:]
+        @test hp.cumulativeArea[1] == 0f0
+        @test hp.cumulativeArea[end] == sum(hpSettings[3])
+        @test hp.cumulativeArea[50] == hp2.cumulativeArea[50] 
+        @test hp.cumulativeExposure[50] == hp2.cumulativeExposure[50]
+        @test hp.cumulativeExposure[end,:] == [sum(hpSettings[4]), sum(hpSettings[5])]  
+        @test hp.cumulativeExposure[end,:] == hp2.cumulativeExposure[end,:]
 
         # Test land raising to a higher elevation than the highest point
         volume = land_raising!(hp, 105f0)
         @test volume > 0
         @test hp.elevation[1] == 105f0
-        @test hp.cummulativeArea[1] == 0f0
-        @test hp.cummulativeArea[end] == sum(hpSettings[3])
-        @test hp.cummulativeExposure[end,:] == [sum(hpSettings[4]), sum(hpSettings[5])] 
+        @test hp.cumulativeArea[1] == 0f0
+        @test hp.cumulativeArea[end] == sum(hpSettings[3])
+        @test hp.cumulativeExposure[end,:] == [sum(hpSettings[4]), sum(hpSettings[5])] 
       end
     end
 end

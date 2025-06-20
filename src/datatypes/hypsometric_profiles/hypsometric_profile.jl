@@ -12,9 +12,9 @@ mutable struct HypsometricProfile{DT<:Real}
   width_unit::String
   elevation::Array{DT}
   elevation_unit::String
-  cummulativeArea::Array{DT}
+  cumulativeArea::Array{DT}
   area_unit::String
-  cummulativeExposure::Array{DT,2}
+  cumulativeExposure::Array{DT,2}
   exposureNames::Array{String}
   exposureUnits::Array{String}
   doLog::Bool
@@ -70,18 +70,17 @@ mutable struct HypsometricProfile{DT<:Real}
     new{DT}(coast_length, coast_length_unit, elevations, elevation_unit, cumsum(area), area_unit, cumsum(exposure_data, dims=1), exposure_names, exposure_units)
   end
 
-  function HypsometricProfile(df::DataFrame; exposureCols = Symbol[], exposureUnits = String[], units = (width = "m", elevation = "m", area = "m²"))
+  function HypsometricProfile(df::DataFrame; exposureCols=Symbol[], exposureUnits=String[], units=(width="m", elevation="m", area="m²"))
 
-    exportData = vcat([hcat(values(row) ...) for row in eachrow(df[:, exposureCols])] ...)
+    exportData = vcat([hcat(values(row)...) for row in eachrow(df[:, exposureCols])]...)
 
     new{Float32}(df.width[1], units.width,
-        df.elevation, units.elevation,
-        df.cummulativeArea, units.area,
-        exportData, 
-        String.(exposureCols),
-        exposureUnits)
-end
-
+      df.elevation, units.elevation,
+      df.cumulativeArea, units.area,
+      exportData,
+      String.(exposureCols),
+      exposureUnits)
+  end
 
 end
 
@@ -100,7 +99,7 @@ function distance(hspf::HypsometricProfile{DT}, e::Real)::DT where {DT<:Real}
   d = 0.0
   ind::Int64 = searchsortedfirst(hspf.elevation, e)
   for i in 2:(ind-1)
-    Δ_area = hspf.cummulativeArea[i] - hspf.cummulativeArea[i-1]
+    Δ_area = hspf.cumulativeArea[i] - hspf.cumulativeArea[i-1]
     @inbounds Δ_el = (hspf.elevation[i] - hspf.elevation[i-1]) / 1000
     if (Δ_area != 0) && ((Δ_area / hspf.width) * (Δ_area / hspf.width) > (Δ_el * Δ_el))
       d += sqrt((Δ_area / hspf.width) * (Δ_area / hspf.width) - (Δ_el * Δ_el))
@@ -110,7 +109,7 @@ function distance(hspf::HypsometricProfile{DT}, e::Real)::DT where {DT<:Real}
   if (ind <= size(hspf.elevation, 1))
     @inbounds Δ_el = (e - hspf.elevation[ind-1]) / 1000
     @inbounds Δ_el_rel = (e - hspf.elevation[ind-1]) / (hspf.elevation[ind] - hspf.elevation[ind-1])
-    @inbounds Δ_area = (hspf.cummulativeArea[ind] - hspf.cummulativeArea[ind-1]) * Δ_el_rel
+    @inbounds Δ_area = (hspf.cumulativeArea[ind] - hspf.cumulativeArea[ind-1]) * Δ_el_rel
 
     if (Δ_area != 0) && ((Δ_area / hspf.width) * (Δ_area / hspf.width) > (Δ_el * Δ_el))
       d += sqrt((Δ_area / hspf.width) * (Δ_area / hspf.width) - (Δ_el * Δ_el))
@@ -125,9 +124,9 @@ function slope(hspf::HypsometricProfile{DT}, i::Int) where {DT<:Real}
     return Inf
   end
   if (i > size(hspf.elevation, 1))
-    return (hspf.width / (hspf.cummulativeArea[size(hspf.elevation, 1)] - hspf.cummulativeArea[size(hspf.elevation, 1)-1])) * (hspf.elevation[size(hspf.elevation, 1)] - hspf.elevation[size(hspf.elevation, 1)-1]) * convert(DT, 0.001)
+    return (hspf.width / (hspf.cumulativeArea[size(hspf.elevation, 1)] - hspf.cumulativeArea[size(hspf.elevation, 1)-1])) * (hspf.elevation[size(hspf.elevation, 1)] - hspf.elevation[size(hspf.elevation, 1)-1]) * convert(DT, 0.001)
   end
-  return (hspf.width / (hspf.cummulativeArea[i] - hspf.cummulativeArea[i-1])) * (hspf.elevation[i] - hspf.elevation[i-1]) * convert(DT, 0.001)
+  return (hspf.width / (hspf.cumulativeArea[i] - hspf.cumulativeArea[i-1])) * (hspf.elevation[i] - hspf.elevation[i-1]) * convert(DT, 0.001)
 end
 
 function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT<:Real}
@@ -136,7 +135,7 @@ function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT
   end
 
   can = Array{DT}(undef, size(elevation, 1))
-  cden::Array{DT,2} = Array{DT,2}(undef, size(elevation, 1), size(hspf.cummulativeExposure, 2))
+  cden::Array{DT,2} = Array{DT,2}(undef, size(elevation, 1), size(hspf.cumulativeExposure, 2))
 
   for i in 1:size(elevation, 1)
     t_exposure = exposure(hspf, elevation[i])
@@ -145,8 +144,8 @@ function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT
   end
 
   hspf.elevation = copy(elevation)
-  hspf.cummulativeArea = can
-  hspf.cummulativeExposure = cden
+  hspf.cumulativeArea = can
+  hspf.cumulativeExposure = cden
 end
 
 """
@@ -180,22 +179,22 @@ function compress!(hspf::HypsometricProfile{DT}) where {DT<:Real}
 
     # OLD:
     #newElevation = zeros(DT, size(hspf.elevation, 1) - d)
-    #newCummulativeArea = zeros(DT, size(hspf.elevation, 1) - d)
-    newCummulativeExposure = zeros(DT, size(hspf.cummulativeExposure, 1) - d, size(hspf.cummulativeExposure, 2))
+    #newCumulativeArea = zeros(DT, size(hspf.elevation, 1) - d)
+    newCumulativeExposure = zeros(DT, size(hspf.cumulativeExposure, 1) - d, size(hspf.cumulativeExposure, 2))
 
     c = 1
     for i in 1:size(hspf.elevation, 1)
       if (keep[i])
         hspf.elevation[c] = hspf.elevation[i]
-        hspf.cummulativeArea[c] = hspf.cummulativeArea[i]
-        newCummulativeExposure[c, :] = hspf.cummulativeExposure[i, :]
+        hspf.cumulativeArea[c] = hspf.cumulativeArea[i]
+        newCumulativeExposure[c, :] = hspf.cumulativeExposure[i, :]
         c += 1
       end
     end
 
     resize!(hspf.elevation, c - 1)
-    resize!(hspf.cummulativeArea, c - 1)
-    hspf.cummulativeExposure = newCummulativeExposure
+    resize!(hspf.cumulativeArea, c - 1)
+    hspf.cumulativeExposure = newCumulativeExposure
   end
 end
 
@@ -225,25 +224,25 @@ function compress_multithread!(hspf::HypsometricProfile{DT}, mtlock) where {DT<:
 
     # OLD:
     #newElevation = zeros(DT, size(hspf.elevation, 1) - d)
-    #newCummulativeArea = zeros(DT, size(hspf.elevation, 1) - d)
-    newCummulativeExposure = zeros(DT, size(hspf.cummulativeExposure, 1) - d, size(hspf.cummulativeExposure, 2))
+    #newCumulativeArea = zeros(DT, size(hspf.elevation, 1) - d)
+    newCumulativeExposure = zeros(DT, size(hspf.cumulativeExposure, 1) - d, size(hspf.cumulativeExposure, 2))
 
     c = 1
     for i in 1:size(hspf.elevation, 1)
       if (keep[i])
         Threads.lock(mtlock) do
           hspf.elevation[c] = hspf.elevation[i]
-          hspf.cummulativeArea[c] = hspf.cummulativeArea[i]
+          hspf.cumulativeArea[c] = hspf.cumulativeArea[i]
         end
-        newCummulativeExposure[c, :] = hspf.cummulativeExposure[i, :]
+        newCumulativeExposure[c, :] = hspf.cumulativeExposure[i, :]
         c += 1
       end
     end
 
     Threads.lock(mtlock) do
       resize!(hspf.elevation, c - 1)
-      resize!(hspf.cummulativeArea, c - 1)
-      hspf.cummulativeExposure = newCummulativeExposure
+      resize!(hspf.cumulativeArea, c - 1)
+      hspf.cumulativeExposure = newCumulativeExposure
     end
   end
 end
@@ -279,7 +278,7 @@ end
 
 unit(hspf::HypsometricProfile, n::Symbol) = unit(hspf, String(n))
 
-function complete_zero(exposure::Tuple{DT, Vector{DT}}) where {DT<:Real}
+function complete_zero(exposure::Tuple{DT,Vector{DT}}) where {DT<:Real}
   if (exposure[1] != 0)
     return false
   end
