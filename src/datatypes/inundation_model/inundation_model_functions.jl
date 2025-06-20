@@ -50,34 +50,43 @@ function inundate(hspf::HypsometricProfile{DT}, wl::Real, im::IM)::Tuple{Array{D
 
     wl_attenuated = copy(hspf.elevation)
     wl_attenuated[1] = wl
-    ind = 2
-    Δ_wl_att_part = (distance(hspf, hspf.elevation[ind]) - distance(hspf, hspf.elevation[ind-1])) * im.attenuation_rate
-    Δ_wl_att_sum = Δ_wl_att_part
 
-    while ((Δ_wl_att_sum <= wl) && (ind <= size(hspf.elevation, 1)) && (wl - Δ_wl_att_sum >= hspf.elevation[ind]))
-        wl_attenuated[ind] = wl - Δ_wl_att_sum
-        ind += 1
-        Δ_wl_att_part = (distance(hspf, hspf.elevation[ind]) - distance(hspf, hspf.elevation[ind-1])) * im.attenuation_rate
-        Δ_wl_att_sum += Δ_wl_att_part
+    ind = 1
+    Δ_wl_att_sum = 0
+    found_break = false
+
+    while !found_break
+        if (ind >= size(hspf.elevation, 1))
+            found_break = true
+        else
+            Δ_wl_att_part = (distance(hspf, hspf.elevation[ind+1]) - distance(hspf, hspf.elevation[ind])) * im.attenuation_rate
+            if wl - Δ_wl_att_sum >= hspf.elevation[ind+1]
+                Δ_wl_att_sum += Δ_wl_att_part
+                ind += 1
+                wl_attenuated[ind] = wl - Δ_wl_att_sum
+            else
+                found_break = true
+            end
+        end
     end
 
-    if (ind > size(hspf.elevation, 1))
+    if (ind == size(hspf.elevation, 1))
+        Δ_wl_att_part = (distance(hspf, hspf.elevation[ind])-distance(hspf, hspf.elevation[ind-1])) * im.attenuation_rate
+        Δ_wl_att_sum += Δ_wl_att_part
+        wl_attenuated[ind] = wl - Δ_wl_att_sum
         return (hspf.elevation, wl_attenuated)
     end
 
-    if (wl - Δ_wl_att_sum < hspf.elevation[ind]) || (Δ_wl_att_sum > wl)
-        ret_el = hspf.elevation[1:ind-1]
-        ret_wl = wl_attenuated[1:ind-1]
-        d = distance(hspf, hspf.elevation[ind-1])
-        sl = slope(hspf, ind) * 1000 # (sl is now in m/km)
-        y_el = d * sl - ret_el[ind-1]
-        y_wl = d * im.attenuation_rate + ret_wl[ind-1]
-        d_intersect = (y_wl - y_el) / (sl + im.attenuation_rate)
-        push!(ret_el, hspf.elevation[ind-1] + sl * d_intersect)
-        push!(ret_wl, hspf.elevation[ind-1] + sl * d_intersect)
-        return (ret_el, ret_wl)
-    end
+    d = distance(hspf, hspf.elevation[ind])
+    sl = slope(hspf, ind + 1) * 1000 # (sl is now in m/km)
+    d_intersect = (wl_attenuated[ind] - hspf.elevation[ind]) / (sl + im.attenuation_rate)
 
+    ret_el = hspf.elevation[1:ind]
+    ret_wl = wl_attenuated[1:ind]
+    push!(ret_el, hspf.elevation[ind] + sl * d_intersect)
+    push!(ret_wl, hspf.elevation[ind] + sl * d_intersect)
+
+    return (ret_el, ret_wl)
 end
 
 
@@ -97,7 +106,7 @@ function water_depth(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::I
     if (wl <= hspf.elevation[1])
         return 0.0
     end
-    
+
     ind = 1
     Δ_wl_att_sum = 0
     found_break = false

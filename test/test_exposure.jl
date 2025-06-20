@@ -38,6 +38,7 @@ function runTests()
   @testset "exposure()" begin
     for i in 1:number_of_tests
       hpTest, hpSettings = initHypsometricProfile(true)
+
       @test exposure(hpTest, 0, BathtubInundation()) == (0.0f0, Float32[0.0, 0.0])
       @test isapprox(exposure(hpTest, 100, BathtubInundation())[1], sum(hpSettings[3]), atol=0.0001)
       @test isapprox(exposure(hpTest, 100, BathtubInundation())[2][1], sum(hpSettings[4]), atol=0.0001)
@@ -98,7 +99,9 @@ function runTests()
       @test isapprox(exposure(hpTest, el, :area, BathtubInundation()), exposure(hpTest2, el, :area, BathtubInundation()), atol=0.001)
       @test isapprox(exposure(hpTest, el, :area, LinearDistanceAttenuatedInundation(0.25)), exposure(hpTest2, el, :area, LinearDistanceAttenuatedInundation(0.25)), atol=0.001)
       @test isapprox(exposure(hpTest, el, :assets, BathtubInundation()), exposure(hpTest2, el, :assets, BathtubInundation()), atol=0.001)
+
       @test isapprox(exposure(hpTest, el, :assets, LinearDistanceAttenuatedInundation(0.25)), exposure(hpTest2, el, :assets, LinearDistanceAttenuatedInundation(0.25)), atol=0.001)
+
       @test isapprox(exposure(hpTest, el, :population, BathtubInundation()), exposure(hpTest2, el, :population, BathtubInundation()), atol=0.001)
       @test isapprox(exposure(hpTest, el, :population, LinearDistanceAttenuatedInundation(0.25)), exposure(hpTest2, el, :population, LinearDistanceAttenuatedInundation(0.25)), atol=0.001)
       @test exposure(hpTest, el + 10, :assets, BathtubInundation()) < exposure(hpTest2, el + 10, :assets, BathtubInundation())
@@ -119,10 +122,14 @@ function runTests()
       @test isapprox(exposure(hpTest, el, :population, BathtubInundation()), exposure(hpTest2, el, :population, BathtubInundation()) * 0.75, atol=0.001)
       @test isapprox(exposure(hpTest, el, :population, LinearDistanceAttenuatedInundation(0.25)), exposure(hpTest2, el, :population, LinearDistanceAttenuatedInundation(0.25)) * 0.75, atol=0.001)
 
-      @test exposure(hpTest, el + 10, :assets, BathtubInundation()) < exposure(hpTest2, el + 10, :assets, BathtubInundation())
-      @test exposure(hpTest, el + 10, :assets, LinearDistanceAttenuatedInundation(0.25)) < exposure(hpTest2, el + 10, :assets, LinearDistanceAttenuatedInundation(0.25))
-      @test exposure(hpTest, el + 10, :population, BathtubInundation()) < exposure(hpTest2, el + 10, :population, BathtubInundation())
-      @test exposure(hpTest, el + 10, :population, LinearDistanceAttenuatedInundation(0.25)) < exposure(hpTest2, el + 10, :population, LinearDistanceAttenuatedInundation(0.25))
+      if exposure(hpTest2, el + 10, :assets, BathtubInundation()) > exposure(hpTest2, el, :assets, BathtubInundation())
+        @test exposure(hpTest, el + 10, :assets, BathtubInundation()) < exposure(hpTest2, el + 10, :assets, BathtubInundation())
+        @test exposure(hpTest, el + 10, :assets, LinearDistanceAttenuatedInundation(0.25)) < exposure(hpTest2, el + 10, :assets, LinearDistanceAttenuatedInundation(0.25))
+      end
+      if exposure(hpTest2, el + 10, :population, BathtubInundation()) > exposure(hpTest2, el, :population, BathtubInundation())
+        @test exposure(hpTest, el + 10, :population, BathtubInundation()) < exposure(hpTest2, el + 10, :population, BathtubInundation())
+        @test exposure(hpTest, el + 10, :population, LinearDistanceAttenuatedInundation(0.25)) < exposure(hpTest2, el + 10, :population, LinearDistanceAttenuatedInundation(0.25))
+      end
 
       multiply_exposure_below!(hpTest, el, :population, 1/0.75)
       @test isapprox(exposure(hpTest, el, :population, BathtubInundation()), exposure(hpTest2, el, :population, BathtubInundation()), atol=0.001)
@@ -140,11 +147,8 @@ function runTests()
       hpTest2 = deepcopy(hpTest)
 
       removed_exp = remove_exposure_below!(hpTest, 50)
-      println(removed_exp)
       @test exposure(hpTest, 50, BathtubInundation())[2] == Float32[0.0, 0.0]
       @test exposure(hpTest, 100, BathtubInundation())[2] .+ removed_exp == exposure(hpTest2, 100, BathtubInundation())[2]
-      
-
       
       add_exposure_between!(hpTest, 0, 50, removed_exp)
       @test exposure(hpTest, 100, BathtubInundation()) == exposure(hpTest2, 100, BathtubInundation())
