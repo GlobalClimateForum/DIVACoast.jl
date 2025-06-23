@@ -1,13 +1,14 @@
 """
-    damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::Vector{Function}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
+    damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{}, ddfs::Vector{Function}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
+    ...
 
 Calculates the flood damage for a given water level wl based on provided damage functions ddfs for all exposure variables in s.
-The default inundation model is the bathtub model, if not specified.
+The default inundation model (if not specified otherwise) is bathtub inundation.
 
 # Arguments
 - `hspf::HypsometricProfile{DT}`: The hypsometric profile.
 - `wl::Real`: The water level for which the damage is calculated.
-- `s::Array{String}`: An array of exposure variable names for which the damage is calculated. If only one variable is needed, it has to be a single string/symbol.
+- `s::String or s::Symbol or s::Array{String} or Array{Symbol}`: An array of exposure variable names for which the damage is calculated. If only one variable is used please use the version with a single variable instaed of an array (the latter one might cause problems then).
 - `ddfs::Vector{Function}`: A vector of damage functions corresponding to the exposure variables in s. 
   StandardDDF(h) can be used for a standard depth-damage function 
 `f(d)= d/(d+h)`
@@ -16,9 +17,9 @@ The default inundation model is the bathtub model, if not specified.
 
 # Example
 ```julia
-  damage(hspf, 2.0, ["assets"], [d -> d/(d+1)])
-  damage(hspf, 2.0, ["population","assets"], [d -> 1, d -> d/(d+1)])
-  damage(hspf, 2.0, [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)])
+  damage(hspf, 2.0, "assets", d -> d/(d+1))   # returns a number
+  damage(hspf, 4.5, ["population","assets"], [d -> 1, d -> d/(d+1)])    # returns a 2-elment Array
+  damage(hspf, 4.5, [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)])    # returns a 2-elment Array
 ```
 """
 function damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::Vector{Function}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
@@ -63,9 +64,15 @@ function damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::
 end
 
 function partial_damage(hspf::HypsometricProfile{DT}, ddfs::Vector{Function},
-  el_low::DT, el_high::DT, wl::Real, wl_low::DT, wl_high::DT, sl::DT, ρ_area::DT, ρ_exp::Array{DT}, im::IM) where {DT<:Real,IM<:BathtubInundation}
+  el_low::DT, el_high::DT, wl::Real, wl_low::DT, wl_high::DT, sl::DT, ρ_area::DT, ρ_exp::Array{DT}, im::BathtubInundation) where {DT<:Real}
   factors = map(f -> (quadgk(d -> f(d), wl_high - el_high, wl_low - el_low, rtol=1e-4))[1], ddfs)
   return (factors .* (ρ_exp / sl))
+end
+
+function partial_damage(hspf::HypsometricProfile{DT}, ddfs::Vector{Function},
+  el_low::DT, el_high::DT, wl::Real, wl_low::DT, wl_high::DT, sl::DT, ρ_area::DT, ρ_exp::Array{DT}, im::LinearDistanceAttenuatedInundation) where {DT<:Real}
+  factors = map(f -> (quadgk(d -> f(d), wl_high - el_high, wl_low - el_low, rtol=1e-4))[1], ddfs)
+  return (factors .* (ρ_exp / (sl+(im.attenuation_rate/1000))))
 end
 
 function partial_damage(hspf::HypsometricProfile{DT}, ddfs::Vector{Function},

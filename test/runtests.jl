@@ -5,7 +5,7 @@ using Logging
 using Test
 
 # Get all test files, except excluded ones
-excluded = Set(["runtests.jl", "test_hsps_df.jl", "test_damages.jl", "test_io.jl"])
+excluded = Set(["runtests.jl", "test_hsps_df.jl", "test_io.jl"])
 tests = [file for file in readdir() if endswith(file, ".jl") && file ∉ excluded]
 
 #run tests
