@@ -5,7 +5,7 @@ using StatsPlots
 """
     ContNonparamDist(xs, ps)
 
-A *Continuous nonparametric distribution* explicitly defines an arbitrary cummulative probability distribution function in terms of a list of real support values and their
+A *Continuous nonparametric distribution* explicitly defines an arbitrary cumulative probability distribution function in terms of a list of real support values and their
 corresponding probabilities
 
 ```julia
@@ -83,7 +83,7 @@ end
 """
     Distributions.ccdf(d::ContNonparamDist, x::Real)
 
-Complementary cummulative distribution function, also called qunatile function
+Complementary cumulative distribution function, also called qunatile function
 """
 function Distributions.ccdf(d::ContNonparamDist, x::Real)
     interpol = get_interpol(d)

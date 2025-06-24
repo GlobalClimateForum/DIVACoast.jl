@@ -38,9 +38,9 @@ function expected_damage_bathtub_standard_ddf(lcm::LocalCoastalImpactModel{DT,DA
   end
 
   edam_area = expected_damage_integral_computation(lcm, "area", x -> f_to_integrate(lcm, x, hdd_area, :area), lower_limit, maximum(lcm.surge_model), tol)
-  edam_other = Array{DT}(undef, size(lcm.coastal_plain_model.cummulativeExposure)[2])
+  edam_other = Array{DT}(undef, size(lcm.coastal_plain_model.cumulativeExposure)[2])
 
-  for ind in 1:size(lcm.coastal_plain_model.cummulativeExposure, 2)
+  for ind in 1:size(lcm.coastal_plain_model.cumulativeExposure, 2)
     edam_other[ind] = expected_damage_integral_computation(lcm, String(lcm.coastal_plain_model.exposureNames[ind]), x -> f_to_integrate(lcm, x, hdds_other[ind], Symbol(lcm.coastal_plain_model.exposureNames[ind])), lower_limit, maximum(lcm.surge_model), tol)
   end
 
@@ -78,9 +78,9 @@ function expected_damage_bathtub(lcm::LocalCoastalImpactModel{DT}, ddf_area::Fun
   end
 
   edam_area = expected_damage_integral_computation(lcm, "area", x -> damage_bathtub(lcm.coastal_plain_model, x, ddf_area, :area) * pdf(lcm.surge_model, x), lower_limit, maximum(lcm.surge_model), tol)
-  edam_other = Array{DT}(undef, size(lcm.coastal_plain_model.cummulativeExposure)[2])
+  edam_other = Array{DT}(undef, size(lcm.coastal_plain_model.cumulativeExposure)[2])
 
-  for ind in 1:size(lcm.coastal_plain_model.cummulativeExposure, 2)
+  for ind in 1:size(lcm.coastal_plain_model.cumulativeExposure, 2)
     edam_other[ind] = expected_damage_integral_computation(lcm, String(lcm.coastal_plain_model.exposureNames[ind]), x -> damage_bathtub(lcm.coastal_plain_model, x, ddf_other[ind], lcm.coastal_plain_model.exposureNames[ind]) * pdf(lcm.surge_model, x), lower_limit, maximum(lcm.surge_model), tol)
   end
 

@@ -38,7 +38,7 @@ function runTests()
         @test minimum(hpSettings[2]) == minimum(hpTest.elevation)
         randomIndex = rand(2:length(hpTest.elevation))
         @test hpTest.delta == hpTest.elevation[randomIndex] - hpTest.elevation[randomIndex - 1]
-        @test sum(hpSettings[3]) == hpTest.cummulativeArea[end]
+        @test sum(hpSettings[3]) == hpTest.cumulativeArea[end]
       end
   
 end

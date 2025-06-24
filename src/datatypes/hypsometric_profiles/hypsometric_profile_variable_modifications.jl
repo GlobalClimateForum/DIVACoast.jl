@@ -32,7 +32,7 @@ function add_exposure_variable!(hspf::HypsometricProfile, elevation::Array{DT}, 
 
   push!(hspf.exposureNames, exposure_name)
   push!(hspf.exposureUnits, exposure_unit)
-  hspf.cummulativeExposure = hcat(hspf.cummulativeExposure, cumsum(exposure_data))
+  hspf.cumulativeExposure = hcat(hspf.cumulativeExposure, cumsum(exposure_data))
 
   compress!(hspf)
 end
@@ -62,7 +62,7 @@ function remove_exposure_variable!(hspf::HypsometricProfile, ind::Integer)
   if (1 <= ind && ind <= size(hspf.exposureUnits, 1))
     hspf.exposureSymbols = (hspf.exposureSymbols[1:ind-1]..., hspf.exposureSymbols[ind+1:size(hspf.exposureUnits, 1)]...)
     deleteat!(hspf.exposureUnits, ind)
-    hspf.cummulativeExposure = hspf.cummulativeExposure[:, 1:end.!=ind]
+    hspf.cumulativeExposure = hspf.cumulativeExposure[:, 1:end.!=ind]
   end
 end
 

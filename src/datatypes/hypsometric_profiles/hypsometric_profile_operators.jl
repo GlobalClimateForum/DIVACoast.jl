@@ -29,33 +29,33 @@ function land_raising!(hspf::HypsometricProfile{Float32}, min_elevation::DT) whe
     if idx <= length(hspf.elevation) && min_elevation != hspf.elevation[idx] 
         #insert!(hspf.elevation, idx, min_elevation)
         # Insert new values in exposure arrays
-        #hspf.cummulativeArea = [hspf.cummulativeArea[1:idx-1, :]; exposure(hp, min_elevation)[1]; hspf.cummulativeArea[idx:end, :]]
-        #hspf.cummulativeExposure = [hspf.cummulativeExposure[1:idx-1, :]; exposure(hp, min_elevation)[2]'; hspf.cummulativeExposure[idx:end, :]]
+        #hspf.cumulativeArea = [hspf.cumulativeArea[1:idx-1, :]; exposure(hp, min_elevation)[1]; hspf.cumulativeArea[idx:end, :]]
+        #hspf.cumulativeExposure = [hspf.cumulativeExposure[1:idx-1, :]; exposure(hp, min_elevation)[2]'; hspf.cumulativeExposure[idx:end, :]]
         insert_elevation_point(hspf, min_elevation, idx)
     end
 
     #calculate volume needed to raise land
-    area = vcat(0,[hspf.cummulativeArea[i]-hspf.cummulativeArea[i-1] for i in 2:length(hspf.cummulativeArea)])
+    area = vcat(0,[hspf.cumulativeArea[i]-hspf.cumulativeArea[i-1] for i in 2:length(hspf.cumulativeArea)])
     volume = sum([area[i] .* 1000000 .* (2.0.*min_elevation.-hspf.elevation[i-1].- hspf.elevation[i])./2 for i in 2:minimum([idx,length(hspf.elevation)])])
     
     if min_elevation > hp.elevation[end]
         # if new elevation is higher than entire floodplain, create new hp values that contain zero and entire area/exposure
         hspf.elevation = [min_elevation, min_elevation]
-        hspf.cummulativeArea = [0f0, hspf.cummulativeArea[end]]
-        hspf.cummulativeExposure = vcat(zeros(eltype(hspf.cummulativeExposure), 1, size(hspf.cummulativeExposure, 2)), hspf.cummulativeExposure[end,:]')
+        hspf.cumulativeArea = [0f0, hspf.cumulativeArea[end]]
+        hspf.cumulativeExposure = vcat(zeros(eltype(hspf.cumulativeExposure), 1, size(hspf.cumulativeExposure, 2)), hspf.cumulativeExposure[end,:]')
         
         #return volume of land raised
         return volume
     else
         #Remove all elements < min_elevation in elevation and cummulated area/exposure 
         deleteat!(hspf.elevation, 1:idx-1)
-        hspf.cummulativeArea = hspf.cummulativeArea[idx:end,:]
-        hspf.cummulativeExposure = hspf.cummulativeExposure[idx:end,:]
+        hspf.cumulativeArea = hspf.cumulativeArea[idx:end,:]
+        hspf.cumulativeExposure = hspf.cumulativeExposure[idx:end,:]
         
         # Insert new values with min_elevation and zero area/exposure
         insert!(hspf.elevation, 1, min_elevation)
-        hspf.cummulativeArea = vcat(0f0, hspf.cummulativeArea) 
-        hspf.cummulativeExposure = vcat(zeros(eltype(hspf.cummulativeExposure), 1, size(hspf.cummulativeExposure, 2)), hspf.cummulativeExposure)
+        hspf.cumulativeArea = vcat(0f0, hspf.cumulativeArea) 
+        hspf.cumulativeExposure = vcat(zeros(eltype(hspf.cumulativeExposure), 1, size(hspf.cumulativeExposure, 2)), hspf.cumulativeExposure)
         
         #return volume of land raised 
         return volume
@@ -88,8 +88,8 @@ Addtion of two Hypsometric Profiles. Adds (combines) the folling properties of t
 # Arguments
 - Elevation: Combine Increments
 - width: Adds the width of both HypsometricProfiles
-- cummulativeArea: Adds the cummulative are of both HypsometricProfiles
-- static Exposure: Adds the cummulative static exposure of both HypsometricProfiles
+- cumulativeArea: Adds the cumulative are of both HypsometricProfiles
+- static Exposure: Adds the cumulative static exposure of both HypsometricProfiles
 """
 function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{Float32})
 

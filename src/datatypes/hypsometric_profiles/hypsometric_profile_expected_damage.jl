@@ -1,5 +1,7 @@
 using Distributions
 
+include("hypsometric_profile_expected_damage_special_cases.jl")
+
 """
     expected_damage_bathtub_standard_ddf(LocalCoastalModel::LocalCoastalModel{DT}, hdd_area::DT, hdds_other::Array{DT})
 

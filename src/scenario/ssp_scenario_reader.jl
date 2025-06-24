@@ -72,7 +72,7 @@ function ssp_get_growth_factor(wrapped_ssp::SSPScenarioReader{T}, variable::Stri
             ret = ret * (1 + ssp_get_growth(wrapped_ssp, filtered_df[ind_y1-1, :].growth))^(years_available[ind_y1] - year1)
         end
 
-        # Calculate cummulative growth between year_1 and year_2
+        # Calculate cumulative growth between year_1 and year_2
         for ind in (ind_y1+1):ind_y2 # Iterate between years
             
             if ind <= size(years_available, 1) # Check if still in available range
