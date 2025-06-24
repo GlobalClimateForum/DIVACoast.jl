@@ -30,15 +30,15 @@ function private_to_DF(hspf::HypsometricProfile{DT}) where {DT<:Real}
     # Init DataFrame
     df = DataFrame()
 
-    # Add elevation and cummulativeArea columns
+    # Add elevation and cumulativeArea columns
     df.elevation = hspf.elevation
-    df.cummulativeArea =  hspf.cummulativeArea
+    df.cumulativeArea =  hspf.cumulativeArea
     df.width = fill(hspf.width, size(df, 1))
     
-    # Get cummulativeExposure values
-    exposures = getfield(hspf, :cummulativeExposure)
+    # Get cumulativeExposure values
+    exposures = getfield(hspf, :cumulativeExposure)
    
-    # Add cummulativeExposure columns to DataFrame
+    # Add cumulativeExposure columns to DataFrame
     symbols = hasproperty(hspf, :exposureNames) ? hspf.exposureNames : []
     
     for i in 1:size(exposures, 2)

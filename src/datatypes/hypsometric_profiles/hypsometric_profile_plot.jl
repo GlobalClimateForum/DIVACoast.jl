@@ -4,7 +4,7 @@ using UnicodePlots
 function RecipesBase.plot(hp::HypsometricProfile)
     currentEnv_ = private_detectENV()
     
-    x = hp.cummulativeArea / hp.width
+    x = hp.cumulativeArea / hp.width
     y = hp.elevation
     lecz = x[findfirst( e -> e == 10, y)]
     plotargs = (
@@ -24,7 +24,7 @@ function RecipesBase.plot(hp::HypsometricProfile)
         Plots.hline!([0], color=:black, linewidth=1, linestyle=:dash, label="0 $(hp.elevation_unit)")
         Plots.vline!([lecz], color=:red, linewidth=2, label="LECZ")
     else
-        p = lineplot(hp.cummulativeArea / hp.width, hp.elevation, xlabel="Distance from coastline [$(hp.width_unit)]", ylabel="Elevation [$(hp.elevation_unit)]")
+        p = lineplot(hp.cumulativeArea / hp.width, hp.elevation, xlabel="Distance from coastline [$(hp.width_unit)]", ylabel="Elevation [$(hp.elevation_unit)]")
     end
 
     return p
@@ -42,10 +42,10 @@ function Base.show(io::IO, ::MIME"text/html", hp::HypsometricProfile)
     htmlstr *= "<tr><th>Property</th><th>Value(s)</th><th>Range</th><th>Unit</th></tr>"
     htmlstr *= "<tr><td>Width</td><td>$(hp.width)</td><td>-</td><td>$(hp.width_unit)</td></tr>"
     htmlstr *= "<tr><td>Elevation</td><td>$(length(hp.elevation)) values</td><td>$(minimum(hp.elevation)) to $(maximum(hp.elevation))</td><td>$(hp.elevation_unit)</td></tr>"
-    htmlstr *= "<tr><td>Cumulative Area</td><td>$(length(hp.cummulativeArea)) values</td><td>0 to $(maximum(hp.cummulativeArea))</td><td>$(hp.area_unit)</td></tr>"
+    htmlstr *= "<tr><td>Cumulative Area</td><td>$(length(hp.cumulativeArea)) values</td><td>0 to $(maximum(hp.cumulativeArea))</td><td>$(hp.area_unit)</td></tr>"
     htmlstr *= "<tr style='text-align: left'><td colspan=4>Exposures</td></tr>"
     for (index, name) in enumerate(hp.exposureNames)
-        e_ = hp.cummulativeExposure[:, index]
+        e_ = hp.cumulativeExposure[:, index]
         htmlstr *= "<tr><td>$name</td><td>$(size(e_, 1)) values</td><td>$(minimum(e_)) to $(maximum(e_))</td><td>$(hp.exposureUnits[index])</td></tr>"
     end
     htmlstr *= "</table>"
@@ -60,11 +60,11 @@ function Base.show(io::IO, hp::HypsometricProfile)
         basestr *= "┌ HypsometricProfile\n"
         basestr *= "├ Width: $(hp.width) $(hp.width_unit)\n"
         basestr *= "├ Elevation: $(minimum(hp.elevation)) up to $(maximum(hp.elevation))$(hp.elevation_unit) at $(length(hp.elevation)) increments\n"
-        basestr *= "├ Cum. area (maximum): $(maximum(hp.cummulativeArea))$(hp.area_unit)\n"
+        basestr *= "├ Cum. area (maximum): $(maximum(hp.cumulativeArea))$(hp.area_unit)\n"
         basestr *= "└ Exposures:\n"
         
         for (index, name) in enumerate(hp.exposureNames)
-            e_ = hp.cummulativeExposure[:, index]
+            e_ = hp.cumulativeExposure[:, index]
             basestr *= "  ├ $name: $(size(e_, 1)) values from $(minimum(e_)) to $(maximum(e_))$(hp.exposureUnits[index])\n"
         end
     end

@@ -110,8 +110,8 @@ function Base.:+(hspf1::HypsometricProfile{Float32}, hspf2::HypsometricProfile{F
         hspf2_exposures  = map(e -> exposure(hspf2, e), hspfc.elevation)
         exposures = map(add_exposures, hspf1_exposures, hspf2_exposures)
 
-        hspfc.cummulativeArea = getindex.(exposures, 1)
-        hspfc.cummulativeExposure = transpose(reduce(hcat, getindex.(exposures, 2)))
+        hspfc.cumulativeArea = getindex.(exposures, 1)
+        hspfc.cumulativeExposure = transpose(reduce(hcat, getindex.(exposures, 2)))
             end
     return hspfc
 end
