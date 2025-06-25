@@ -1,24 +1,38 @@
 using Distributions
 
+"""
+    expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s, ddfs::Vector{Function}, im::IM=BathtubInundation(), tol::Real=1e-3) where {DT<:Real,IM<:InundationModel}
+    ...
+
+Calculates the expected flood damage for a given distribution of water levels 'dist' based on provided damage functions ddfs for all exposure variables in s.
+The default inundation model (if not specified otherwise) is bathtub inundation.
+
+# Arguments
+- `hspf::HypsometricProfile{DT}`: The hypsometric profile.
+- `dist::Distribution` :: The probability distribution of the water levels that flood the hypsometric profile.
+- `wl_lower_limit::Real`:: the lowest water level taken into account (for instance if all water levels below are defended by a dike)
+- `s::String or s::Symbol or s::Array{String} or Array{Symbol}`: An array of exposure variable names for which the damage is calculated. If only one variable is used please use the version with a single variable instaed of an array (the latter one might cause problems then).
+- `ddfs::Vector{Function}`: A vector of damage functions corresponding to the exposure variables in s. 
+  StandardDDF(h) can be used for a standard depth-damage function `f(d)= d/(d+h)`
+- `im::IM`: The inundation model to be used, default is BathtubInundation().
+
+# Example
+```julia
+  expected_damage(hspf, GeneralizedPareto(2.5,0.75,0), "assets", StandardDDF(1.0))   # returns a number
+  expected_damage(hspf, GeneralizedExtremeValue(2.0,0.18,0.1), ["population","assets"], [d -> 1, d -> d/(d+1)])    # returns a 2-elment Array
+  expected_damage(hspf, GeneralizedPareto(2.5,0.75,0), [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)], LinearDistanceAttenuatedInundation(0.25))   # returns a 2-elment Array
+
+  ```
+"""
+
 include("hypsometric_profile_expected_damage_special_cases.jl")
 
-"""
-    expected_damage_bathtub_standard_ddf(LocalCoastalModel::LocalCoastalModel{DT}, hdd_area::DT, hdds_other::Array{DT})
-
-This function calculates the annual expected damage for one local coastal model (Hypsometric Profile and Extreme surge distribution) by 
-integrating the product of damages and the pdf (probability disctribution function) of the surge model over all possible extreme values. 
-The output are annual expected damage (as a pair) for area (one number) and for all other exposure dimensions (an array of numbers). 
-The standard depth damage function (dd = 1/(1+hdd)) is used to estimate flood damages, the hdd parameters for ares (one number) and for all other exposure dimensions (an array of numbers) are input parameters"""
-
-#expected_damage(hspf::HypsometricProfile{DT}, hazard::Distribution, wl_lower_limit::Real, s::Array{Symbol}, ddfs::Vector{Function}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = damage(hspf, wl, map(x -> String(x), s), ddfs, im)
-#expected_damage(hspf::HypsometricProfile{DT}, hazard::Distribution, wl_lower_limit::Real, s::Array{Symbol}, ddfs::Vector{StandardDDF}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = damage(hspf, wl, map(x -> String(x), s), ddfs, im)
-
 expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Array{Symbol}, ddfs::Vector{Function}, im::IM=BathtubInundation(), tol::Real=1e-3) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, map(x -> String(x), s), ddfs, im, tol)
-expected_damage(hspf::HypsometricProfile{DT}, hazard::Distribution, wl_lower_limit::Real, s::String, ddf::Function, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, hazard, wl_lower_limit, [s], convert(Array{Function}, [ddf]), im)[1]
-expected_damage(hspf::HypsometricProfile{DT}, hazard::Distribution, wl_lower_limit::Real, s::Symbol, ddf::Function, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, hazard, wl_lower_limit, [String(s)], convert(Array{Function}, [ddf]), im)[1]
+expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::String, ddf::Function, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [s], convert(Array{Function}, [ddf]), im)[1]
+expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Symbol, ddf::Function, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [String(s)], convert(Array{Function}, [ddf]), im)[1]
 
-expected_damage(hspf::HypsometricProfile{DT}, hazard::Distribution, wl_lower_limit::Real, s::String, ddf::StandardDDF, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, hazard, wl_lower_limit, [s], convert(Array{StandardDDF}, [ddf]), im)[1]
-expected_damage(hspf::HypsometricProfile{DT}, hazard::Distribution, wl_lower_limit::Real, s::Symbol, ddf::StandardDDF, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, hazard, wl_lower_limit, [String(s)], convert(Array{StandardDDF}, [ddf]), im)[1]
+expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::String, ddf::StandardDDF, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [s], convert(Array{StandardDDF}, [ddf]), im)[1]
+expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Symbol, ddf::StandardDDF, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [String(s)], convert(Array{StandardDDF}, [ddf]), im)[1]
 
 
 function expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Array{String}, ddfs::Vector{F}, im::IM=BathtubInundation()) where {DT<:Real,F<:Function,IM<:InundationModel}
