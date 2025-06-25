@@ -32,6 +32,9 @@ export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integra
 # Export Inundation Model - struct and functions
 export InundationModel, BathtubInundation, LinearDistanceAttenuatedInundation, inundate, water_depth
 
+# Export DIVACoast2D
+export FloodProfile, flood_fill, dijkstra_fill, Kernel, Neighbour8, Neighbour4, get_coast_sea
+
 # Set constants from local config
 earth_circumference_km = config[:earthCircumferenceKM]
 earth_radius_km = config[:earthRadiusKM]
@@ -95,5 +98,10 @@ include("./io/jld/jld_load.jl")
 include("./tools/geotiff_tools.jl")
 include("./scenario/ssp_scenario_reader.jl")
 include("./scenario/slr_scenario_reader.jl")
+
+# DIVACoast2D includes
+include("./datatypes/floodfillprofile/floodfillprofile.jl")
+include("./datatypes/floodfillprofile/inundation_model_functions.jl")
+include("./datatypes/floodfillprofile/kernels.jl")
 end
 
