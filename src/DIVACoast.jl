@@ -1,8 +1,3 @@
-# import Pkg
-# # Activates the DIVACoast.jl project environment (dependencies)
-# Pkg.activate(joinpath(@__DIR__, "../."))
-# Pkg.instantiate()
-
 module DIVACoast
 
 import YAML
@@ -10,21 +5,32 @@ import YAML
 # Read local library configuration
 config = YAML.load_file(joinpath(@__DIR__, "DIVACoast.jl.yml"), dicttype=Dict{Symbol,Any})
 
+# Export global constants
 export earth_circumference_km, earth_radius_km
 
-export earth_circumference_km, earth_radius_km
-export HypsometricProfile, convert, slope,
-    unit, exposure, named, display,
-    multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!,
-    remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
-    add_exposure_variable!, remove_exposure_variable!, StandardDDF,
-    damage, expected_damage,
-    compress!, compress_multithread!, land_raising!
+# Export Base-functions
+export convert, display, enumerate
+
+# Export HypsometricProfile structs and functions
+export HypsometricProfile, HypsometricProfileCollection, slope,
+    unit, named, compress!, compress_multithread!, land_raising!
+
+# Export HypsometricProfile - Exposure functions
+export exposure, multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!, 
+    remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!, 
+    add_exposure_variable!, remove_exposure_variable!
+
+# Export HypsometricProfile - Damage functions
+export damage, expected_damage
+
+# Export Damage -  structs and functions
+export StandardDDF
+
+# Export Statistic Operations
 export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integration
-export InundationModel, BathtubInundation, LinearDistanceAttenuatedInundation, inundate, water_depth
 
-# append depot path (local packages) to project load path
-# append!(LOAD_PATH, DEPOT_PATH)
+# Export Inundation Model - struct and functions
+export InundationModel, BathtubInundation, LinearDistanceAttenuatedInundation, inundate, water_depth
 
 # Set constants from local config
 earth_circumference_km = config[:earthCircumferenceKM]
@@ -52,11 +58,13 @@ function __init__()
 end
 
 
-# Include functions
+# Include scripts
 include("./logger/logger.jl")
 include("./datatypes/geodatatype/SparseGeoArrays.jl")
 include("./datatypes/inundation_model/inundation_model.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile_collection.jl")
+include("./datatypes/hypsometric_profiles/hypsometric_profile_dataframe.jl")
 include("./datatypes/inundation_model/inundation_model_functions.jl")
 include("./datatypes/depth_damage_functions/standard_ddf.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile_exposure.jl")
