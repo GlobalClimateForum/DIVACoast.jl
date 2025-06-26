@@ -1,3 +1,25 @@
+function seamask(elevationMatrix::Matrix, seed::CartesianIndex{2})
+
+    sea_value = elevationMatrix[seed]
+    println(sea_value)
+    queue = Queue{CartesianIndex{2}}()
+    enqueue!(queue, seed)
+    sea_mask = falses(size(elevationMatrix))
+    sea_mask[seed] = true
+
+    while !isempty(queue)
+        current = dequeue!(queue)
+        nbs = values(getNBS(elevationMatrix, current, nb=Neighbour8()))
+        for nb in nbs
+            if !isnothing(nb) && elevationMatrix[nb] == sea_value 
+                    sea_mask[nb] = true
+                    enqueue!(queue, nb)
+            end
+        end
+    end
+    return sea_mask
+end
+
 function get_coast_sea(profile::FloodProfile, seavalue::DT) where DT <: Union{Symbol, Number}
     sea_mask = profile.elevation .== seavalue
     is_coastal = (sea_cell::CartesianIndex{2}) -> begin
@@ -47,7 +69,7 @@ function flood_fill(profile::FloodProfile, seed::CartesianIndex{2}, wl::DT) wher
 end
 
 
-function dijkstra_fill(profile::FloodProfile, seed::CartesianIndex{2}, wl::DT) where DT <: Number
+function dijkstra_fill(profile::FloodProfile, wl::DT) where DT <: Number
 
     # Distances to each pixel, initialized to Inf
     distances = fill(Inf, profile.height, profile.width)
@@ -63,7 +85,7 @@ function dijkstra_fill(profile::FloodProfile, seed::CartesianIndex{2}, wl::DT) w
     pqueue = PriorityQueue{CartesianIndex{2}, Int}()
 
     # Get the coast and sea masks
-    coastmask, seamask = get_coast_sea(profile, :sea)
+    coastmask, seamask = get_coast_sea(profile, profile.seavalue)
 
     # Mark all sea cells as visited and set their distances to 0
     for cell in findall(seamask) 

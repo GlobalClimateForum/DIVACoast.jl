@@ -33,7 +33,8 @@ export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integra
 export InundationModel, BathtubInundation, LinearDistanceAttenuatedInundation, inundate, water_depth
 
 # Export DIVACoast2D
-export FloodProfile, flood_fill, dijkstra_fill, Kernel, Neighbour8, Neighbour4, get_coast_sea
+export FloodProfile, flood_fill, dijkstra_fill, Kernel, Neighbour8, Neighbour4, get_coast_sea, 
+seamask
 
 # Set constants from local config
 earth_circumference_km = config[:earthCircumferenceKM]
