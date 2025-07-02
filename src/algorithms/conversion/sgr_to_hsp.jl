@@ -190,7 +190,7 @@ end
 function to_hypsometric_profiles(
   category_file_name::String, elevation_file_name::String, area_unit::String,
   exposure_file_names::Array{String}, exposure_names::Array{String}, exposure_units::Array{String},
-  widths::Dict, width_unit::String, min_elevation::DT, max_elevation::DT, elevation_incr::DT, elevation_unit::String)::Dict{Int32,HypsometricProfile{DT}} where {DT<:Real,IT<:Integer}
+  widths::Dict, width_unit::String, min_elevation::DT, max_elevation::DT, elevation_incr::DT, elevation_unit::String)::Dict{Int32,HypsometricProfile{DT}} where {DT<:Real}
 
   category_data = SparseGeoArray{DT,Int32}()
   read_geotiff_header!(category_data, category_file_name)
@@ -281,7 +281,7 @@ function attach_to_hypsometric_profiles!(
   hspf_data::Dict{Int32,HypsometricProfile{DT}},
   category_file_name::String, elevation_file_name::String,
   exposure_file_names::Array{String}, exposure_names::Array{String}, exposure_units::Array{String},
-  min_elevation::DT, max_elevation::DT, elevation_incr::DT) where {DT<:Real,IT}
+  min_elevation::DT, max_elevation::DT, elevation_incr::DT) where {DT<:Real}
 
   category_data = SparseGeoArray{DT,Int32}()
   read_geotiff_header!(category_data, category_file_name)
@@ -298,7 +298,7 @@ function attach_to_hypsometric_profiles!(
     e[i] = min_elevation + i * elevation_incr
   end
 
-  exposure_data::Dict{Int32,Array{DT,2}} = Dict{Int32,Array{DT,2}}()
+  exposure_data::Dict{Int32,Array{DT,2}} = Dict{Int,Array{DT,2}}()
 
   for i in 1:size(sgas_exposure, 1)
     sgas_exposure[i] = SparseGeoArray{DT,Int32}()
@@ -368,7 +368,7 @@ function attach_exposure_variable_to_hypsometric_profiles!(
   hspf_data::Dict{Int32,HypsometricProfile{DT}},
   category_file_name::String, elevation_file_name::String,
   exposure_file_name::String, exposure_names::String, exposure_units::String,
-  min_elevation::DT, max_elevation::DT, elevation_incr::DT) where {DT<:Real,IT}
+  min_elevation::DT, max_elevation::DT, elevation_incr::DT) where {DT<:Real}
   attach_to_hypsometric_profiles!(hspf_data, category_file_name, elevation_file_name, [exposure_file_name], [exposure_names], [exposure_units], min_elevation, max_elevation, elevation_incr)
 end
 
