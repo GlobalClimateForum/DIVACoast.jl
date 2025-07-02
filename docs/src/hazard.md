@@ -12,8 +12,8 @@ Main.DIVACoast.estimate_frechet_distribution
 Main.DIVACoast.estimate_gev_distribution
 Main.DIVACoast.estimate_weibull_distribution
 
-Main.DIVACoast.estimate_gpd_negative_distribution
-Main.DIVACoast.estimate_gpd_positive_distribution
+Main.DIVACoast.estimate_beta_distribution
+Main.DIVACoast.estimate_pareto_distribution
 Main.DIVACoast.estimate_gp_distribution
 Main.DIVACoast.estimate_exponential_distribution
 
