@@ -127,7 +127,7 @@ function collect_data(ccm::ComposedImpactModel{IT1,IT2,DATA,CM}, outputs::Dict{S
   metadatanames::Array{String}) where {IT1,IT2,DATA,CM<:CoastalImpactUnit}
   if (ccm.level in keys(outputs))
     if !(ccm.level in keys(output_rows))
-      row = [ccm.id; metadata]
+      row ::Array{Any} = [ccm.id; metadata]
       for n in fieldnames(DATA)
         push!(row, getfield(ccm.data, n))
       end
