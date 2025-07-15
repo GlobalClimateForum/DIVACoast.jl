@@ -2,6 +2,7 @@
 using GDAL
 using CoordinateTransformations
 using StaticArrays
+using GeoArrays
 
 """
     SparseGeoArray{DT,IT}(filename::String, band::Integer=1) where {DT <: Real, IT <: Integer}
@@ -229,29 +230,6 @@ function hard_reset!(sga :: SparseGeoArray{DT,IT}) where {DT <: Real, IT <: Inte
 end
 
 
-# Coordinates and indices
-abstract type AbstractStrategy end
-struct Center <: AbstractStrategy
-    offset :: SVector{2}
-    Center() = new(SVector{2}(0.5,0.5))
-end
-struct UpperLeft <: AbstractStrategy
-    offset :: SVector{2}
-    UpperLeft() = new(SVector{2}(0.0,0.0))
-end
-struct UpperRight <: AbstractStrategy
-    offset :: SVector{2}
-    UpperRight() = new(SVector{2}(1.0,0.0))
-end
-struct LowerLeft <: AbstractStrategy
-    offset :: SVector{2}
-    LowerLeft() = new(SVector{2}(0.0,1.0))
-end
-struct LowerRight <: AbstractStrategy
-    offset :: SVector{2}
-    LowerRight() = new(SVector{2}(1.0,1.0))
-end
-
 """
     coords(sga::SparseGeoArray, p::SVector{2,<:Integer}, strategy::AbstractStrategy=Center())
     coords(sga::SparseGeoArray, p::Tuple{<:Integer,<:Integer}, strategy::AbstractStrategy=Center())
@@ -273,12 +251,12 @@ The coordinates are returned as a `SVector{2}`. The `strategy` parameter determi
 
 ```
 """
-function coords(sga::SparseGeoArray, p::SVector{2,<:Integer}, strategy::AbstractStrategy)
+function coords(sga::SparseGeoArray, p::SVector{2,<:Integer}, strategy::GeoArrays.AbstractStrategy)
     SVector{2}(sga.f(p .- (1,1) .+ strategy.offset))
 end
-coords(sga::SparseGeoArray, p::Vector{<:Integer}, strategy::AbstractStrategy=Center()) = coords(sga, SVector{2}(p), strategy)
-coords(sga::SparseGeoArray, p::Tuple{<:Integer,<:Integer}, strategy::AbstractStrategy=Center()) = coords(sga, SVector{2}(p), strategy)
-coords(sga::SparseGeoArray, i :: IT, j :: IT, strategy::AbstractStrategy=Center()) where {IT <: Integer} = coords(sga, SVector{2}(i,j), strategy)
+coords(sga::SparseGeoArray, p::Vector{<:Integer}, strategy::GeoArrays.AbstractStrategy=Center()) = coords(sga, SVector{2}(p), strategy)
+coords(sga::SparseGeoArray, p::Tuple{<:Integer,<:Integer}, strategy::GeoArrays.AbstractStrategy=Center()) = coords(sga, SVector{2}(p), strategy)
+coords(sga::SparseGeoArray, i :: IT, j :: IT, strategy::GeoArrays.AbstractStrategy=Center()) where {IT <: Integer} = coords(sga, SVector{2}(i,j), strategy)
 
 """
     indices(sga::SparseGeoArray, p::SVector{2,<:Real})
@@ -303,7 +281,7 @@ function indices(sga :: SparseGeoArray{DT, IT}, p::SVector{2,<:Real}) :: Tuple{I
 end
 indices(sga::SparseGeoArray, p::AbstractVector{<:Real}) = indices(sga, SVector{2}(p))
 indices(sga::SparseGeoArray, p::Tuple{<:Real,<:Real}) = indices(sga, SVector{2}(p))
-indices(sga::SparseGeoArray, i :: R, j :: R, strategy::AbstractStrategy=Center()) where {R <: Real} = indices(sga, SVector{2}(i,j))
+indices(sga::SparseGeoArray, i :: R, j :: R, strategy::GeoArrays.AbstractStrategy=Center()) where {R <: Real} = indices(sga, SVector{2}(i,j))
 
 """
     area(sga::SparseGeoArray, i::I, j::I) where {I <: Integer}

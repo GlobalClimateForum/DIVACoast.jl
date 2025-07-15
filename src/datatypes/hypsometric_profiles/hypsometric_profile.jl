@@ -1,10 +1,6 @@
-using StructArrays, DataFrames
+using DataFrames
 
 """
-    HypsometricProfile(coast_length::DT, coast_length_unit::String,
-    elevations::Array{DT}, elevation_unit::String, area::Array{DT}, area_unit::String,
-    exposure_data::StructArray{T1}, exposure_units::Array{String}) where {DT<:Real,T1}
-
 A HypsometricProfile represents the variation in elevation from the coastline to inland areas. It can be constructed manually or by using `load_hsps_nc()` and a NetCDF-file.
 """
 mutable struct HypsometricProfile{DT<:Real}
