@@ -27,16 +27,28 @@ The default inundation model (if not specified otherwise) is bathtub inundation.
 
 include("hypsometric_profile_expected_damage_special_cases.jl")
 
-expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Array{Symbol}, ddfs::Vector{Function}, im::IM=BathtubInundation(), tol::Real=1e-3) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, map(x -> String(x), s), ddfs, im, tol)
-expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::String, ddf::Function, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [s], convert(Array{Function}, [ddf]), im)[1]
-expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Symbol, ddf::Function, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [String(s)], convert(Array{Function}, [ddf]), im)[1]
+expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Vector{Symbol}, ddfs::Vector{Function}, im::IM=BathtubInundation(), tol::Real=1e-3) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, map(x -> String(x), s), ddfs, im, tol)
+expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Vector{Symbol}, ddfs::Vector{F}, im::IM=BathtubInundation(), tol::Real=1e-3) where {DT<:Real,F<:Function,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, map(x -> String(x), s), ddfs, im, tol)
 
-expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::String, ddf::StandardDDF, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [s], convert(Array{StandardDDF}, [ddf]), im)[1]
-expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Symbol, ddf::StandardDDF, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [String(s)], convert(Array{StandardDDF}, [ddf]), im)[1]
+expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::String, ddf::Function, im::IM=BathtubInundation(), tol::Real=1e-3) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [s], convert(Array{Function}, [ddf]), im, tol)[1]
+expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Symbol, ddf::Function, im::IM=BathtubInundation(), tol::Real=1e-3) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [String(s)], convert(Array{Function}, [ddf]), im, tol)[1]
+
+expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::String, ddf::StandardDDF, im::IM=BathtubInundation(), tol::Real=1e-3) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [s], convert(Array{StandardDDF}, [ddf]), im, tol)[1]
+expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Symbol, ddf::StandardDDF, im::IM=BathtubInundation(), tol::Real=1e-3) where {DT<:Real,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, [String(s)], convert(Array{StandardDDF}, [ddf]), im, tol)[1]
 
 
-function expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Array{String}, ddfs::Vector{F}, im::IM=BathtubInundation()) where {DT<:Real,F<:Function,IM<:InundationModel}
-    tol::Real = 1e-3
+function expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Vector{String}, ddfs::Vector{F}, im::IM=BathtubInundation(), tol::Real=1e-3) where {DT<:Real,F<:Function,IM<:InundationModel}
+    x_low = max(minimum(dist), wl_lower_limit)
+
+    inds = map(x -> get_position(hspf, x), s)
+    ret = zeros(DT, size(inds, 1))
+    for ind in 1:size(inds, 1)
+        ret[ind] = expected_damage_integral_computation(x -> f_to_integrate(hspf, dist, x, ddfs[ind], s[ind], im, tol), x_low, maximum(dist), tol)
+    end
+    return ret
+end
+
+function expected_damage(hspf::HypsometricProfile{DT}, dist::Distribution, wl_lower_limit::Real, s::Vector{String}, ddfs::Vector{Function}, im::IM=BathtubInundation(), tol::Real=1e-3) where {DT<:Real,IM<:InundationModel}
     x_low = max(minimum(dist), wl_lower_limit)
 
     inds = map(x -> get_position(hspf, x), s)

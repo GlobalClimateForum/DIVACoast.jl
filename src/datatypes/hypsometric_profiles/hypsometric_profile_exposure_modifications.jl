@@ -32,7 +32,7 @@ end
 function multiply_exposure!(hspf::HypsometricProfile{DT}, named_factors::NamedTuple) where {DT<:Real}
   for field in keys(named_factors)
     factor = named_factors[field]
-    multiply_exposure!(hspf, factor, field)
+    multiply_exposure!(hspf, field, factor)
   end
 end
 

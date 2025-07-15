@@ -26,7 +26,7 @@ function estimate_ev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:
     elseif (min_error == my_pareto_error)
         return (gpd_pareto, my_pareto_error)
     elseif (min_error == my_weibull_error)
-        return (gev_weibull, my_weibullerror)
+        return (gev_weibull, my_weibull_error)
     else
         return (gpd_beta, my_beta_error)
     end
