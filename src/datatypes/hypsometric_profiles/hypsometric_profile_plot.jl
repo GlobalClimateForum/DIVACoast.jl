@@ -1,32 +1,48 @@
 using Plots
 using UnicodePlots
 
-function RecipesBase.plot(hp::HypsometricProfile)
+function RecipesBase.plot(hp::HypsometricProfile; exposure::Union{Symbol, String, Nothing} = nothing)
+
     currentEnv_ = private_detectENV()
     
-    x = hp.cumulativeArea / hp.width
-    y = hp.elevation
-    lecz = x[findfirst( e -> e == 10, y)]
-    plotargs = (
-        title = "Hypsometric Profile",
-        xlabel = "Distance from coastline [$(hp.width_unit)]",
-        ylabel = "Elevation [$(hp.elevation_unit)]",
-        label = "Hypsometric Profile", 
-        fillrange = minimum(hp.elevation), 
-        fillcolor = :darkgreen, 
-        fillalpha = 0.4, 
-        color = :darkgreen,
-        linewidth = 2
-    )
-    
-    if currentEnv_ ∈ [:jupyter, :pluto] || isinteractive()
-        p = plot(x, y; plotargs...)
-        Plots.hline!([0], color=:black, linewidth=1, linestyle=:dash, label="0 $(hp.elevation_unit)")
-        Plots.vline!([lecz], color=:red, linewidth=2, label="LECZ")
+    exposure = !isnothing(exposure) ? String(exposure) : nothing
+    index = !isnothing(exposure) ? findfirst(==(exposure), hp.exposureNames) : nothing
+
+    distance_to_coast = hp.cumulativeArea / hp.width
+
+    if !isnothing(exposure) && isnothing(index)
+        error("Exposure: '$exposure' not found in HypsometricProfile.")
+    elseif !isnothing(exposure) && !isnothing(index) 
+        y = hp.cumulativeExposure[:, index]
+        plotargs = (
+            xlabel = "Distance from coastline",
+            ylabel = exposure * (hp.exposureUnits[index] ∉ [" ", "", nothing] ? "[$(hp.exposureUnits[index])]" : ""),
+            label = "$(exposure)", 
+            fillrange = minimum(hp.elevation), 
+            fillcolor = :darkblue, 
+            fillalpha = 0.4, 
+            color = :darkblue,
+            linewidth = 2
+            )
     else
-        p = lineplot(hp.cumulativeArea / hp.width, hp.elevation, xlabel="Distance from coastline [$(hp.width_unit)]", ylabel="Elevation [$(hp.elevation_unit)]")
+        y = hp.elevation
+        plotargs = (
+            xlabel = "Distance from coastline",
+            ylabel = "Elevation [$(hp.elevation_unit)]",
+            label = "Elevation", 
+            fillrange = minimum(hp.elevation), 
+            fillcolor = :darkgreen, 
+            fillalpha = 0.4, 
+            color = :darkgreen,
+            linewidth = 2
+            )
     end
 
+    lecz_idx = findfirst(e -> e >= 10.0, hp.elevation)
+
+    p = plot(distance_to_coast, y; plotargs...)
+    Plots.hline!(p, [0.0], linestyle = :dash, label = "0$(hp.elevation_unit) elevation",   color = :black)
+    Plots.vline!(p, [distance_to_coast[lecz_idx]], color = :red, label = "LECZ", linewidth = 1)
     return p
 end
 
