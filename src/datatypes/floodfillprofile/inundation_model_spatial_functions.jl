@@ -1,13 +1,23 @@
-function seamask(elevationMatrix::Matrix, seed::CartesianIndex{2})
+function exposure(profile::SpatialFloodProfile, wl::Real, im::IM) where IM <: InundationModel
 
+    if typeof(im) ∈ [SpatialBathtubInundation] 
+        seed_ = im.seed
+        flooded = flood_fill(profile, seed_, wl)
+    else
+        flooded = dijkstra_fill(profile, wl)
+    end
+
+end
+
+
+
+function seamask(elevationMatrix::Matrix, seed::CartesianIndex{2})
     sea_value = elevationMatrix[seed]
-    println(sea_value)
     queue = Queue{CartesianIndex{2}}()
     enqueue!(queue, seed)
     sea_mask = falses(size(elevationMatrix))
     sea_mask[seed] = true
-
-    while !isempty(queue)
+    while !isempty(queeue)
         current = dequeue!(queue)
         nbs = values(getNBS(elevationMatrix, current, nb=Neighbour8()))
         for nb in nbs
@@ -20,7 +30,7 @@ function seamask(elevationMatrix::Matrix, seed::CartesianIndex{2})
     return sea_mask
 end
 
-function get_coast_sea(profile::FloodProfile, seavalue::DT) where DT <: Union{Symbol, Number}
+function get_coast_sea(profile::SpatialFloodProfile, seavalue::DT) where DT <: Union{Symbol, Number}
     sea_mask = profile.elevation .== seavalue
     is_coastal = (sea_cell::CartesianIndex{2}) -> begin
         nbs = values(getNBS(profile.elevation, sea_cell, nb=profile.kernel))
@@ -41,35 +51,65 @@ function get_coast_sea(profile::FloodProfile, seavalue::DT) where DT <: Union{Sy
     return coastmask, seamask
 end
 
-function flood_fill(profile::FloodProfile, seed::CartesianIndex{2}, wl::DT) where DT <: Number
+
+function flood_fill(profile::SpatialFloodProfile, seed::CartesianIndex{2}, wl::DT) where DT <: Number
+
+    inundation_depth = zeros(DT, profile.height, profile.width)
     flooded = falses(profile.height, profile.width)
     queue = Queue{CartesianIndex{2}}()
     enqueue!(queue, seed)
 
-    visitfilter = (value, wl) -> isa(value, typeof(:sea)) ? value == :sea && value != :out : value <= wl
-
     while !isempty(queue)
-        current = dequeue!(queue)
-        
-        if flooded[current] || !visitfilter(profile.elevation[current], wl)
+
+        current_ = dequeue!(queue)
+    
+        if flooded[current_] || profile.elevation[current_] > wl
             continue
         end
 
-        flooded[current] = true
+        flooded[current_] = true
+        inundation_depth[current_] = wl - profile.elevation[current_]
 
-        nbs = filter(!isnothing, values(getNBS(profile.elevation, current, nb=profile.kernel)))
+        nbs = filter(!isnothing, values(getNBS(profile.elevation, current, nb = profile.kernel)))
         for nb in nbs
-            if !flooded[nb] && visitfilter(profile.elevation[nb], wl)
+            if !flooded[nb] && profile.elevation[nb] <= wl
                 enqueue!(queue, nb)
             end
         end
     end
 
-    return flooded
+    return inundation_depth
 end
 
+# function flood_fill(profile::SpatialFloodProfile, seed::CartesianIndex{2}, wl::DT) where DT <: Number
+#     flooded = falses(profile.height, profile.width)
+#     queue = Queue{CartesianIndex{2}}()
+#     enqueue!(queue, seed)
 
-function dijkstra_fill(profile::FloodProfile, wl::DT) where DT <: Number
+#     visitfilter = (value, wl) -> isa(value, typeof(:sea)) ? value == :sea && value != :out : value <= wl
+
+#     while !isempty(queue)
+#         current = dequeue!(queue)
+        
+#         if flooded[current] || !visitfilter(profile.elevation[current], wl)
+#             continue
+#         end
+
+#         flooded[current] = true
+
+#         nbs = filter(!isnothing, values(getNBS(profile.elevation, current, nb=profile.kernel)))
+#         for nb in nbs
+#             if !flooded[nb] && visitfilter(profile.elevation[nb], wl)
+#                 enqueue!(queue, nb)
+#             end
+#         end
+#     end
+
+#     return flooded
+# end
+
+
+function dijkstra_fill(profile::SpatialFloodProfile, wl::DT) where DT <: Number
 
     # Distances to each pixel, initialized to Inf
     distances = fill(Inf, profile.height, profile.width)

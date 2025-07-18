@@ -3,17 +3,17 @@ using DataStructures
 include("./kernels.jl")
 include("./test_profile.jl")
 
-struct FloodProfile{T}
+struct SpatialFloodProfile{T}
     elevation::Matrix{T}
     width::Int
     height::Int
     kernel::Kernel
     seavalue::T
     seed::CartesianIndex{2}
-    exposures::Vector
+    exposures::Vector{Matrix{T}}
 end
 
-function FloodProfile(
+function SpatialFloodProfile(
     elevation::Matrix{T};
     kernel::Kernel=Neighbour8(),
     seavalue::T=zero(T),
@@ -21,5 +21,5 @@ function FloodProfile(
     exposures::Vector=Vector{Any}()) where T
     width = size(elevation, 2)
     height = size(elevation, 1)
-    return FloodProfile{T}(elevation, width, height, kernel, seavalue, seed, exposures)
+    return SpatialFloodProfile{T}(elevation, width, height, kernel, seavalue, seed, exposures)
 end

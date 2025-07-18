@@ -27,7 +27,7 @@ netherlandsCopDEM = joinpath(@__DIR__, "..", "testdata", "Netherlands", "tif", "
 
 # fp = FloodProfile(elevationMatrix, seavalue = 0.0f0, seed = CartesianIndex(seed_idx ...))
 
-fp = FloodProfile(Matrix{Float32}(reduce(hcat, elevation)), exposures = [Matrix{Float32}(reduce(hcat, assets))], seavalue = 0.0f0, seed = CartesianIndex(25, 5))
+fp = SpatialFloodProfile(Matrix{Float32}(reduce(hcat, elevation)), exposures = [Matrix{Float32}(reduce(hcat, assets))], seavalue = 0.0f0, seed = CartesianIndex(25, 5))
 
 dists, paths = dijkstra_fill(fp,2)
 
