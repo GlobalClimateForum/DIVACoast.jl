@@ -19,10 +19,19 @@ end
     right::Tuple{Int, Int} = (0, 1)    # right      
 end
 
-function getNBS(m::Matrix, at::CartesianIndex{2}; nb::Kernel = Neighbour8())
+function getNBS(m::Matrix, at::CartesianIndex{2}; nb::Kernel = Neighbour8(), returndist = false)
+    
     get = (position) -> begin
         new_pos = at .+ CartesianIndex(getfield(nb, position))
         checkbounds(Bool, m, new_pos) ? new_pos : nothing
     end
-    return NamedTuple(npos => get(npos) for npos in fieldnames(typeof(nb)))
+
+    get_distance = (position) -> begin 
+        new_pos = at .+ CartesianIndex(getfield(nb, position))
+        new_pos = checkbounds(Bool, m, new_pos) ? new_pos : nothing
+        distance = isnothing(new_pos) ? nothing : √(sum((abs(new_pos[1] - at[1]), abs(new_pos[2] - at[2])) .^ 2))
+        return new_pos, distance
+    end
+    
+    return NamedTuple(npos => (returndist ? get_distance(npos) : get(npos)) for npos in fieldnames(typeof(nb)))
 end

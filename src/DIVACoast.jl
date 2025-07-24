@@ -33,8 +33,10 @@ export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integra
 export InundationModel, BathtubInundation, LinearDistanceAttenuatedInundation, inundate, water_depth
 
 # Export DIVACoast2D
-export SpatialFloodProfile, flood_fill, dijkstra_fill, Kernel,
-Neighbour8, Neighbour4, get_coast_sea, seamask
+# structs
+export SpatialFloodProfile, SpatialFloodProfileMask, Kernel, Neighbour8, Neighbour4, HydraulicConnectedBathtub, PathBasedAttenuatedBathtub
+# functions
+export flood_fill, dijkstra_fill, getNBS, get_coast_sea, seamask, private_mask_profile, path_based_attenuated_inundation
 
 # Set constants from local config
 earth_circumference_km = config[:earthCircumferenceKM]
@@ -101,9 +103,11 @@ include("./scenario/ssp_scenario_reader.jl")
 include("./scenario/slr_scenario_reader.jl")
 
 # DIVACoast2D includes
-include("./datatypes/floodfillprofile/SpatialFloodProfile.jl")
-include("./datatypes/floodfillprofile/inundation_model_spatial_functions.jl")
-include("./datatypes/floodfillprofile/inundation_model_spatial_functions.jl")
-include("./datatypes/floodfillprofile/kernels.jl")
+include("./datatypes/spatial_flood_profile/SpatialFloodProfile.jl")
+include("./datatypes/spatial_flood_profile/inundation_model_spatial.jl")
+include("./datatypes/spatial_flood_profile/inundation_model_spatial_functions.jl")
+include("./datatypes/spatial_flood_profile/inundation_model_spatial_functions.jl")
+include("./datatypes/spatial_flood_profile/spatial_flood_profile_exposure.jl")
+include("./datatypes/spatial_flood_profile/kernels.jl")
 end
 
