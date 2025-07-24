@@ -1,7 +1,7 @@
 """
   function multiply_exposure!(hspf::HypsometricProfile{DT}, factors::Array{T}) where {DT<:Real,T<:Real}
-  function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::Symbol) where {DT<:Real,T<:Real}
-  function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::String)
+  function multiply_exposure!(hspf::HypsometricProfile{DT}, s::Symbol, factor::T) where {DT<:Real,T<:Real}
+  function multiply_exposure!(hspf::HypsometricProfile{DT}, s::String, factor::T) where {DT<:Real,T<:Real}
 
   The `multiply_exposure!` function applies factors to all exposure data of a HypsometricProfile, where different factors 
   for different variables are possible. This can be used to implement soci-economic growth. Versions for single variables exist.
@@ -15,8 +15,8 @@
 # Example
 ```julia
 function multiply_exposure!(hspf, [1.0, 1.1])
-function multiply_exposure!(hspf, 1.0, :assets)
-function multiply_exposure!(hspf, 1.1, "population")
+function multiply_exposure!(hspf, :assets, 1.0)
+function multiply_exposure!(hspf, "population", 1.1)
 ```
 """
 function multiply_exposure!(hspf::HypsometricProfile{DT}, factors::Array{T}) where {DT<:Real,T<:Real}
@@ -32,11 +32,11 @@ end
 function multiply_exposure!(hspf::HypsometricProfile{DT}, named_factors::NamedTuple) where {DT<:Real}
   for field in keys(named_factors)
     factor = named_factors[field]
-    multiply_exposure!(hspf, factor, field)
+    multiply_exposure!(hspf, field, factor)
   end
 end
 
-function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::Symbol) where {DT<:Real,T<:Real}
+function multiply_exposure!(hspf::HypsometricProfile{DT}, s::Symbol, factor::T) where {DT<:Real,T<:Real}
   p = get_position(hspf, s)
   if (p > 0)
     hspf.cumulativeExposure[:, p] *= factor
@@ -46,13 +46,13 @@ function multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::Symbol) 
   end
 end
 
-multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::String) where {DT<:Real,T<:Real} = multiply_exposure!(hspf, factor, Symbol(s))
+multiply_exposure!(hspf::HypsometricProfile{DT}, s::String, factor::T) where {DT<:Real,T<:Real} = multiply_exposure!(hspf, factor, Symbol(s))
 
 
 """
   function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, factors::Array{T}) where {DT<:Real,T<:Real}
-  function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, factor::T, s::Symbol) where {DT<:Real,T<:Real}
-  function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, factor::T, s::String)
+  function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, s::Symbol, factor::T) where {DT<:Real,T<:Real}
+  function multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, s::String, factor::T) where {DT<:Real,T<:Real}
 
   The `multiply_exposure_above!` function applies factors to all exposure data above a given elevation of a HypsometricProfile, 
   where different factors for different variables are possible. Versions for single varaibles exist.
@@ -67,8 +67,8 @@ multiply_exposure!(hspf::HypsometricProfile{DT}, factor::T, s::String) where {DT
 # Example
 ```julia
 function multiply_exposure_above!(hspf, [1.0, 1.1])
-function multiply_exposure_above!(hspf, 1.0, :assets)
-function multiply_exposure_above!(hspf, 1.1, "population")
+function multiply_exposure_above!(hspf, :assets, 1.0)
+function multiply_exposure_above!(hspf, "population", 1.1)
 ```
 """
 function multiply_exposure_above!(hspf::HypsometricProfile, above::Real, factors::Array{DT}) where {DT<:Real}
@@ -126,8 +126,8 @@ multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, s::Symbol, f
 
 """
   function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, factors::Array{T}) where {DT<:Real,T<:Real}
-  function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, factor::T, s::Symbol) where {DT<:Real,T<:Real}
-  function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, factor::T, s::String)
+  function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, s::Symbol, factor::T) where {DT<:Real,T<:Real}
+  function multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, s::String, factor::T) where {DT<:Real,T<:Real}
 
   The `multiply_exposure_below!` function applies factors to all exposure data below a given elevation of a HypsometricProfile, 
   where different factors for different variables are possible. Versions for single varaibles exist.
@@ -142,8 +142,8 @@ multiply_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, s::Symbol, f
 # Example
 ```julia
 function multiply_exposure_below!(hspf, 2.0, [1.0, 1.1])
-function multiply_exposure_below!(hspf, 2.0, 1.0, :assets)
-function multiply_exposure_below!(hspf, 2.0, 1.1, "population")
+function multiply_exposure_below!(hspf, 2.0, :assets, 1.0)
+function multiply_exposure_below!(hspf, 2.0, "population", 1.1)
 ```
 """
 function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factors::Array{T}) where {T<:Real}
@@ -175,7 +175,7 @@ function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factors
   end
 end
 
-function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, factor::Real, s::Symbol)
+function multiply_exposure_below!(hspf::HypsometricProfile, below::Real, s::Symbol, factor::Real)
   p = get_position(hspf, s)
   if (p[1] == -1)
     @error "profile ($hspf) has no variable $(s)"
@@ -229,7 +229,7 @@ multiply_exposure_below!(hspf::HypsometricProfile{DT}, below::Real, s::Symbol, f
 
 
 """
-  function remove_exposure_below!(hspf::HypsometricProfile{DT}, below::Real) where {DT<:Real}
+    function remove_exposure_below!(hspf::HypsometricProfile{DT}, below::Real) where {DT<:Real}
 
   The `remove_exposure_below!` function removes exposure (assets and population) below a certain elevation.
 
@@ -281,9 +281,7 @@ function remove_exposure_below_named!(hspf::HypsometricProfile, below::Real)
 end
 
 """
-Adds assets / population above a certain elevation.
-
-  function add_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, values::Array{T}) where {T<:Real}
+    function add_exposure_above!(hspf::HypsometricProfile{DT}, above::Real, values::Array{T}) where {T<:Real}
 
   The `add_exposure_above!` function adds exposure (assets / population) above a certain elevation.
 
@@ -324,7 +322,7 @@ function add_exposure_above!(hspf::HypsometricProfile, above::Real, values::Arra
 end
 
 """
-  function add_exposure_between!(hspf::HypsometricProfile{DT}, above::Real, below::Real, values::Array{T}) where {T<:Real}
+    function add_exposure_between!(hspf::HypsometricProfile{DT}, above::Real, below::Real, values::Array{T}) where {T<:Real}
 
   The `add_exposure_between!` function adds assets / population between certain elevations.
 

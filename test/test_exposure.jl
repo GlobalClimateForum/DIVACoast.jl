@@ -122,7 +122,7 @@ function runTests()
       @test isapprox(exposure(hpTest, el, :population, BathtubInundation()), exposure(hpTest2, el, :population, BathtubInundation()) * 0.75, atol=0.001)
       @test isapprox(exposure(hpTest, el, :population, LinearDistanceAttenuatedInundation(0.25)), exposure(hpTest2, el, :population, LinearDistanceAttenuatedInundation(0.25)) * 0.75, atol=0.001)
 
-      if exposure(hpTest2, el + 10, :assets, BathtubInundation()) > exposure(hpTest2, el, :assets, BathtubInundation())
+      if exposure(hpTest2, el + 10, :assets, LinearDistanceAttenuatedInundation(0.25)) > exposure(hpTest2, el, :assets, LinearDistanceAttenuatedInundation(0.25))
         @test exposure(hpTest, el + 10, :assets, BathtubInundation()) < exposure(hpTest2, el + 10, :assets, BathtubInundation())
         @test exposure(hpTest, el + 10, :assets, LinearDistanceAttenuatedInundation(0.25)) < exposure(hpTest2, el + 10, :assets, LinearDistanceAttenuatedInundation(0.25))
       end

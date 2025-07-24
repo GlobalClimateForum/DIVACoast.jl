@@ -9,3 +9,4 @@ testdata/.~lock.osm_gadm1.csv#
 src/scenario/ssp_wrapper.jl
 src/scenario/ssp_wrapper.jl
 .DS_Store
+testdata/UKIRL/tif/UKIRL_merit_coastplain_elecz_20m.tif.aux.xml

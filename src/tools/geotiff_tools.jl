@@ -1,5 +1,3 @@
-export geotiff_connect, geotiff_transform, geotiff_collect
-
 """
         geotiff_connect(infilename1::String, infilename2::String, outfilename::String, f::Function)
 
@@ -25,50 +23,50 @@ geotiff_connect(path1, path2, path_out, takemaximum)
 """
 function geotiff_connect(infilename1::String, infilename2::String, outfilename::String, f::Function)
 
-    sga_in1 = SparseGeoArray{Float32,Int32}()
+    sga_in1 = empty_geo_array(SparseArrayDOK{Float32,Int32})
     read_geotiff_header!(sga_in1, infilename1, 1)
     dataset_in1_data = GDAL.gdalopen(infilename1, GDAL.GA_ReadOnly)
     band_in1_data = GDAL.gdalgetrasterband(dataset_in1_data, 1)
 
-    sga_in2 = SparseGeoArray{Float32,Int32}()
+    sga_in2 = empty_geo_array(SparseArrayDOK{Float32,Int32})
     read_geotiff_header!(sga_in2, infilename2, 1)
     dataset_in2_data = GDAL.gdalopen(infilename2, GDAL.GA_ReadOnly)
     band_in2_data = GDAL.gdalgetrasterband(dataset_in2_data, 1)
 
-    if (sga_in1.xsize != sga_in2.xsize) 
+    if (size(sga_in1)[1] != size(sga_in1)[1]) 
       # error: different sizes of x dimension in the two input files
     end
 
     driver = GDAL.gdalgetdriverbyname("GTiff")
     opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES", "PREDICTOR=2"]
-    dataset_out = GDAL.gdalcreate(driver, outfilename, sga_in1.xsize, sga_in2.ysize, 1, GDAL.GDT_Float32, opts)
+    dataset_out = GDAL.gdalcreate(driver, outfilename, size(sga_in1)[1], size(sga_in1)[2], 1, GDAL.GDT_Float32, opts)
     band_out_data = GDAL.gdalgetrasterband(dataset_out, 1)
 
-    GDAL.gdalsetrasternodatavalue(band_out_data, sga_in1.nodatavalue)
-    GDAL.gdalsetprojection(dataset_out, sga_in1.projref)
-    GDAL.gdalsetgeotransform(dataset_out, affine_to_geotransform(sga_in1.f))
+    GDAL.gdalsetrasternodatavalue(band_out_data, no_data_value(sga_in1))
+    GDAL.gdalsetprojection(dataset_out, GeoFormatTypes.val(sga_in1.crs))
+    GDAL.gdalsetgeotransform(dataset_out, GeoArrays.affine_to_geotransform(sga_in1.f))
     #GDAL.gdalgettransformerdstgeotransform
 
-    r_tiles = sga_in1.ysize ÷ 1
-    remaining_r = sga_in1.ysize % 1
-    scanline1 = fill(0.0f0, sga_in1.xsize)
-    scanline2 = fill(0.0f0, sga_in1.xsize)
-    outline = fill(0.0f0, sga_in1.xsize)
+    r_tiles = size(sga_in1)[2] ÷ 1
+    remaining_r = size(sga_in1)[2] % 1
+    scanline1 = fill(0.0f0, size(sga_in1)[1])
+    scanline2 = fill(0.0f0, size(sga_in1)[1])
+    outline = fill(0.0f0, size(sga_in1)[1])
 
     print("processesing progress: 0 ")
     p = 0
 
     for r in 1:(r_tiles)
-        GDAL.gdalrasterio(band_in1_data, GDAL.GF_Read, 0, (r - 1), sga_in1.xsize, 1, scanline1, sga_in1.xsize, 1, GDAL.GDT_Float32, 0, 0)
-        GDAL.gdalrasterio(band_in2_data, GDAL.GF_Read, 0, (r - 1), sga_in2.xsize, 1, scanline2, sga_in2.xsize, 1, GDAL.GDT_Float32, 0, 0)
+        GDAL.gdalrasterio(band_in1_data, GDAL.GF_Read, 0, (r - 1), size(sga_in1)[1], 1, scanline1, size(sga_in1)[1], 1, GDAL.GDT_Float32, 0, 0)
+        GDAL.gdalrasterio(band_in2_data, GDAL.GF_Read, 0, (r - 1), size(sga_in2)[1], 1, scanline2, size(sga_in2)[1], 1, GDAL.GDT_Float32, 0, 0)
 
         for i in 1:size(scanline1, 1)
             # f should also take the SGAs in order to handle no data 
             outline[i] = f(scanline1[i], scanline2[i], sga_in1, sga_in2)
         end
-        GDAL.gdalrasterio(band_out_data, GDAL.GF_Write, 0, (r - 1), sga_in1.xsize, 1, outline, sga_in1.xsize, 1, GDAL.GDT_Float32, 0, 0)
-        if ((r * 100 ÷ sga_in1.ysize) ÷ 10) > p
-            p = ((r * 100 ÷ sga_in2.ysize) ÷ 10)
+        GDAL.gdalrasterio(band_out_data, GDAL.GF_Write, 0, (r - 1), size(sga_in1)[1], 1, outline, size(sga_in1)[1], 1, GDAL.GDT_Float32, 0, 0)
+        if ((r * 100 ÷ size(sga_in1)[2]) ÷ 10) > p
+            p = ((r * 100 ÷ size(sga_in2)[2]) ÷ 10)
             print("$(p*10) ")
         end
     end
@@ -101,7 +99,7 @@ geotiff_transform(input_path, output_path, square)
 """
 function geotiff_transform(infilename1::String, outfilename::String, f::Function)
 
-    sga_in1 = SparseGeoArray{Float32,Int32}()
+    sga_in1 = empty_geo_array(SparseArrayDOK{Float32,Int32})
     read_geotiff_header!(sga_in1, infilename1, 1)
     dataset_in1_data = GDAL.gdalopen(infilename1, GDAL.GA_ReadOnly)
     band_in1_data = GDAL.gdalgetrasterband(dataset_in1_data, 1)
@@ -160,7 +158,7 @@ masked by the mask geotiff (`maskfilename`). The result is saved in a new geotif
 """
 function geotiff_collect(maskfilename::String, infilenames::Array{String}, f::Function)
 
-    sga_mask = SparseGeoArray{Float32,Int32}()
+    sga_mask = empty_geo_array(SparseArrayDOK{Float32,Int32})
     read_geotiff_header!(sga_mask, maskfilename, 1)
     dataset_mask_data = GDAL.gdalopen(maskfilename, GDAL.GA_ReadOnly)
     band_mask_data = GDAL.gdalgetrasterband(dataset_mask_data, 1)

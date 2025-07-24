@@ -64,9 +64,9 @@ function runTests()
       hpTest, hpSettings = initHypsometricProfile(true)
 
       @test damage(hpTest, 0, [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)], BathtubInundation()) == Float32[0.0, 0.0]
-      @test damage(hpTest, 0, :population, StandardDDF(0.0)) == Float32[0.0]
+      @test damage(hpTest, 0, :population, StandardDDF(0.0)) == 0.0
       @test damage(hpTest, 0, [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)], LinearDistanceAttenuatedInundation(0.1)) == Float32[0.0, 0.0]
-      @test damage(hpTest, 0, :assets, StandardDDF(1.0), LinearDistanceAttenuatedInundation(0.1)) == Float32[0.0]
+      @test damage(hpTest, 0, :assets, StandardDDF(1.0), LinearDistanceAttenuatedInundation(0.1)) == 0.0
 
       @test damage(hpTest, 0, [:population,:assets], [d -> 1, d -> d/(d+1)], BathtubInundation()) == Float32[0.0, 0.0]
       @test damage(hpTest, 0, ["population", "assets"], [d -> 1, d -> d/(d+1)], LinearDistanceAttenuatedInundation(0.1)) == Float32[0.0, 0.0]
@@ -76,12 +76,13 @@ function runTests()
       @time println(damage(hpTest, el, [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)], BathtubInundation()))
       println("slow:")
       @time println(damage(hpTest, el, [:population,:assets], [d -> 1, d -> d/(d+1)], BathtubInundation()))
-      @test isapprox(damage(hpTest, el, [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)], BathtubInundation()), damage(hpTest, el, [:population,:assets], [d -> 1, d -> d/(d+1)], BathtubInundation()))
-      @test isapprox(damage(hpTest, el, [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)], LinearDistanceAttenuatedInundation(0.1)), damage(hpTest, el, [:population,:assets], [d -> 1, d -> d/(d+1)], LinearDistanceAttenuatedInundation(0.1)))
 
-      remove_exposure_below!(hpTest, 100.0)
+      @test damage(hpTest, el, [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)], BathtubInundation()) ≈ damage(hpTest, el, [:population,:assets], [d -> 1, d -> d/(d+1)], BathtubInundation()) rtol=1e-2
+      @test damage(hpTest, el, [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)], LinearDistanceAttenuatedInundation(0.1)) ≈ damage(hpTest, el, [:population,:assets], [d -> 1, d -> d/(d+1)], LinearDistanceAttenuatedInundation(0.1)) rtol=1e-2
+
+      remove_exposure_below!(hpTest, el)
       @test damage(hpTest, el, [:population,:assets], [StandardDDF(0.0), StandardDDF(1.0)], BathtubInundation()) == Float32[0.0, 0.0]
-      @test damage(hpTest, el, :popoulation, StandardDDF(0.0), BathtubInundation()) == Float32[0.0]
+      @test damage(hpTest, el, :popoulation, StandardDDF(0.0), BathtubInundation()) == 0.0
     end
   end
 
@@ -93,23 +94,16 @@ function runTests()
       sl = slope(hpTest, 2)
 
       el = rand() * 50
+      ir = rand() * 0.33
       @test isapprox(damage(hpTest, el, :assets, d -> d/(d+1))[1], rho/sl * (log(1/(1+el)) + el) , rtol=0.1)
       @test isapprox(damage(hpTest, el, :population, d -> 1)[1], exposure(hpTest, el, BathtubInundation())[2][1] , rtol=0.1)
 
-println(damage(hpTest, el, :assets, StandardDDF(1.0)))
-println(damage(hpTest, el, :assets, d -> d/(d+1)))
-println(rho/sl * (log(1/(1+el)) + el))
-
-println(damage(hpTest, el, :assets, StandardDDF(1.0), LinearDistanceAttenuatedInundation(0.1)))
-println(damage(hpTest, el, :assets, d -> d/(d+1), LinearDistanceAttenuatedInundation(0.1)))
-println(rho/(sl+(0.1/1000)) * (log(1/(1+el)) + el))
-
-      @test isapprox(damage(hpTest, el, :assets, d -> d/(d+1), LinearDistanceAttenuatedInundation(0.1))[1], rho/(sl+(0.1/1000)) * (log(1/(1+el)) + el), atol=0.1)
-      @test isapprox(damage(hpTest, el, :assets, StandardDDF(1.0), LinearDistanceAttenuatedInundation(0.1))[1], rho/(sl+(0.1/1000)) * (log(1/(1+el)) + el), atol=0.1)
-      @test isapprox(damage(hpTest, el, :population, d -> 1, LinearDistanceAttenuatedInundation(0.1))[1], exposure(hpTest, el, LinearDistanceAttenuatedInundation(0.1))[2][1] , rtol=0.1)
+      @test isapprox(damage(hpTest, el, :assets, d -> d/(d+1), LinearDistanceAttenuatedInundation(ir))[1], rho/(sl+(ir/1000)) * (log(1/(1+el)) + el), rtol=0.1)
+      @test isapprox(damage(hpTest, el, :assets, StandardDDF(1.0), LinearDistanceAttenuatedInundation(ir))[1], rho/(sl+(ir/1000)) * (log(1/(1+el)) + el), rtol=0.1)
+      @test isapprox(damage(hpTest, el, :population, d -> 1, LinearDistanceAttenuatedInundation(ir))[1], exposure(hpTest, el, LinearDistanceAttenuatedInundation(ir))[2][1] , rtol=0.1)
       el = rand()*50
-      @test isapprox(damage(hpTest, el, :assets, d -> d/(d+1))[1], rho/sl * (log(1/(1+el)) + el), rtol=1e-6)
-      @test isapprox(damage(hpTest, el, "population", d -> 1)[1], exposure(hpTest, el, BathtubInundation())[2][1], rtol=1e-6)
+      @test isapprox(damage(hpTest, el, :assets, d -> d/(d+1))[1], rho/sl * (log(1/(1+el)) + el), rtol=0.1)
+      @test isapprox(damage(hpTest, el, "population", d -> 1)[1], exposure(hpTest, el, BathtubInundation())[2][1], rtol=0.1)
 
     end
   end

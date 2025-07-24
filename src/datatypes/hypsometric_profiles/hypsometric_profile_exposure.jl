@@ -1,23 +1,25 @@
 """
     exposure(hspf::HypsometricProfile{DT}, wl::Real, im::IM) where {DT<:Real, IM<:InundationModel}
-    exposure(hspf::HypsometricProfile{DT}, wl::Real, s::Symbol, im::IM) where {DT<:Real, IM<:InundationModel}
+    exposure(hspf::HypsometricProfile{DT}, wl::Real, s, im::IM) where {DT<:Real, IM<:InundationModel}
 
-Calculate the cumulative area, static exposure, and dynamic exposure below elevation (`e`) for a hypsometric profile. The function handles different cases based on the elevation's presence in the profile and its position.
+Calculate the cumulative exposure below elevatito a given water level (`wl`) for a hypsometric profile and all exposure variables in s given a inundation model. 
+  The default inundation model (if not specified otherwise) is bathtub inundation.
+
 # Arguments
-`hspf::HypsometricProfile{DT}`: The hypsometric profile with elevation, area and exposure data.
-`e::Real`: The elevation threshold for which exposure is calculated (everything underneath this elevation).
-`im::IM`: the inundationmodel used to .
-
+- `hspf::HypsometricProfile{DT}`: The hypsometric profile with elevation, area and exposure data.
+- `wl::Real`: The water level for which exposure is calculated.
+- `s::String or s::Symbol or s::Array{String} or Array{Symbol}`: An array of exposure variable names for which the damage is calculated. If only one variable is used please use the version with a single variable instaed of an array (the latter one might cause problems then).
+- `im::IM`: the inundation model used to calculate the propagation of the water level.
 
 # Returns
 Exposed area and exposure for elevations smaller than `e`.
 
   # Example
 ```julia
-function exposure(hspf, 2.0, BathtubInundation())
-function exposure(hspf, 100, "population", BathtubInundation())
+  exposure(hspf, 10.0, "assets")   # returns a number
+  exposure(hspf, 4.5, ["population","assets"])    # returns a 2-elment Array
+  exposure(hspf, 4.5, [:population,:assets], LinearDistanceAttenuatedInundation(0.1))    # returns a 2-elment Array
 ```
-
 """
 function exposure(hspf::HypsometricProfile{DT}, wl::Number, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
   water_levels = inundate(hspf, wl, im)

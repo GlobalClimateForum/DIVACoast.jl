@@ -55,7 +55,7 @@ function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, ddfs::Vector{
   d_low = wl_high - el_high
   d_high = wl_low - el_low
   factors = map(f -> (f.hdd == 0.0) ? (d_high - d_low) : convert(DT, f.hdd * log((f.hdd + d_low) / (f.hdd + d_high)) + (d_high - d_low)), ddfs)
-  return (factors .* (ρ_exp / (sl+im.attenuation_rate)))
+  return (factors .* (ρ_exp / (sl+(im.attenuation_rate/1000))))
 end
 
 function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, ddfs::Vector{StandardDDF},
