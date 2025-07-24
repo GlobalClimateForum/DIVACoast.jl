@@ -1,215 +1,158 @@
 using Statistics
 
-# union : union of all values in sga1 and sga2 in a new sga
-# result contains all data that is in sga1 OR sga2
-# if a grid cell is present in both but with different values the value of sga1 should be used
-# (thus union does not commute, we can have union(x,y)!=union(y,x)
-# take into account different dimensions (coordinates, sizes adf transformation), we can reject sga's with different projections
-
 """
-        emptySGAfromSGA(orgSGA::SparseGeoArray{DT,IT}, extentNew) where {DT<:Real,IT<:Integer}
+        get_total_extent(ga::GeoArray{E,N,C}) where {E,N,C}
 
-Creates an empty SparseGeoArray from an existing SGA (orgSGA) with same metadta but with  a new extent defined by `extentNew` and
-empty data.
+Get the extent of a GeoArray as coordinates of its corners.
 
 # Arguments
-- `orgSGA::SparseGeoArray{DT,IT}`: The original SparseGeoArray from which metadata is copied.
-- `extentNew`: The new extent for the SparseGeoArray, defines as a named tuple with keys `uppL`, `uppR`, `lwrL`, and `lwrR` representing the upper left, upper right, lower left, and lower right corners of the new extent.
-
-# Returns
-- A new `SparseGeoArray{DT,IT}`
-
-# Example
-```julia
-emptySGAfromSGA(orgSGA, (uppL=(0.0, 10.0), uppR=(10.0, 10.0), lwrL=(0.0, 0.0), lwrR=(10.0, 0.0)))
-```
-"""
-function emptySGAfromSGA(orgSGA::SparseGeoArray{DT,IT}, extentNew) where {DT<:Real,IT<:Integer}
-    newSGA = empty_copy(orgSGA)
-    t = SVector(extentNew.uppL[1], extentNew.uppL[2])
-    l = newSGA.f.linear * SMatrix{2,2}([1 0; 0 1])
-    newSGA.xsize = round(abs(extentNew.uppL[1] - extentNew.uppR[1]) / abs(pixelsize_x(orgSGA)), digits=0)
-    newSGA.ysize = round(abs(extentNew.uppL[2] - extentNew.lwrL[2]) / abs(pixelsize_y(orgSGA)), digits=0)
-    newSGA.f = AffineMap(l, t)
-    return (newSGA)
-end
-
-"""
-        get_extent(sga::SparseGeoArray{DT,IT}) where {DT<:Real,IT<:Integer}
-
-Get the extent of a SparseGeoArray as coordinates of its corners.
-
-# Arguments
-- `sga::SparseGeoArray{DT,IT}`: The SparseGeoArray for which the extent is to be calculated.
+- `ga::GeoArray{E,N,C}`: The GeoArray for which the extent is to be calculated.
 
 # Returns
 - A named tuple with keys `uppL`, `uppR`, `lwrL`, and `lwrR` representing the upper left, upper right, lower left, and lower right corners of the extent.
 
 # Example
 ```julia
-sga = SparseGeoArray(...)  # Assume sga is defined
-extent = get_extent(sga)
+extent = get_extent(ga)
 ```
 """
-function get_extent(sga::SparseGeoArray{DT,IT}) where {DT<:Real,IT<:Integer}
-    if !(typeof(sga) <: AbstractArray)
-        sga = [sga]
-    end
-    sgaIndexExt = sga -> [(1, 1), (size(sga)[1], 1), (size(sga)[1], size(sga)[2]), (1, size(sga)[2])]
-    sgaCoordExt = sga -> [coords(sga, corner, UpperLeft()) for corner in sgaIndexExt(sga)]
-    unionExtent = reduce(vcat, [sgaCoordExt(s) for s in sga])
-    xSorted = sort(unionExtent, by=first)
-    ySorted = sort(unionExtent, by=last)
+function get_total_extent(gas::Array{GeoArray{E,N,C}}) where {E,N,C}
+    gas_coords_ext = map(ga -> [GeoArrays.coords(ga, (1, 1), UpperLeft()), GeoArrays.coords(ga, (size(ga)[1], 1), UpperLeft()), GeoArrays.coords(ga, (size(ga)[1], size(ga)[2]), UpperLeft()), GeoArrays.coords(ga, (1, size(ga)[2]), UpperLeft())], gas)
+    union_extent = reduce(vcat, gas_coords_ext)
+    x_sorted = sort(union_extent, by=first)
+    y_sorted = sort(union_extent, by=last)
     return (
-        uppL=(xSorted[1][1], ySorted[end][2]),
-        uppR=(xSorted[end][1], ySorted[end][2]),
-        lwrL=(xSorted[1][1], ySorted[1][2]),
-        lwrR=(xSorted[end][1], ySorted[1][2])
+        ul=(x_sorted[1][1], y_sorted[end][2]),
+        ur=(x_sorted[end][1], y_sorted[end][2]),
+        ll=(x_sorted[1][1], y_sorted[1][2]),
+        lr=(x_sorted[end][1], y_sorted[1][2])
     )
 end
 
-"""
-        sga_union(sgaArray::Array{SparseGeoArray{DT,IT}}) where {DT<:Real,IT<:Integer}
-        sga_union(sga1::SparseGeoArray{DT,IT}, sga2::SparseGeoArray{DT,IT}) where {DT<:Real,IT<:Integer}
+get_total_extent(ga::GeoArray{E,N,C}) where {E,N,C} = get_total_extent([ga])
 
-Get the union of multiple `SparseGeoArray`s. The union is a new `SparseGeoArray` that contains all data from the input arrays and fills 
-the union extent defined by the input arrays. If a grid cell is present in multiple arrays, the value from the first array is used.
+"""
+        geoarray_union(::Array{GeoArray{E,N,C}})::GeoArray{E,N,C} where {E,N,C}
+        geoarray_union(sga1::SparseGeoArray{DT,IT}, sga2::SparseGeoArray{DT,IT}) where {DT<:Real,IT<:Integer}
+
+Get the union of multiple `SparseGeoArray`s. The union is a new `GeoArray` that contains all data from the input arrays and fills 
+the union extent defined by the input arrays. If a grid cell is present with a data value in multiple arrays, the value from the 
+first array is used.
 
 # Arguments
-- `sgaArray::Array{SparseGeoArray{DT,IT}}`: An array of `SparseGeoArray`s to be united.
+- `ga::GeoArray{E,N,C}`: An array of `GeoArray`s to be unioned.  
 
 # Returns 
-- A new `SparseGeoArray{DT,IT}` that represents the union of the input `SparseGeoArray`'s.
+- A new `GeoArray{E,N,C}` that contains the union of the input `GeoArray`'s.
 
 # Example 
 ```julia
-union = sga_union([sga1, sga2, sga3])
+union = geoarray_union([ga1, ga2, ga3])
 ``
 """
-function sga_union(sgaArray::Array{SparseGeoArray{DT,IT}})::SparseGeoArray{DT,IT} where {DT<:Real,IT<:Integer}
+function geoarray_union(gas::Array{GeoArray{E,N,C}})::GeoArray{E,N,C} where {E,N,C}
+    #function geoarray_union(gas::Array{GeoArray})::GeoArray
 
-    if isempty(sgaArray)
-        @warn "sga_union(): Can not run sga_union(). No SparseGeoArray provided."
-        return nothing
+    if isempty(gas)
+        @error "geoarray_union(): empty input array provided."
     end
 
-    unionExtent = get_extent(sgaArray)
-    xOffset = sga -> ((indices(sga, unionExtent.uppL)[1]) * -1) + 1
-    yOffset = sga -> ((indices(sga, unionExtent.uppL)[2]) * -1) + 1
-    unionSize = (maximum([xOffset(sga) + size(sga)[1] + 1 for sga in sgaArray]),
-        maximum([yOffset(sga) + size(sga)[2] + 1 for sga in sgaArray]))
+    union_extent = get_total_extent(gas)
+    println("union_extent = ", union_extent)
 
+    x_offset = ga -> ((indices(ga, union_extent.ul)[1]) * -1) + 1
+    y_offset = ga -> ((indices(ga, union_extent.ul)[2]) * -1) + 1
+
+    union_xsize = convert(Int, round(abs(union_extent.ul[1] - union_extent.ur[1]) / abs(pixelsize_x(gas[1])), digits=0) + 1)
+    union_ysize = convert(Int, round(abs(union_extent.ul[2] - union_extent.ll[2]) / abs(pixelsize_y(gas[1])), digits=0) + 1)
 
     # Create Union Object
-    union = deepcopy(sgaArray[1])
-    clear_data!(union)
-    t = SVector(unionExtent.uppL[1], unionExtent.uppL[2])
-    l = union.f.linear * SMatrix{2,2}([1 0; 0 1])
-    union.xsize = unionSize[1]
-    union.ysize = unionSize[2]
-    union.f = AffineMap(l, t)
+    union = empty_copy_from_geo_array(gas[1], union_xsize, union_ysize, union_extent.ul, no_data_value(gas[1]))
+    map_coordinates = (ga, x, y) -> (x + x_offset(ga), y + y_offset(ga))
 
-    mapCoordinates = (sga, x, y) -> (x + xOffset(sga), y + yOffset(sga))
-
-    function translateValues(sga, union)
-        for ((x, y), value) in sga.data
-            (unionX, unionY) = mapCoordinates(sga, x, y)
-            union[unionX, unionY] = value
+    for ga in reverse(gas) # if duplicate values, values of first array are set
+        for (ind, v) in GeoArrayIndexValueIterator(ga)
+            (union_x, union_y) = map_coordinates(ga, ind[1], ind[2])
+            if v != no_data_value(ga)
+                union[union_x, union_y] = v
+            end
         end
-        return (union)
-    end
-
-    for sga in reverse(sgaArray) # if duplicate values, values of first array are set
-        union = translateValues(sga, union)
     end
 
     return union
 end
 
-sga_union(sga1, sga2) = sga_union([sga1, sga2])
+geoarray_union(ga1, ga2) = geoarray_union([ga1, ga2])
 
 # TODO: implement sga_union! function (mutating version of sga_union)
-# as before, but instead of constructing a new sga store the result in place in sga1
-# and delete all values from sga2 after they have been processed (one by one)
+# as before, but instead of constructing a new ga store the result in place in ga1
+# and delete all values from ga2 after they have been processed (one by one)
 
 
-function private_getOverlapExtent(sgaArray)
-    maximumby = (arr, index) -> maximum(a -> a[index], arr)
-    minimumby = (arr, index) -> minimum(a -> a[index], arr)
-    ul = [coords(sga, [1, 1], UpperLeft()) for sga in sgaArray]
-    lr = [coords(sga, size(sga), UpperLeft()) for sga in sgaArray]
-    maximumby = (arr, index) -> maximum(a -> a[index], arr)
-    minimumby = (arr, index) -> minimum(a -> a[index], arr)
+
+function get_overlap_extent(gas::Array{GeoArray{E,N,C}}) where {E,N,C}
+    ul = [GeoArrays.coords(ga, [1, 1], UpperLeft()) for ga in gas]
+    lr = [GeoArrays.coords(ga, size(ga), UpperLeft()) for ga in gas]
+    maximum_by = (arr, index) -> maximum(a -> a[index], arr)
+    minimum_by = (arr, index) -> minimum(a -> a[index], arr)
     return (
-        uppL=(maximumby(ul, 1), minimumby(ul, 2)),
-        uppR=(minimumby(lr, 1), minimumby(ul, 2)),
-        lwrL=(maximumby(ul, 1), maximumby(lr, 2)),
-        lwrR=(minimumby(lr, 1), maximumby(lr, 2))
+        ul=(maximum_by(ul, 1), minimum_by(ul, 2)),
+        ur=(minimum_by(lr, 1), minimum_by(ul, 2)),
+        ll=(maximum_by(ul, 1), maximum_by(lr, 2)),
+        lr=(minimum_by(lr, 1), maximum_by(lr, 2))
     )
 end
 
 """
-        sga_intersect(sgaArray::Array{SparseGeoArray{DT,IT}})::Array{SparseGeoArray{DT,IT}} where {DT<:Real,IT<:Integer}
+        geoarray_intersect(gas::Array{GeoArray{E,N,C}})::GeoArray{E,N,C} where {E,N,C}
 
-Get the intersection of multiple `SparseGeoArray`s. The intersection is a new `SparseGeoArray` that contains only the data that is present in all input arrays,
-and fills the intersection extent defined by the input arrays. If a grid cell is present in multiple arrays, the value from the first array is used.
+Get the intersection of multiple `GeoArray`s. The intersection is a new `GeoArray` that contains only the data that is present as data value 
+in all input arrays, and fills the intersection extent defined by the input arrays. If for a grid cell a data value is present in multiple 
+arrays, the value from the first array is used.
 
 # Arguments
-- `sgaArray::Array{SparseGeoArray{DT,IT}}`: An array of `SparseGeoArray`s to be intersected.
+- `gas::Array{GeoArray{E,N,C}}`: An array of `GeoArray`s to be intersected.
 
 # Returns
-- An array of `SparseGeoArray{DT,IT}` that represents the intersection of the input `SparseGeoArray`s.
+- An array of `GeoArray{E,N,C}` that represents the intersection of the input `GeoArray`s.
 
 # Example 
 ```julia
-intersection = sga_intersect([sga1, sga2, sga3])
+intersection = geoarray_intersect([ga1, ga2, ga3])
 ````
 """
-function sga_intersect(sgaArray::Array{SparseGeoArray{DT,IT}})::Array{SparseGeoArray{DT,IT}} where {DT<:Real,IT<:Integer}
+function geoarray_intersect(gas::Array{GeoArray{E,N,C}})::GeoArray{E,N,C} where {E,N,C}
 
-    intersectExtent = private_getOverlapExtent(sgaArray)
-    xOffset = sga -> abs((indices(sga, intersectExtent.uppL)[1]))
-    yOffset = sga -> abs((indices(sga, intersectExtent.uppL)[2]))
-    mapCoordinates = (sga, x, y) -> (x + xOffset(sga), y + yOffset(sga))
+    intersect_extent = get_overlap_extent(gas)
+    x_offset = ga -> abs(GeoArrays.indices(ga, intersect_extent.ul, UpperLeft())[1]-1)
+    y_offset = ga -> abs(GeoArrays.indices(ga, intersect_extent.ul, UpperLeft())[2]-1)
+    map_coordinates = (ga, x, y) -> (x + x_offset(ga), y + y_offset(ga))
 
-    function translateValues(sga)
+    intersect_xsize = convert(Int, round(abs(intersect_extent.ul[1] - intersect_extent.ur[1]) / abs(pixelsize_x(gas[1])), digits=0) + 1)
+    intersect_ysize = convert(Int, round(abs(intersect_extent.ul[2] - intersect_extent.ll[2]) / abs(pixelsize_y(gas[1])), digits=0) + 1)
 
-        newSGA = emptySGAfromSGA(sga, intersectExtent)
+    intersect = empty_copy_from_geo_array(gas[1], intersect_xsize, intersect_ysize, intersect_extent.ul, no_data_value(gas[1]))
 
-        for x in 1:newSGA.xsize
-            for y in 1:newSGA.ysize
-                (sgaX, sgaY) = mapCoordinates(sga, x, y)
-                newSGA[x, y] = sga[sgaX, sgaY]
+    for ga in reverse(gas) # if duplicate values, values of first array are set
+        for (ind, v) in GeoArrayIndexValueIterator(ga)
+            (intersect_x, intersect_y) = map_coordinates(ga, ind[1], ind[2])
+            if 1 <= intersect_x && intersect_x <= intersect_xsize && 1 <= intersect_y && intersect_y <= intersect_ysize
+                if v != no_data_value(ga)
+                    intersect[intersect_x, intersect_y] = v
+                end
             end
         end
-
-        return newSGA
     end
 
-    return [translateValues(sga) for sga in sgaArray]
+    return intersect
 end
 
-function sga_dimension_match(sga1::SparseGeoArray{DT,IT}, sga2::SparseGeoArray{DT,IT})::Bool where {DT<:Real,IT<:Integer}
-    return (size(sga1, 1) == size(sga2, 1)) && (size(sga1, 2) == size(sga2, 2)) && (pixelsize_x(sga1) == pixelsize_x(sga2)) && (pixelsize_y(sga1) == pixelsize_y(sga2)) && (sga1.f.translation == sga2.f.translation)
-end
+intersect(ga1, ga2) = geoarray_intersect([ga1, ga2])
 
-
-function sga_dimension_match_log(sga1::SparseGeoArray{DT,IT}, sga2::SparseGeoArray{DT,IT})::Bool where {DT<:Real,IT<:Integer}
-    if ((size(sga1, 1) != size(sga2, 1)) || (size(sga1, 2) != size(sga2, 2)))
-        error("DimensionError: $(sga1.filename) ($(size(sga1,1))×$(size(sga1,2))) and $(sga2.filename) ($(size(sga2,1))×$(size(sga2,2)))")
-    end
-    if (sga1.projref != sga2.projref)
-        error("ProjRefError: $(sga1.filename) ($(sga1.projref)) and $(sga2.filename) ($(sga2.projref))")
-    end
-    if (sga1.f != sga2.f)
-        error("GeoTransfomError: $(sga1.filename) ($(sga1.f)) and $(sga2.filename) ($(sga2.f))")
-    end
-    return true
-end
 
 # TODO: implement sga_difference, sga_sym_difference
 
-function private_get_radial_kernel(radius::Real, pixelsizeX::Real, pixelsizeY::Real)    
+function private_get_radial_kernel(radius::Real, pixelsizeX::Real, pixelsizeY::Real)
     indexSpanX = convert(Int32, round(radius / pixelsizeX, RoundNearest))
     indexSpanY = convert(Int32, round(radius / pixelsizeY, RoundNearest))
     kernel = falses(indexSpanX + 1, indexSpanY + 1)
@@ -226,7 +169,7 @@ function private_get_radial_kernel(radius::Real, pixelsizeX::Real, pixelsizeY::R
     return (kernel)
 end
 
-
+#=
 # create a radial Kernel Mask with a defined radius
 function private_get_radial_kernel(sga::SparseGeoArray{DT,IT}, radius::Real, lon_min::Real, lon_max::Real, lat_max::Real, lat_min::Real) where {DT<:Real,IT<:Integer}
     indexSpanX = convert(Int32, round(radius / pixelsizeX, RoundNearest))
@@ -395,3 +338,4 @@ function get_box_around(sga::SparseGeoArray{DT,IT}, p::Tuple{Real,Real}, radius:
     bb = bounding_boxes(sga, p_east[1], p_west[1], p_south[2], p_north[2])
     return sga[bb[1][1]:bb[1][3],bb[1][2]:bb[1][4]]    
 end
+=#

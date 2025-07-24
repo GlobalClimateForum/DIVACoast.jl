@@ -2,6 +2,7 @@ import Pkg
 
 Pkg.add("GeoFormatTypes")
 Pkg.add("GDAL")
+Pkg.add("ArchGDAL")
 Pkg.add("CoordinateTransformations")
 Pkg.add("StaticArrays")
 Pkg.add("NCDatasets")

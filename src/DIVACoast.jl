@@ -33,18 +33,27 @@ export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integra
 export InundationModel, BathtubInundation, LinearDistanceAttenuatedInundation, inundate, water_depth
 
 # Export GeoArray adapter stuff
-export read_geotiff_to_geoarray_2d, empty_geo_array, is_rotated, is_circular, no_data_value
+export read_geotiff_to_geoarray_2d, empty_geo_array, is_circular, no_data_value, clear_data!
+
+# Export GeoArray iterators
+export GeoArrayIndexValueIterator
 
 # Export GeoArray I/O stuff
-export read_geotiff_header!, read_geotiff_data_complete!
+export read_geotiff_header!, read_geotiff_data_complete!, read_geotiff_data_categorised!, save_geotiff_data_complete
 
 # Export GeoArray utilities stuff
-export nh4, nh8, distance, area
+export nh4, nh8, distance, area, crop!
 export UpperLeft, LowerRight
 export AbstractDirection, East, North, West, South
 
+# Export Geoarray Operations
+export geoarray_union, geoarray_intersect
+
 # Export SparseArray's for memory friendly data processing
 export SparseArrayADOC, SparseArrayDOK
+
+export geotiff_connect, geotiff_transform, geotiff_collect
+
 
 # Set constants from local config
 earth_circumference_km = config[:earthCircumferenceKM]
@@ -74,13 +83,14 @@ end
 
 # Include scripts
 include("./logger/logger.jl")
-include("./datatypes/geodatatype/SparseGeoArrays.jl")
-include("./datatypes/geoarray_adapter/geoarray_adapter.jl")
-include("./datatypes/geoarray_adapter/geoarray_io.jl")
-include("./datatypes/geoarray_adapter/geoarray_utils.jl")
-include("./datatypes/geoarray_adapter/geoutils_types.jl")
 include("./datatypes/sparse_arrays/sparse_array_adoc.jl")
 include("./datatypes/sparse_arrays/sparse_array_dok.jl")
+include("./datatypes/geoarray_adapter/geoutils_types.jl")
+include("./datatypes/geoarray_adapter/geoarray_adapter.jl")
+include("./datatypes/geoarray_adapter/geoarray_iterators.jl")
+include("./datatypes/geoarray_adapter/geoarray_io.jl")
+include("./datatypes/geoarray_adapter/geoarray_utils.jl")
+include("./datatypes/geoarray_adapter/geoarray_operations.jl")
 include("./datatypes/inundation_model/inundation_model.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile.jl")
 include("./datatypes/hypsometric_profiles/hypsometric_profile_collection.jl")
@@ -98,10 +108,8 @@ include("./datatypes/hypsometric_profiles/hypsometric_profile_damage_standard_dd
 include("./datatypes/coastal_model/local_coastal_model.jl")
 include("./datatypes/coastal_model/composed_coastal_model.jl")
 include("./datatypes/coastal_model/composed_coastal_model_generics.jl")
-include("./datatypes/geodatatype/nn.jl")
+#include("./datatypes/geodatatype/nn.jl")
 include("./algorithms/conversion/sgr_to_hsp.jl")
-include("./algorithms/coastal/coastline.jl")
-include("./algorithms/coastal/coastplain.jl")
 include("./algorithms/statistics/gev_fits.jl")
 include("./algorithms/statistics/gpd_fits.jl")
 include("./algorithms/statistics/ev_fit.jl")

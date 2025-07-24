@@ -3,13 +3,13 @@ export to_hypsometric_profile, to_hypsometric_profiles,
   attach_exposure_variables_to_hypsometric_profiles!
 
 """
-    function to_hypsometric_profile(sga::SparseGeoArray{DT,IT}, width::DT2, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
+    function to_hypsometric_profile(ga::GeoArray, width::Real, min_elevation::Real, max_elevation::Real, elevation_incr::Real)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
 
-Function converts a `SparseGeoArray` object to a `HypsometricProfile` object. The function calculates the area of each elevation increment and stores it in the `HypsometricProfile` object. Elevation
+Function converts a `GeoArray` object to a `HypsometricProfile` object. The function calculates the area of each elevation increment and stores it in the `HypsometricProfile` object. Elevation
 increments are calculated between a `min_elevation` and a `max_elevation` with a desired eleveation increment: `elevation_incr`. The function returns the `HypsometricProfile` object.
 
 # Arguments
-- `sga::SparseGeoArray{DT,IT}`: The `SparseGeoArray` object to be converted.
+- `ga::GeoArray`: The `GeoArray` object to be converted.
 - `width::DT2`: The width of the hypsometric profile.
 - `min_elevation::DT2`: The minimum elevation of the hypsometric profile to be considered.
 - `max_elevation::DT2`: The maximum elevation of the hypsometric profile to be considered.
@@ -20,24 +20,25 @@ increments are calculated between a `min_elevation` and a `max_elevation` with a
 
 # Example
 ```julia
-to_hypsometric_profile(sga, 1.0, -2.0, 20.0, 5.0)
+to_hypsometric_profile(ga, 1.0, -2.0, 20.0, 5.0)
 ```
 """
-function to_hypsometric_profile(sga::SparseGeoArray{DT,IT}, width::DT2, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
+
+function to_hypsometric_profile(ga::GeoArray{E,N,C}, width::Real, min_elevation::Real, max_elevation::Real, elevation_incr::Real)::HypsometricProfile where {E,N,C}
   s = floor(Int, ((max_elevation - min_elevation) / elevation_incr))
-  a::Array{DT2} = zeros(s)
-  e = Array{DT2}(undef, s)
+  a::Array{E} = zeros(s)
+  e = Array{E}(undef, s)
   for i in 1:s
     e[i] = min_elevation + i * elevation_incr
   end
 
-  for (indices, elevation) in sga.data
+  for (indices, elevation) in GeoArrayIndexValueIterator(ga_elevation)
     if elevation <= e[1]
-      a[1] += area(sga, indices)
+      a[1] += area(ga, indices)
     else
       i = floor(Int, (elevation - min_elevation) / elevation_incr) + 1
       if (i <= length(e))
-        a[i] += area(sga, indices)
+        a[i] += area(ga, indices)
       end
     end
   end
@@ -56,15 +57,15 @@ function to_hypsometric_profile(sga::SparseGeoArray{DT,IT}, width::DT2, min_elev
 end
 
 """
-    function to_hypsometric_profile(sga_elevation::SparseGeoArray{DT,IT}, area_unit::String, sgas_exp::Array{SparseGeoArray{DT,IT}}, exp_names::Array{String}, exp_units::Array{String}, width::DT2, width_unit::String, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2, elevation_unit::String)
+    function to_hypsometric_profile(ga_elevation::GeoArray, area_unit::String, gas_exp::Array{GeoArray}, exp_names::Array{String}, exp_units::Array{String}, width::DT2, width_unit::String, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2, elevation_unit::String)
 
-Creates a `HypsometricProfile` object from a `SparseGeoArray` object containing elevation data. 
+Creates a `HypsometricProfile` object from a `GeoArray` object containing elevation data. 
 It also calculates associated area affected and static/dynamic exposure at each elevation increment. The function returns the `HypsometricProfile` object.
 
 # Arguments
-- `sga_elevation::SparseGeoArray{DT,IT}`: The `SparseGeoArray` object containing elevation data.
+- `ga_elevation::GeoArray`: The `GeoArray` object containing elevation data.
 - `area_unit::String`: The unit of the area.
-- `sgas_exp::Array{SparseGeoArray{DT,IT}}`: The `SparseGeoArray` objects containing dynamic exposure data.
+- `gas_exp::Array{GeoArray}`: The `GeoArray` objects containing dynamic exposure data.
 - `exp_names::Array{String}`: The names of the dynamic exposure data.
 - `exp_units::Array{String}`: The units of the dynamic exposure data.
 - `width::DT2`: The width of the hypsometric profile.
@@ -79,38 +80,38 @@ It also calculates associated area affected and static/dynamic exposure at each 
 
 # Example
 ```julia
-to_hypsometric_profile(sga_elevation, "m²", sgas_exp, ["population", "assets"], ["individuals", "USD"], 1.0, "m", -2.0, 20.0, 5.0, "m")
+to_hypsometric_profile(ga_elevation, "m²", gas_exp, ["population", "assets"], ["individuals", "USD"], 1.0, "m", -2.0, 20.0, 5.0, "m")
 ```
 """
-function to_hypsometric_profile(sga_elevation::SparseGeoArray{DT,IT}, area_unit::String,
-  sgas_exposure::Array{SparseGeoArray{DT,IT}}, exposure_names::Array{String}, exposure_units::Array{String},
-  width::DT2, width_unit::String, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2, elevation_unit::String)::HypsometricProfile where {DT<:Real,IT<:Integer,DT2<:Real}
+function to_hypsometric_profile(ga_elevation::GeoArray, area_unit::String,
+  gas_exposure::Array{GeoArray}, exposure_names::Array{String}, exposure_units::Array{String},
+  width::DT, width_unit::String, min_elevation::DT, max_elevation::DT, elevation_incr::DT, elevation_unit::String)::HypsometricProfile where {DT<:Real}
   # ToDo:: check if all dimensions match.
 
   s = floor(Int, ((max_elevation - min_elevation) / elevation_incr))
-  a::Array{DT2} = zeros(s)
-  e = Array{DT2}(undef, s)
+  a::Array{DT} = zeros(s)
+  e = Array{DT}(undef, s)
   for i in 1:s
     e[i] = min_elevation + i * elevation_incr
   end
 
-  exposure_tmp::Array{DT2} = zeros(s, size(sgas_exposure, 1))
+  exposure_tmp::Array{DT} = zeros(s, size(gas_exposure, 1))
 
-  for (indices, elevation) in sga_elevation.data
+  for (indices, elevation) in GeoArrayIndexValueIterator(ga_elevation)
     if elevation <= e[1]
-      a[1] += area(sga_elevation, indices)
-      for j in 1:size(sgas_exposure, 1)
-        if (sgas_exposure[j][indices[1], indices[2]]) != sgas_exposure[j].nodatavalue
-          exposure_tmp[1, j] += sgas_exposure[j][indices[1], indices[2]]
+      a[1] += area(ga_elevation, indices)
+      for j in 1:size(gas_exposure, 1)
+        if (gas_exposure[j][indices[1], indices[2]]) != no_data_value(gas_exposure[j])
+          exposure_tmp[1, j] += gas_exposure[j][indices[1], indices[2]]
         end
       end
     else
       i = floor(Int, (elevation - min_elevation) / elevation_incr) + 1
       if (i <= length(e))
-        a[i] += area(sga_elevation, indices)
-        for j in 1:size(sgas_exposure, 1)
-          if (sgas_exposure[j][indices[1], indices[2]]) != sgas_exposure[j].nodatavalue
-            exposure_tmp[i, j] += sgas_exposure[j][indices[1], indices[2]]
+        a[i] += area(ga_elevation, indices)
+        for j in 1:size(gas_exposure, 1)
+          if (gas_exposure[j][indices[1], indices[2]]) != no_data_value(gas_exposure[j])
+            exposure_tmp[i, j] += gas_exposure[j][indices[1], indices[2]]
           end
         end
       end
@@ -129,42 +130,40 @@ function to_hypsometric_profile(sga_elevation::SparseGeoArray{DT,IT}, area_unit:
     end
   end
 
-  z_exposure::Array{DT2} = zeros(size(sgas_exposure, 1))
+  z_exposure::Array{DT} = zeros(size(gas_exposure, 1))
 
   return HypsometricProfile(width, width_unit, pushfirst!(e, min_elevation), elevation_unit, pushfirst!(a, 0), area_unit, [z_exposure'; exposure_tmp], exposure_names, exposure_units)
 end
 
-function to_hypsometric_profile(sgas_elevation::Dict{IT2,SparseGeoArray{DT,IT}}, area_unit::String,
-  sgas_exp_dyn::Array{Dict{IT2,SparseGeoArray{DT,IT}}}, exp_dyn_names::Array{String}, exp_dyn_units::Array{String},
-  widths::Dict{IT3,DT3}, width_unit::String, min_elevation::DT2, max_elevation::DT2, elevation_incr::DT2, elevation_unit::String)::Dict{IT2,HypsometricProfile} where {DT<:Real,IT<:Integer,DT2<:Real,IT2<:Integer,DT3<:Real,IT3<:Integer}
+function to_hypsometric_profile(gas_elevation::Dict{IT,GeoArray{E,N,C}}, area_unit::String,
+  gas_exp::Array{Dict{IT,GeoArray{E,N,C}}}, exp_names::Array{String}, exp_units::Array{String},
+  widths::Dict{IT2,DT2}, width_unit::String, min_elevation::DT, max_elevation::DT, elevation_incr::DT, elevation_unit::String)::Dict{IT,HypsometricProfile} where {E,N,C<:AbstractArray,DT<:Real,IT<:Integer,DT2<:Real,IT2<:Integer}
 
-  ret::Dict{IT2,HypsometricProfile{DT2}} = Dict{IT2,HypsometricProfile{DT2}}()
-  dy = Array{SparseGeoArray{DT,IT}}(undef, size(sgas_exp_dyn, 1))
+  ret::Dict{IT,HypsometricProfile{DT}} = Dict{IT2,HypsometricProfile{DT}}()
+  exp_arrays = Array{GeoArray}(undef, size(gas_exp, 1))
 
   print("construction progress: 0 ")
   p = 0
   counter = 0
 
-  length(sgas_elevation)
+  length(gas_elevation)
 
   # VERY memory inefficient
-  for (index, elevation_data) in sgas_elevation
+  for (index, elevation_data) in gas_elevation
     counter = counter + 1
-    if ((counter * 100 ÷ length(sgas_elevation)) ÷ 10) > p
-      p = (counter * 100 ÷ length(sgas_elevation)) ÷ 10
+    if ((counter * 100 ÷ length(gas_elevation)) ÷ 10) > p
+      p = (counter * 100 ÷ length(gas_elevation)) ÷ 10
       print("$(p*10) ")
     end
 
-    for j in 1:size(sgas_exp_dyn, 1)
-      if (haskey(sgas_exp_dyn[j], index))
-        dy[j] = sgas_exp_dyn[j][index]
+    for j in 1:size(gas_exp, 1)
+      if (haskey(gas_exp[j], index))
+        exp_arrays[j] = gas_exp[j][index]
       else
-        dy[j] = SparseGeoArray{DT,IT}()
-        dy[j].xsize = elevation_data.xsize
-        dy[j].ysize = elevation_data.ysize
+        exp_arrays[j] = empty_copy_from_geo_array(gas_elevation[index])
       end
     end
-    ret[index] = to_hypsometric_profile(elevation_data, area_unit, dy, exp_dyn_names, exp_dyn_units, convert(DT2, widths[index]), width_unit, min_elevation, max_elevation, elevation_incr, elevation_unit)
+    ret[index] = to_hypsometric_profile(elevation_data, area_unit, exp_arrays, exp_names, exp_units, convert(DT, widths[index]), width_unit, min_elevation, max_elevation, elevation_incr, elevation_unit)
   end
   println()
   return ret
@@ -192,14 +191,14 @@ function to_hypsometric_profiles(
   exposure_file_names::Array{String}, exposure_names::Array{String}, exposure_units::Array{String},
   widths::Dict, width_unit::String, min_elevation::DT, max_elevation::DT, elevation_incr::DT, elevation_unit::String)::Dict{Int32,HypsometricProfile{DT}} where {DT<:Real}
 
-  category_data = SparseGeoArray{DT,Int32}()
+  category_data = empty_geo_array(SparseArrayDOK{Float32,Int32})
   read_geotiff_header!(category_data, category_file_name)
 
-  elevation_data = SparseGeoArray{DT,Int32}()
+  elevation_data = empty_geo_array(SparseArrayDOK{Float32,Int32})
   read_geotiff_header!(elevation_data, elevation_file_name)
-  sga_dimension_match_log(category_data, elevation_data)
+  ga_dimension_match(category_data, elevation_data)
 
-  sgas_exposure = Array{SparseGeoArray{DT,Int32}}(undef, size(exposure_file_names, 1))
+  gas_exposure = Array{GeoArrays.GeoArray{Float32, 2, SparseArrayDOK{Float32, Int32}}}(undef, size(exposure_file_names, 1))
 
   s = floor(Int, ((max_elevation - min_elevation) / elevation_incr))
   e = Array{DT}(undef, s)
@@ -210,10 +209,10 @@ function to_hypsometric_profiles(
   area_data::Dict{Int32,Array{DT}} = Dict()
   exposure_data::Dict{Int32,Array{DT,2}} = Dict()
 
-  for i in 1:size(sgas_exposure, 1)
-    sgas_exposure[i] = SparseGeoArray{DT,Int32}()
-    read_geotiff_header!(sgas_exposure[i], exposure_file_names[i])
-    sga_dimension_match_log(category_data, sgas_exposure[i])
+  for i in 1:size(gas_exposure, 1)
+    gas_exposure[i] = empty_geo_array(SparseArrayDOK{Float32,Int32})
+    read_geotiff_header!(gas_exposure[i], exposure_file_names[i])
+    ga_dimension_match(category_data, gas_exposure[i])
   end
 
   print("construction progress: 0 ")
@@ -228,18 +227,18 @@ function to_hypsometric_profiles(
     read_geotiff_data_partial!(category_data, 1, size(category_data, 1), y, y)
     clear_data!(elevation_data)
     read_geotiff_data_partial!(elevation_data, 1, size(elevation_data, 1), y, y)
-    for i in 1:size(sgas_exposure, 1)
-      clear_data!(sgas_exposure[i])
-      read_geotiff_data_partial!(sgas_exposure[i], 1, size(sgas_exposure[i], 1), y, y)
+    for i in 1:size(gas_exposure, 1)
+      clear_data!(gas_exposure[i])
+      read_geotiff_data_partial!(gas_exposure[i], 1, size(gas_exposure[i], 1), y, y)
     end
     for x in 1:size(category_data, 1)
-      if (category_data[x, y] != category_data.nodatavalue)
-        if (elevation_data[x, y] != elevation_data.nodatavalue)
+      if (category_data[x, y] != no_data_value(category_data))
+        if (elevation_data[x, y] != no_data_value(elevation_data))
           if (!haskey(area_data, category_data[x, y]))
             area_data[category_data[x, y]] = zeros(s)
           end
           if (!haskey(exposure_data, category_data[x, y]))
-            exposure_data[category_data[x, y]] = zeros(s, size(sgas_exposure, 1))
+            exposure_data[category_data[x, y]] = zeros(s, size(gas_exposure, 1))
           end
 
           i = if elevation_data[x, y] <= e[1]
@@ -251,9 +250,9 @@ function to_hypsometric_profiles(
             i = length(e)
           end
           area_data[category_data[x, y]][i] += area(elevation_data, x, y)
-          for j in 1:size(sgas_exposure, 1)
-            if (sgas_exposure[j][x, y] != sgas_exposure[j].nodatavalue)
-              exposure_data[category_data[x, y]][i, j] += sgas_exposure[j][x, y]
+          for j in 1:size(gas_exposure, 1)
+            if (gas_exposure[j][x, y] != no_data_value(gas_exposure[j]))
+              exposure_data[category_data[x, y]][i, j] += gas_exposure[j][x, y]
             end
           end
         end
@@ -283,14 +282,14 @@ function attach_to_hypsometric_profiles!(
   exposure_file_names::Array{String}, exposure_names::Array{String}, exposure_units::Array{String},
   min_elevation::DT, max_elevation::DT, elevation_incr::DT) where {DT<:Real}
 
-  category_data = SparseGeoArray{DT,Int32}()
+  category_data = empty_geo_array(SparseArrayDOK{Float32,Int32})
   read_geotiff_header!(category_data, category_file_name)
 
-  elevation_data = SparseGeoArray{DT,Int32}()
+  elevation_data = empty_geo_array(SparseArrayDOK{Float32,Int32})
   read_geotiff_header!(elevation_data, elevation_file_name)
-  sga_dimension_match_log(category_data, elevation_data)
+  ga_dimension_match(category_data, elevation_data)
 
-  sgas_exposure = Array{SparseGeoArray{DT,Int32}}(undef, size(exposure_file_names, 1))
+  gas_exposure = Array{GeoArrays.GeoArray{Float32, 2, SparseArrayDOK{Float32, Int32}}}(undef, size(exposure_file_names, 1))
 
   s = floor(Int, ((max_elevation - min_elevation) / elevation_incr))
   e = Array{DT}(undef, s)
@@ -300,11 +299,10 @@ function attach_to_hypsometric_profiles!(
 
   exposure_data::Dict{Int32,Array{DT,2}} = Dict{Int,Array{DT,2}}()
 
-  for i in 1:size(sgas_exposure, 1)
-    sgas_exposure[i] = SparseGeoArray{DT,Int32}()
-    read_geotiff_header!(sgas_exposure[i], exposure_file_names[i])
-    sga_dimension_match_log(category_data, sgas_exposure[i])
-    #    exp_dyn_data[i] = Dict()
+  for i in 1:size(gas_exposure, 1)
+    gas_exposure[i] = empty_geo_array(SparseArrayDOK{Float32,Int32})
+    read_geotiff_header!(gas_exposure[i], exposure_file_names[i])
+    ga_dimension_match(category_data, gas_exposure[i])
   end
 
   print("attach progress: 0 ")
@@ -319,13 +317,13 @@ function attach_to_hypsometric_profiles!(
     read_geotiff_data_partial!(category_data, 1, size(category_data, 1), y, y)
     clear_data!(elevation_data)
     read_geotiff_data_partial!(elevation_data, 1, size(elevation_data, 1), y, y)
-    for i in 1:size(sgas_exposure, 1)
-      clear_data!(sgas_exposure[i])
-      read_geotiff_data_partial!(sgas_exposure[i], 1, size(sgas_exposure[i], 1), y, y)
+    for i in 1:size(gas_exposure, 1)
+      clear_data!(gas_exposure[i])
+      read_geotiff_data_partial!(gas_exposure[i], 1, size(gas_exposure[i], 1), y, y)
     end
     for x in 1:size(category_data, 1)
-      if (category_data[x, y] != category_data.nodatavalue)
-        if (elevation_data[x, y] != elevation_data.nodatavalue)
+      if (category_data[x, y] != no_data_value(category_data))
+        if (elevation_data[x, y] != no_data_value(elevation_data))
           i = if elevation_data[x, y] <= e[1]
             1
           else
@@ -335,12 +333,12 @@ function attach_to_hypsometric_profiles!(
             i = length(e)
           end
 
-          for j in 1:size(sgas_exposure, 1)
+          for j in 1:size(gas_exposure, 1)
             if (!haskey(exposure_data, category_data[x, y]))
-              exposure_data[category_data[x, y]] = zeros(DT, s, size(sgas_exposure, 1))
+              exposure_data[category_data[x, y]] = zeros(DT, s, size(gas_exposure, 1))
             end
-            if (sgas_exposure[j][x, y] != sgas_exposure[j].nodatavalue)
-              exposure_data[category_data[x, y]][i, j] += sgas_exposure[j][x, y]
+            if (gas_exposure[j][x, y] != no_data_value(gas_exposure[j]))
+              exposure_data[category_data[x, y]][i, j] += gas_exposure[j][x, y]
             end
           end
         end

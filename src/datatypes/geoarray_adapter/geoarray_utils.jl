@@ -52,9 +52,9 @@ function nh4(ga::GeoArray, x::Integer, y::Integer)::Array{Tuple{Integer,Integer}
   return ret
 end
 
-nh4(ga::GeoArray, p::Tuple{Integer,Integer}) where {DT<:Real,IT<:Integer} = nh4(ga, p[1], p[2])
+nh4(ga::GeoArray, p::Tuple{Integer,Integer}) = nh4(ga, p[1], p[2])
 
-function nh4(ga::GeoArray, x::Integer, y::Integer, nh::Array{Tuple{IT,IT}})::Integer where {DT<:Real,IT<:Integer}
+function nh4(ga::GeoArray, x::Integer, y::Integer, nh::Array{Tuple{Integer,Integer}})::Integer
   ret::Integer = 0
   if ((x < 1) || (x > size(ga)[1]))
     return ret
@@ -262,8 +262,8 @@ julia> ...
 
 ```
 """
-function bounding_boxes(ga::SparseGeoArray{DT,IT}, lon_east::Real, lon_west::Real, lat_south::Real, lat_north::Real) where {DT<:Real,IT<:Integer}
-  ret = Array{NTuple{4,IT}}(undef, 0)
+function bounding_boxes(ga::GeoArray, lon_east::Real, lon_west::Real, lat_south::Real, lat_north::Real)
+  ret = Array{NTuple{4,Int}}(undef, 0)
   if lon_west <= lon_east
     ul = indices(ga, (lon_west, lat_north))
     ulx = if ul[1] < 1
@@ -376,16 +376,54 @@ end
 area(ga::GeoArray, p::Tuple{<:Integer,<:Integer}) = area(ga, p[1], p[2])
 area(ga::GeoArray, p::Tuple{I,I}) where {I<:Integer} = area(ga, p[1], p[2])
 
+include("geoarray_helpers.jl")
 
-
-function crop!(ga::GeoArray; min_x::Integer, min_y::Integer, max_x::Integer, max_y::Integer)
+function make_consistent_for_crop(ga::GeoArray{T,N,C}, min_x::Integer, min_y::Integer, max_x::Integer, max_y::Integer) where {T,N,C}
   if max_x < min_x
     min_x, max_x = max_x, min_x
   end
   if max_y < min_y
     min_y, max_y = max_y, min_y
   end
-  ga = ga[x_min:x_max,y_min,y_max]
+  if min_x < 1
+    min_x = 1
+  end
+  if max_x > size(ga, 1)
+    max_x = size(ga, 1)
+  end
+  if min_y < 1
+    min_y = 1
+  end
+  if max_y > size(ga, 2)
+    max_y = size(ga, 2)
+  end
+  return min_x, min_y, max_x, max_y
+end
+
+function crop!(ga::GeoArray{T,N,C}, min_x::Integer, min_y::Integer, max_x::Integer, max_y::Integer) where {T,N,C}
+  min_x, min_y, max_x, max_y = make_consistent_for_crop(ga, min_x, min_y, max_x, max_y)
+  crop!(ga.A, min_x=min_x, max_x=max_x, min_y=min_y, max_y=max_y)
+  t = ga.f(SVector(min_x - 1, min_y - 1))
+  l = ga.f.linear * SMatrix{2,2}([1 0; 0 1])
+  ga.f = AffineMap(l, t)
+end
+
+function crop!(ga::GeoArray{T,N,Array{T}}, min_x::Integer, min_y::Integer, max_x::Integer, max_y::Integer) where {T,N}
+  min_x, min_y, max_x, max_y = make_consistent_for_crop(ga, min_x, min_y, max_x, max_y)
+  a = ga.A[min_x:max_x,min_y:max_y]
+  ga.A = a
+  t = ga.f(SVector(min_x - 1, min_y - 1))
+  l = ga.f.linear * SMatrix{2,2}([1 0; 0 1])
+  ga.f = AffineMap(l, t)
+end
+
+function crop!(ga::GeoArray{T,N,Matrix{T}}, min_x::Integer, min_y::Integer, max_x::Integer, max_y::Integer) where {T,N}
+  min_x, min_y, max_x, max_y = make_consistent_for_crop(ga, min_x, min_y, max_x, max_y)
+  a = ga.A[min_x:max_x,min_y:max_y]
+  ga.A = a
+  t = ga.f(SVector(min_x - 1, min_y - 1))
+  l = ga.f.linear * SMatrix{2,2}([1 0; 0 1])
+  ga.f = AffineMap(l, t)
 end
 
 """
@@ -406,73 +444,15 @@ Crop a `GeoArray` to its minimum data extent and optional margins around the ext
 crop!(ga, margin_x=5, margin_y=10)
 ```
 """
-function crop!(ga::GeoArray; margin_x::Integer=0, margin_y::Integer=0) where {DT<:Real,IT<:Integer}
-  max_x = 1
-  min_x = size(ga)[1]
-  max_y = 1
-  min_y = size(ga)[2]
-  for x in 1:size(ga)[1]
-    for y in 1:size(ga)[2]
-      if ga[x, y] != no_data_value(ga) && ga[x, y] != missing
-        min_x = x
-        break
-      end
-      if min_x == x
-        break
-      end
-    end
-  end
-
-  for x in size(ga)[1]:-1:1
-    for y in 1:size(ga)[2]
-      if ga[x, y] != no_data_value(ga) && ga[x, y] != missing
-        max_x = x
-        break
-      end
-      if max_x == x
-        break
-      end
-    end
-  end
-
-  for y in 1:size(ga)[2]
-    for x in 1:size(ga)[1]
-      if ga[x, y] != no_data_value(ga) && ga[x, y] != missing
-        min_y = y
-        break
-      end
-      if min_y == y
-        break
-      end
-    end
-  end
-
-  for y in size(ga)[2]:-1:1
-    for x in 1:size(ga)[1]
-      if ga[x, y] != no_data_value(ga) && ga[x, y] != missing
-        max_y = y
-        break
-      end
-      if max_y == y
-        break
-      end
-    end
-  end
-
-  #  for (coordinates, elevation) in ga.data
-  #    if (coordinates[1]<min_x) min_x=coordinates[1] end
-  #    if (coordinates[1]>max_x) max_x=coordinates[1] end
-  #    if (coordinates[2]<min_y) min_y=coordinates[2] end
-  #   if (coordinates[2]>max_y) max_y=coordinates[2] end
-  #  end
+function crop!(ga::GeoArray{T,N,C}; margin_x::Integer=0, margin_y::Integer=0) where {T,N,C}
+  min_x, min_y, max_x, max_y = extent(ga.A, no_data_value(ga))
   min_x = (min_x - margin_x < 1) ? 1 : min_x - margin_x
   min_y = (min_y - margin_y < 1) ? 1 : min_y - margin_y
-  max_x = (max_x + margin_x > sga.xsize) ? sga.xsize : max_x + margin_x
-  max_y = (max_y + margin_y > sga.ysize) ? sga.ysize : max_y + margin_y
+  max_x = (max_x + margin_x > size(ga)[1]) ? size(ga)[1] : max_x + margin_x
+  max_y = (max_y + margin_y > size(ga)[2]) ? size(ga)[2] : max_y + margin_y
 
-  crop!(ga, (min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y))
+  crop!(ga, min_x, min_y, max_x, max_y)
 end
 
+
 #clear_data!(sga) = empty!(sga.data)
-pixelsize_x(ga::SparseGeoArray) = sga.f.linear[1, 1]
-pixelsize_y(ga::SparseGeoArray) = sga.f.linear[2, 2]
