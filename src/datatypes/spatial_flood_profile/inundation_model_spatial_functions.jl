@@ -14,7 +14,7 @@ function private_mask_profile(profile::SpatialFloodProfile)
 
     while !isempty(queue)
         current_ = dequeue!(queue)
-        nb_cells = getNBS(profile.elevation, current_, nb = profile.kernel) |> values
+        nb_cells = neighbours(profile.elevation, current_, nb = profile.kernel) |> values
 
         for nb in nb_cells
             if !isnothing(nb) && !visited[nb]
@@ -67,7 +67,7 @@ function flood_fill(profile::SpatialFloodProfile, wl::DT) where DT <: Number
         
         # Get all neighbors within the bounds and enqueue them if they are not flooded and their 
         # elevation is less than or equal to the water level
-        nbs = filter(!isnothing, values(getNBS(profile.elevation, current_, nb = profile.kernel)))
+        nbs = filter(!isnothing, values(neighbours(profile.elevation, current_, nb = profile.kernel)))
         for nb in nbs
             if !flooded[nb] && profile.elevation[nb] <= wl
                 enqueue!(queue, nb)
@@ -123,7 +123,7 @@ function dijkstra_fill(profile::SpatialFloodProfile, wl::DT) where DT <: Number
         visited[index] = true
 
         # Get neighbors of the current index
-        nbs = values(getNBS(profile.elevation, index, nb=profile.kernel))
+        nbs = values(neighbours(profile.elevation, index, nb=profile.kernel))
 
         for nb in nbs # Check neighbors
             
@@ -148,7 +148,9 @@ function dijkstra_fill(profile::SpatialFloodProfile, wl::DT) where DT <: Number
     return distances, paths
 end
 
-function path_based_attenuated_inundation(profile::SpatialFloodProfile, profilemask::SpatialFloodProfileMask, wl::Real, attrate::Real)
+function path_based_attenuated_inundation(profile::SpatialFloodProfile, profilemask::SpatialFloodProfileMask, wl::Real, attrate::Union{Real, AbstractArray{Real, 2}}; returnpaths = false)
+
+    attrate = (attrate / 1000) # Convert attrate to km^-1 if given in m^-1
 
     # Initialize the propagation counter - defines which cells are processed in each iteration
     propagationcounter = 0
@@ -158,6 +160,15 @@ function path_based_attenuated_inundation(profile::SpatialFloodProfile, profilem
     # Initialize the attenuation for each cell (Inf) and set attenuation at coast to 0.0
     attenuation = fill(Inf, profile.height, profile.width)
     attenuation[profilemask.coast] .= 0.0f0
+
+    # Inititalize paths
+    paths = fill(-1, profile.height, profile.width)
+    
+    # Assign path IDs to coastal cells
+    path_indices = findall(profilemask.coast)
+    for (i, idx) in enumerate(path_indices)
+        paths[idx] = i
+    end
     
     # Set Inundation depth to 0.0 for each land cell and to inf for sea cells
     inundation_depth = fill(0.0f0, profile.height, profile.width)
@@ -179,13 +190,16 @@ function path_based_attenuated_inundation(profile::SpatialFloodProfile, profilem
             if inundation_depth[cell] > 0.0f0
 
                 # Get neighbors of the current cell
-                nbs = values(getNBS(profile.elevation, cell, nb=profile.kernel, returndist = true))
+                nbs = values(neighbours(profile.elevation, cell, nb=profile.kernel; returndist = true))
                 for (nb, distance) in nbs
-
+    
                     # Skip neighbor if the neighbor is out of bounds
                     if isnothing(nb)
                         continue
                     end
+
+                    # Assign path ID to the neighbor
+                    paths[nb] = paths[cell]
 
                     # Calculate the attenuation rate for the neighbor
                     new_attenuation = attenuation[cell] + (attrate * distance)
@@ -194,6 +208,7 @@ function path_based_attenuated_inundation(profile::SpatialFloodProfile, profilem
                     if new_attenuation < attenuation[nb]
                         attenuation[nb] = new_attenuation
                         propagation[nb] = propagationcounter + 1
+                        paths[nb] = paths[cell]
                     end
 
                 end
@@ -202,7 +217,13 @@ function path_based_attenuated_inundation(profile::SpatialFloodProfile, profilem
          # Update the propagation counter
         propagationcounter += 1
     end
-    return inundation_depth  # return the inundation depth matrix
+
+    if returnpaths
+        return inundation_depth, paths  # return the inundation depth matrix and paths
+    else
+        return inundation_depth
+    end
+
 end
 
 

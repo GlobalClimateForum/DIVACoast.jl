@@ -1,3 +1,6 @@
+using Distances
+
+
 abstract type Kernel
 end
 
@@ -19,19 +22,39 @@ end
     right::Tuple{Int, Int} = (0, 1)    # right      
 end
 
-function getNBS(m::Matrix, at::CartesianIndex{2}; nb::Kernel = Neighbour8(), returndist = false)
-    
+
+
+function neighbours(m::T, at::CartesianIndex{2}; nb::Kernel = Neighbour8(), returndist = false) where T <: AbstractArray
+
     get = (position) -> begin
         new_pos = at .+ CartesianIndex(getfield(nb, position))
         checkbounds(Bool, m, new_pos) ? new_pos : nothing
     end
 
-    get_distance = (position) -> begin 
+    get_distance = (position) -> begin
+        
         new_pos = at .+ CartesianIndex(getfield(nb, position))
-        new_pos = checkbounds(Bool, m, new_pos) ? new_pos : nothing
-        distance = isnothing(new_pos) ? nothing : √(sum((abs(new_pos[1] - at[1]), abs(new_pos[2] - at[2])) .^ 2))
-        return new_pos, distance
-    end
+
+        if m isa GeoArrays.GeoArray && checkbounds(Bool, m.A, new_pos)
+
+
+            lon1, lat1 = GeoArrays.coords(m, at)
+            lon2, lat2 = GeoArrays.coords(m, new_pos)
+
+            # Check wether the GeoArray is projected or geographic and choose the appropiate distance function
+            projected_ = occursin("PROJCS", string(m.crs)) || !occursin("GEOGCS", string(m.crs))
+            dist_ = projected_ ? Distances.euclidean((lon1, lat1), (lon2, lat2)) : distance(lon1, lat1, lon2, lat2) * 1000
+            return new_pos, dist_
+        
+        elseif !(m isa GeoArrays.GeoArray) && checkbounds(Bool, m, new_pos)
+
+            dist_ = √(sum((abs(new_pos[1] - at[1]), abs(new_pos[2] - at[2])) .^ 2))
+            return new_pos, dist_
     
+        else
+            return nothing, nothing
+        end
+    end
+
     return NamedTuple(npos => (returndist ? get_distance(npos) : get(npos)) for npos in fieldnames(typeof(nb)))
 end

@@ -1,36 +1,38 @@
 using Plots
 using DataStructures
+using GeoFormatTypes
+using CoordinateTransformations
 include("./kernels.jl")
-include("./test_profile.jl")
 
-struct SpatialFloodProfile{T}
-    elevation::Matrix{T}
+struct SpatialFloodProfile
+    elevation::AbstractArray{Real, 2}
     elevation_unit::String
     area_unit::String
     width::Int
     height::Int
     kernel::Kernel
     seed::CartesianIndex{2}
-    exposures::Vector{Matrix{T}}
+    exposures::Vector{Matrix{Real}}
     exposure_names::Array{Union{String, Nothing}}
     exposure_units::Array{Union{String, Nothing}}
+    crs::Union{GeoFormatTypes.WellKnownText, Nothing}
+    affinemap::Union{CoordinateTransformations.AffineMap, Nothing}
 end
 
 function SpatialFloodProfile(
-    elevation::Matrix{T};
+    
+    elevation::GeoArrays.GeoArray; 
     elevation_unit::String="m",
     area_unit::String="km²",
     kernel::Kernel=Neighbour8(),
     seed::CartesianIndex{2}=CartesianIndex(1, 1),
-    exposures::Vector{Matrix{T}}=Vector{Matrix{T}}(),
+    exposures::Vector{Matrix{Real}}=Vector{Matrix{Real}}(),
     exposure_names::Array{String} = String[],
-    exposure_units::Array{String} = String[]
-) where T
-
-    width = size(elevation, 2)
-    height = size(elevation, 1)
+    exposure_units::Array{String} = String[])
+    width = size(elevation.A, 2)
+    height = size(elevation.A, 1)
     
-    return SpatialFloodProfile{T}(
+    return SpatialFloodProfile(
         elevation,
         elevation_unit,
         area_unit,
@@ -40,7 +42,40 @@ function SpatialFloodProfile(
         seed,
         exposures,
         isempty(exposure_names) ? [nothing for i in 1:length(exposures)] : exposure_names,
-        isempty(exposure_units) ? [nothing for i in 1:length(exposures)] : exposure_units
+        isempty(exposure_units) ? [nothing for i in 1:length(exposures)] : exposure_units,
+        elevation.crs,
+        elevation.f
+    )
+
+end
+
+function SpatialFloodProfile(
+    elevation::Matrix{Real};
+    elevation_unit::String="m",
+    area_unit::String="km²",
+    kernel::Kernel=Neighbour8(),
+    seed::CartesianIndex{2}=CartesianIndex(1, 1),
+    exposures::Vector{Matrix{Real}}=Vector{Matrix{T}}(),
+    exposure_names::Array{String} = String[],
+    exposure_units::Array{String} = String[]
+) where T
+    
+    width = size(elevation, 2)
+    height = size(elevation, 1)
+    
+    return SpatialFloodProfile(
+        elevation,
+        elevation_unit,
+        area_unit,
+        width,
+        height,
+        kernel,
+        seed,
+        exposures,
+        isempty(exposure_names) ? [nothing for i in 1:length(exposures)] : exposure_names,
+        isempty(exposure_units) ? [nothing for i in 1:length(exposures)] : exposure_units,
+        nothing,
+        nothing
     )
 end
 

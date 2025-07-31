@@ -59,7 +59,7 @@ export geotiff_connect, geotiff_transform, geotiff_collect
 # structs
 export SpatialFloodProfile, SpatialFloodProfileMask, Kernel, Neighbour8, Neighbour4, HydraulicConnectedBathtub, PathBasedAttenuatedBathtub
 # functions
-export flood_fill, dijkstra_fill, getNBS, get_coast_sea, seamask, private_mask_profile, path_based_attenuated_inundation
+export flood_fill, dijkstra_fill, neighbours, get_coast_sea, seamask, private_mask_profile, path_based_attenuated_inundation
 
 # Set constants from local config
 earth_circumference_km = config[:earthCircumferenceKM]
