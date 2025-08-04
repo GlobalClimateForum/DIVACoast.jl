@@ -9,12 +9,12 @@ After the Wrapper structure was initialized dataset specific functions can be us
 """
 mutable struct SLRScenarioReader
     dataset::Dataset
-    lon::Array{Real}
-    lat::Array{Real}
-    time::Array{Real}
-    quantiles::Array{Real}
+    lon::Array{Float32}
+    lat::Array{Float32}
+    time::Array{Float32}
+    quantiles::Array{Float32}
     variable::String
-    data::Array{Union{Missing,Real}}
+    data::Array{Union{Missing,Float64}}
 end
 
 """

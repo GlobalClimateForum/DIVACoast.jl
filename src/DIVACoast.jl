@@ -30,7 +30,7 @@ export StandardDDF
 export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integration
 
 # Export Inundation Model - struct and functions
-export InundationModel, BathtubInundation, LinearDistanceAttenuatedInundation, inundate, water_depth
+export InundationModel, BathtubInundation, LinearDistanceAttenuatedInundation, inundate, water_depth, water_level, max_water_level
 
 # Export GeoArray adapter stuff
 export read_geotiff_to_geoarray_2d, empty_geo_array, is_circular, no_data_value, clear_data!

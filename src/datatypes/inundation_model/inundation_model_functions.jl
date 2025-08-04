@@ -1,10 +1,7 @@
 """
     function inundate(hspf::HypsometricProfile, wl::Number, im::IM)  where {DT<:Real,IM<:InundationModel}
 
-The `inundate` function models the flood inundation for each elevation of a given HypsometricProfile and a given water level and InundationModel.
-
-output: tuple of two arrays, first array gives elevation, second one water level per respective elevation (the arrays stop when no inundation happens)
-
+The `inundate` function computes the complete flood inundation for each elevation of a given HypsometricProfile and a given water level and InundationModel.
 
 # Arguments
 - `hspf::HypsometricProfile`: the hypsometric profile object which will be flooded.
@@ -13,7 +10,6 @@ output: tuple of two arrays, first array gives elevation, second one water level
 
 # Output
 - two tuple of arrays, the first array returns the elevation of the hypsometric profile, the second array returns the water level per respective elevation (the arrays stop when no inundation happens)
-
 
 # Example
 ```julia
@@ -89,20 +85,39 @@ function inundate(hspf::HypsometricProfile{DT}, wl::Real, im::IM)::Tuple{Array{D
     return (ret_el, ret_wl)
 end
 
+"""
+    
+    function water_level(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::IM)::DT where {DT<:Real,IM<:InundationModel}
 
-function water_depth(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::IM)::DT where {DT<:Real,IM<:InundationModel}
+The `water_level` function computes the water level on a HypsometricProfile given a water level wl at the coast, an elevation el and InundationModel. Returns zero if the water cannot reach the elevation.
+
+# Arguments
+- `hspf::HypsometricProfile`: the hypsometric profile object which will be flooded.
+- `wl::Number`: the water level that is propagated on the hypsometric profile.
+- `im::IM`: the inundation model defining how the water is propagated on the hypsometric profile.
+
+# Output
+- the water level at elevation el (relative to the reference of the given water level), or zero if the water cannot reach this elevation
+
+# Example
+```julia
+water_level(hspf, 3.4, 2.5, BathtubInundation)
+```
+"""
+
+function water_level(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::IM)::DT where {DT<:Real,IM<:InundationModel}
     @error("fallback")
 end
 
-function water_depth(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::IM)::DT where {DT<:Real,IM<:BathtubInundation}
+@inline function water_level(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::IM)::DT where {DT<:Real,IM<:BathtubInundation}
     if (el >= wl)
         convert(DT, 0.0)
     else
-        convert(DT, wl - el)
+        convert(DT, wl)
     end
 end
 
-function water_depth(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::IM)::DT where {DT<:Real,IM<:LinearDistanceAttenuatedInundation}
+function water_level(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::IM)::DT where {DT<:Real,IM<:LinearDistanceAttenuatedInundation}
     if (wl <= hspf.elevation[1])
         return 0.0
     end
@@ -134,7 +149,7 @@ function water_depth(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::I
 
     if (ind >= size(hspf.elevation, 1))
         # interpolate further upwards?
-        return (wl - Δ_wl_att_sum) - el
+        return (wl - Δ_wl_att_sum)
     end
 
     d = distance(hspf, hspf.elevation[ind])
@@ -151,6 +166,47 @@ function water_depth(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::I
     Δ_wl_att_part = (d_el - distance(hspf, hspf.elevation[ind])) * im.attenuation_rate
     Δ_wl_att_sum += Δ_wl_att_part
 
-    #println("final Δ_wl_att_sum=", Δ_wl_att_sum)
-    return (wl - Δ_wl_att_sum) - el
+    return (wl - Δ_wl_att_sum)
+end
+
+
+@inline function max_water_level(hspf::HypsometricProfile{DT}, wl::Real, im::IM)::DT where {DT<:Real,IM<:InundationModel}
+    @error("fallback")
+end
+
+@inline function max_water_level(hspf::HypsometricProfile{DT}, wl::Real, im::IM)::DT where {DT<:Real,IM<:BathtubInundation} 
+    wl
+end
+
+function max_water_level(hspf::HypsometricProfile{DT}, wl::Number, im::IM)::DT where {DT<:Real,IM<:LinearDistanceAttenuatedInundation}
+    water_levels=inundate(hspf, wl, im)
+    last(water_levels)[2]
+end
+
+
+"""
+    
+    function water_depth(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::IM)::DT where {DT<:Real,IM<:InundationModel}
+
+The `water_depth` function computes the water depth on a HypsometricProfile given a water level wl at the coast, an elevation el and InundationModel. Returns zero if the water cannot reach the elevation.
+
+# Arguments
+- `hspf::HypsometricProfile`: the hypsometric profile object which will be flooded.
+- `wl::Number`: the water level that is propagated on the hypsometric profile.
+- `im::IM`: the inundation model defining how the water is propagated on the hypsometric profile.
+
+# Output
+- the water depth at elevation el, or zero if the water cannot reach this elevation
+
+# Example
+```julia
+water_depth(hspf, 3.4, 2.5, BathtubInundation)
+```
+"""
+function water_depth(hspf::HypsometricProfile{DT}, wl::Number, el::Number, im::IM)::DT where {DT<:Real,IM<:InundationModel} 
+    if (el >= wl)
+        convert(DT, 0.0)
+    else
+        water_level(hspf, wl, el, im) - el
+    end
 end

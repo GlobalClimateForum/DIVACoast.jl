@@ -126,23 +126,28 @@ function slope(hspf::HypsometricProfile{DT}, i::Int) where {DT<:Real}
 end
 
 function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT<:Real}
-  if (hspf.elevation[1] != elevation[1])
-    @error "min elevation can not be changed in resampling: $(hspf.elevation[1]) != $(elevation[1])"
+  if (hspf.elevation != elevation)
+    el = copy(elevation)
+
+    if (hspf.elevation[1] < el[1])
+      pushfirst!(el, hspf.elevation[1])
+    end
+
+    can = Array{DT}(undef, size(el, 1))
+    cden::Array{DT,2} = Array{DT,2}(undef, size(el, 1), size(hspf.cumulativeExposure, 2))
+
+    for i in 1:size(el, 1)
+      t_exposure = exposure(hspf, el[i])
+      can[i] = t_exposure[1]
+      cden[i, :] = t_exposure[2]
+    end
+
+    hspf.elevation = el
+    hspf.cumulativeArea = can
+    hspf.cumulativeExposure = cden
   end
-
-  can = Array{DT}(undef, size(elevation, 1))
-  cden::Array{DT,2} = Array{DT,2}(undef, size(elevation, 1), size(hspf.cumulativeExposure, 2))
-
-  for i in 1:size(elevation, 1)
-    t_exposure = exposure(hspf, elevation[i])
-    can[i] = t_exposure[1]
-    cden[i, :] = t_exposure[2]
-  end
-
-  hspf.elevation = copy(elevation)
-  hspf.cumulativeArea = can
-  hspf.cumulativeExposure = cden
 end
+
 
 """
     compress!(hspf::HypsometricProfile)

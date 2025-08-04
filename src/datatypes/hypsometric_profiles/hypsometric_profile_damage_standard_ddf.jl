@@ -1,19 +1,62 @@
 # special case ddf = d/(d+hdd)
 
-function damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::Vector{StandardDDF}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
+function damage(hspf::HypsometricProfile{DT}, wl::Real, inds::Array{Int}, ddfs::Vector{StandardDDF}, im::IM=BathtubInundation()) where {DT<:Real,IM<:BathtubInundation}
   # test: size(s,1) = size(ddfs,1)
 
-  inds = map(x -> get_position(hspf, x), s)
   dam = exposure(hspf, wl, inds, im)
   if complete_zero(dam)
     return dam
   end
 
-  dam = exposure(hspf, first(hspf.elevation), inds, im)
-  water_levels = inundate(hspf, wl, im)
-  max_water_level = last(water_levels[2])
+  if hspf.width > 0
+    dam = exposure(hspf, first(hspf.elevation), inds, im)
+
+    for ind in 1:size(hspf.elevation, 1)-1
+      if hspf.elevation[ind] > wl
+        return dam
+      else
+        sl = slope(hspf, ind + 1)
+        el_low = hspf.elevation[ind]
+        el_high = (hspf.elevation[ind+1] <= wl) ? hspf.elevation[ind+1] : wl
+        wl_low = wl
+        wl_high = wl
+
+        Δ_area = (hspf.elevation[ind+1] <= wl) ? hspf.cumulativeArea[ind+1] - hspf.cumulativeArea[ind] : exposure(hspf, wl_high, :area) - hspf.cumulativeArea[ind]
+
+        if (Δ_area != 0)
+          Δ_exp = (hspf.elevation[ind+1] <= wl) ? (
+            size(hspf.cumulativeExposure)[2] >= 1 ? hspf.cumulativeExposure[ind+1, :] - hspf.cumulativeExposure[ind, :] : Array{DT,2}(undef, 0, 0)
+          ) : (
+            size(hspf.cumulativeExposure)[2] >= 1 ? exposure(hspf, wl)[2] - hspf.cumulativeExposure[ind, :] : Array{DT,2}(undef, 0, 0)
+          )
+
+          ρ_area = hspf.width / 1000
+          ρ_exp = (Δ_exp / (Δ_area / hspf.width)) / 1000
+
+          dam_t = partial_damage_standard_ddf(hspf, ddfs, el_low, el_high, wl_low, wl_high, sl, ρ_area, ρ_exp, im)
+          dam += dam_t[inds]
+        end
+      end
+    end
+  end
+
+  return dam
+end
+
+
+function damage(hspf::HypsometricProfile{DT}, wl::Real, inds::Array{Int}, ddfs::Vector{StandardDDF}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
+  # test: size(s,1) = size(ddfs,1)
+
+  dam = exposure(hspf, wl, inds, im)
+  if complete_zero(dam)
+    return dam
+  end
 
   if hspf.width > 0
+    dam = exposure(hspf, first(hspf.elevation), inds, im)
+    water_levels = inundate(hspf, wl, im)
+    max_water_level = last(water_levels[2])
+
     for ind in 1:size(water_levels[1], 1)-1
       sl = slope(hspf, ind + 1)
       wl_low = water_levels[2][ind]
@@ -32,7 +75,7 @@ function damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::
         ρ_exp = (Δ_exp / (Δ_area / hspf.width)) / 1000
 
         dam_t = partial_damage_standard_ddf(hspf, ddfs, el_low, el_high, wl_low, wl_high, sl, ρ_area, ρ_exp, im)
-        dam += dam_t
+        dam += dam_t[inds]
       end
       dam
     end
@@ -41,25 +84,25 @@ function damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::
   return (dam)
 end
 
-function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, ddfs::Vector{StandardDDF},
-  el_low::DT, el_high::DT, wl_low::DT, wl_high::DT, sl::DT, ρ_area::DT, ρ_exp::Array{DT}, im::BathtubInundation) where {DT<:Real}
+@inline function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, ddfs::Vector{StandardDDF},
+  el_low::Real, el_high::Real, wl_low::Real, wl_high::Real, sl::Real, ρ_area::Real, ρ_exp::Array{DT}, im::BathtubInundation) where {DT<:Real}
   d_low = wl_high - el_high
   d_high = wl_low - el_low
   factors = map(f -> (f.hdd == 0.0) ? (d_high - d_low) : convert(DT, f.hdd * log((f.hdd + d_low) / (f.hdd + d_high)) + (d_high - d_low)), ddfs)
   return (factors .* (ρ_exp / sl))
 end
 
-function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, ddfs::Vector{StandardDDF},
-  el_low::DT, el_high::DT, wl_low::DT, wl_high::DT, sl::DT, ρ_area::DT, ρ_exp::Array{DT}, im::LinearDistanceAttenuatedInundation) where {DT<:Real}
+@inline function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, ddfs::Vector{StandardDDF},
+  el_low::Real, el_high::Real, wl_low::Real, wl_high::Real, sl::Real, ρ_area::Real, ρ_exp::Array{DT}, im::LinearDistanceAttenuatedInundation) where {DT<:Real}
   # not correct - change!
   d_low = wl_high - el_high
   d_high = wl_low - el_low
   factors = map(f -> (f.hdd == 0.0) ? (d_high - d_low) : convert(DT, f.hdd * log((f.hdd + d_low) / (f.hdd + d_high)) + (d_high - d_low)), ddfs)
-  return (factors .* (ρ_exp / (sl+(im.attenuation_rate/1000))))
+  return (factors .* (ρ_exp / (sl + (im.attenuation_rate / 1000))))
 end
 
 function partial_damage_standard_ddf(hspf::HypsometricProfile{DT}, ddfs::Vector{StandardDDF},
-  el_low::DT, el_high::DT, wl_low::DT, wl_high::DT, sl::DT, ρ_area::DT, ρ_exp::Array{DT}, im::IM) where {DT<:Real,IM<:InundationModel}
+  el_low::Real, el_high::Real, wl_low::Real, wl_high::Real, sl::Real, ρ_area::Real, ρ_exp::Array{DT}, im::IM) where {DT<:Real,IM<:InundationModel}
   @error "Don't touch this!"
 end
 

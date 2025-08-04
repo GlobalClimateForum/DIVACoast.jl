@@ -22,19 +22,14 @@ add_exposure_variable!(hspf, [0.0, 1.0, 2.0, 3.0], [0.0, 3000, 5000, 2000], "pop
 function add_exposure_variable!(hspf::HypsometricProfile, elevation::Array{DT}, exposure_data::Array{DT}, exposure_name::String, exposure_unit::String) where {DT<:Real}
   resample!(hspf, elevation)
 
-  if (length(hspf.elevation) != size(exposure_data, 1))
-    logg(hspf.logger, Logging.Error, @__FILE__, "", "\n length(hspf.elevation) != size(exposure_data) as length($(hspf.elevation)) != size($exposure_data,1) as $(length(hspf.elevation)) != $(size(exposure_data,1))")
-  end
-
-  if (values(exposure_data[1]) != 0)
-    logg(hspf.logger, Logging.Error, @__FILE__, String(nameof(var"#self#")), "\n exposure_data first column should be zero, but its not: $exposure_data")
+  if (size(hspf.elevation,1) == size(exposure_data, 1)+1)
+    pushfirst!(exposure_data,0)
   end
 
   push!(hspf.exposureNames, exposure_name)
   push!(hspf.exposureUnits, exposure_unit)
-  hspf.cumulativeExposure = hcat(hspf.cumulativeExposure, cumsum(exposure_data))
 
-  compress!(hspf)
+  hspf.cumulativeExposure = hcat(hspf.cumulativeExposure, cumsum(exposure_data))    
 end
 
 
