@@ -25,7 +25,7 @@ The default inundation model (if not specified otherwise) is bathtub inundation.
   ```
 """
 
-include("hypsometric_profile_expected_damage_special_cases.jl")
+#include("hypsometric_profile_expected_damage_special_cases.jl")
 
 expected_damage(hspf::HypsometricProfile{DT}, dist::DIST, wl_lower_limit::Real, s::Vector{String}, ddfs::Vector{Function}, im::IM=BathtubInundation(); rtol::Real=1e-3) where {DT<:Real,DIST<:Distribution,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, map(x -> get_position(hspf, x), s), ddfs, im; rtol)
 expected_damage(hspf::HypsometricProfile{DT}, dist::DIST, wl_lower_limit::Real, s::Vector{String}, ddfs::Vector{F}, im::IM=BathtubInundation(); rtol::Real=1e-3) where {DT<:Real,DIST<:Distribution,F<:Function,IM<:InundationModel} = expected_damage(hspf, dist, wl_lower_limit, map(x -> get_position(hspf, x), s), ddfs, im; rtol)
@@ -44,7 +44,7 @@ function expected_damage(hspf::HypsometricProfile{DT}, dist::DIST, wl_lower_limi
     expected_damage_integral_computation(x -> f_to_integrate(hspf, dist, x, inds, ddfs, im; rtol), x_low, maximum(dist), rtol, hspf.width)
 end
 
-function expected_damage(hspf::HypsometricProfile{DT}, dist::DIST, wl_lower_limit::Real, ind::Int, ddfs::Vector{Function}, im::IM=BathtubInundation(); rtol::Real=1e-3) where {DT<:Real,DIST<:Distribution,IM<:InundationModel}
+function expected_damage(hspf::HypsometricProfile{DT}, dist::DIST, wl_lower_limit::Real, inds::Array{Int}, ddfs::Vector{Function}, im::IM=BathtubInundation(); rtol::Real=1e-3) where {DT<:Real,DIST<:Distribution,IM<:InundationModel}
     x_low = max(minimum(dist), wl_lower_limit)
     expected_damage_integral_computation(x -> f_to_integrate(hspf, dist, x, inds, ddfs, im; rtol), x_low, maximum(dist), rtol, hspf.width)
 end
