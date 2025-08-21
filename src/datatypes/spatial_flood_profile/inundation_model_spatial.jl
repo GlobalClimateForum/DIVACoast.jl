@@ -4,9 +4,11 @@ struct HydraulicConnectedBathtub <: InundationModel
     end
 end
 
+
 struct PathBasedAttenuatedBathtub <: InundationModel
-    attrate::Union{Real, AbstractArray{Real, 2}}
-    function PathBasedAttenuatedBathtub(attrate::Union{Real, AbstractArray{Real, 2}})
+    attrate::Union{Real, GeoArrays.GeoArray, AbstractMatrix}
+    function PathBasedAttenuatedBathtub(attrate::Union{Real, GeoArrays.GeoArray, AbstractMatrix})
         return new(attrate)
     end
-end 
+end
+

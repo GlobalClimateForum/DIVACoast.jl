@@ -2,7 +2,7 @@ using Plots
 using DataStructures
 using GeoFormatTypes
 using CoordinateTransformations
-include("./kernels.jl")
+include("./SpatialKernel.jl")
 
 struct SpatialFloodProfile
     elevation::AbstractArray{Real, 2}
@@ -10,7 +10,7 @@ struct SpatialFloodProfile
     area_unit::String
     width::Int
     height::Int
-    kernel::Kernel
+    SpatialKernel::SpatialKernel
     seed::CartesianIndex{2}
     exposures::Vector{Matrix{Real}}
     exposure_names::Array{Union{String, Nothing}}
@@ -20,103 +20,48 @@ struct SpatialFloodProfile
 end
 
 function SpatialFloodProfile(
-    
-    elevation::GeoArrays.GeoArray; 
-    elevation_unit::String="m",
-    area_unit::String="km²",
-    kernel::Kernel=Neighbour8(),
-    seed::CartesianIndex{2}=CartesianIndex(1, 1),
-    exposures::Vector{Matrix{Real}}=Vector{Matrix{Real}}(),
-    exposure_names::Array{String} = String[],
-    exposure_units::Array{String} = String[])
-    width = size(elevation.A, 2)
-    height = size(elevation.A, 1)
-    
-    return SpatialFloodProfile(
-        elevation,
-        elevation_unit,
-        area_unit,
-        width,
-        height,
-        kernel,
-        seed,
-        exposures,
-        isempty(exposure_names) ? [nothing for i in 1:length(exposures)] : exposure_names,
-        isempty(exposure_units) ? [nothing for i in 1:length(exposures)] : exposure_units,
-        elevation.crs,
-        elevation.f
-    )
+    elevation::Union{AbstractMatrix{T}, GeoArrays.GeoArray{T}},;
+    seed::CartesianIndex{2} = CartesianIndex(1,1), 
+    elevation_unit::String = "m",
+    area_unit::String = "m²", 
+    SpatialKernel::SpatialKernel = Neighbour8(), 
+    exposures::Vector = [], 
+    exposure_names::Union{Vector{String}, Nothing} = nothing, 
+    exposure_units::Union{Vector{String}, Nothing} = nothing, 
+    crs::Union{GeoFormatTypes.WellKnownText, Nothing} = nothing, 
+    affinemap::Union{CoordinateTransformations.AffineMap, Nothing} = nothing) where T<:Real
 
+    width, height = size(elevation)
+    
+    # Handle case for empty vectors
+    if isempty(exposures)
+        exposures = Vector{Nothing}()
+    end
+    
+    exposure_names = exposure_names === nothing ? Vector{Union{String, Nothing}}() : exposure_names
+    exposure_units = exposure_units === nothing ? Vector{Union{String, Nothing}}() : exposure_units
+    
+    return SpatialFloodProfile(elevation, elevation_unit, area_unit, width, height, SpatialKernel, seed, exposures, exposure_names, exposure_units, crs, affinemap)
 end
 
-function SpatialFloodProfile(
-    elevation::Matrix{Real};
-    elevation_unit::String="m",
-    area_unit::String="km²",
-    kernel::Kernel=Neighbour8(),
-    seed::CartesianIndex{2}=CartesianIndex(1, 1),
-    exposures::Vector{Matrix{Real}}=Vector{Matrix{T}}(),
-    exposure_names::Array{String} = String[],
-    exposure_units::Array{String} = String[]
-) where T
-    
-    width = size(elevation, 2)
-    height = size(elevation, 1)
-    
-    return SpatialFloodProfile(
-        elevation,
-        elevation_unit,
-        area_unit,
-        width,
-        height,
-        kernel,
-        seed,
-        exposures,
-        isempty(exposure_names) ? [nothing for i in 1:length(exposures)] : exposure_names,
-        isempty(exposure_units) ? [nothing for i in 1:length(exposures)] : exposure_units,
-        nothing,
-        nothing
-    )
-end
-
-struct SpatialFloodProfileMask{Bool}
-    coast::Matrix{Bool}
-    sea::Matrix{Bool}
-    width::Int
-    height::Int
-end
-
-function SpatialFloodProfileMask(profile::SpatialFloodProfile)
-    coast, sea = private_mask_profile(profile::SpatialFloodProfile)
-    width = size(coast, 2)
-    height = size(coast, 1)
-    return SpatialFloodProfileMask{Bool}(coast, sea, width, height)
-end
-
-function RecipesBase.plot(profile::SpatialFloodProfileMask)
+function RecipesBase.plot(profile::SpatialFloodProfile) 
 
     psettings = Dict(
-        :colorbar => false, 
-        :aspect_ratio => :equal, 
-        :framestyle => :box, 
-        :xticks => [1,profile.width],
-        :yticks => [1,profile.height]
+        :colorbar => true, 
+        :aspect_ratio => :equal,
+        :framestyle => :box,
+        :xticks => [1, profile.width],
+        :yticks => [1, profile.height],
+        :title => "Spatial Flood Profile",
+        :c => cgrad(:lightterrain, rev=false)
     )
 
-    p1 = Plots.heatmap(Int.(profile.coast),
-        c=[:white, :darkgreen],
-        title="Coast Mask";
+    p = Plots.heatmap(
+        profile.elevation;
         psettings ...
-        )
+    )
 
-    p2 = Plots.heatmap(Int.(profile.sea),
-        c=[:white, :darkblue],
-        title="Sea Mask";
-        psettings ...
-        )
-
-    return Plots.plot(p1, p2, layout = (1, 2), size=(1000, 500), legend=false)
+    return p
 
 end
-
 

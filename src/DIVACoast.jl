@@ -130,12 +130,17 @@ include("./tools/geotiff_tools.jl")
 include("./scenario/ssp_scenario_reader.jl")
 include("./scenario/slr_scenario_reader.jl")
 
-# DIVACoast2D includes
+# DIVACoast - Spatial 
 include("./datatypes/spatial_flood_profile/SpatialFloodProfile.jl")
+include("./datatypes/spatial_flood_profile/SpatialFloodProfileMask.jl")
+
 include("./datatypes/spatial_flood_profile/inundation_model_spatial.jl")
-include("./datatypes/spatial_flood_profile/inundation_model_spatial_functions.jl")
-include("./datatypes/spatial_flood_profile/inundation_model_spatial_functions.jl")
+include("./datatypes/spatial_flood_profile/spatial_flood_profile_path_based_att_inundation.jl")
+include("./datatypes/spatial_flood_profile/spatial_flood_profile_flood_fill.jl")
+include("./datatypes/spatial_flood_profile/spatial_flood_profile_dijkstra_fill.jl")
+
 include("./datatypes/spatial_flood_profile/spatial_flood_profile_exposure.jl")
-include("./datatypes/spatial_flood_profile/kernels.jl")
+include("./datatypes/spatial_flood_profile/spatial_flood_profile_damage.jl")
+include("./datatypes/spatial_flood_profile/SpatialKernel.jl")
 end
 

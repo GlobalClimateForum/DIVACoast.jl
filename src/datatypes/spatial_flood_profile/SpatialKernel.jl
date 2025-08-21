@@ -1,10 +1,11 @@
 using Distances
 
 
-abstract type Kernel
+abstract type SpatialKernel
+    # Abstract type for spatial kernels
 end
 
-@kwdef struct Neighbour8 <: Kernel
+@kwdef struct Neighbour8 <: SpatialKernel
     up::Tuple{Int, Int} = (-1, 0)      # up
     down::Tuple{Int, Int} = (1, 0)     # down   
     left::Tuple{Int, Int} = (0, -1)    # left
@@ -15,7 +16,7 @@ end
     downright::Tuple{Int, Int} = (1, 1)  # down_right
 end
 
-@kwdef struct Neighbour4 <: Kernel
+@kwdef struct Neighbour4 <: SpatialKernel
     up::Tuple{Int, Int} = (-1, 0)      # up
     down::Tuple{Int, Int} = (1, 0)     # down   
     left::Tuple{Int, Int} = (0, -1)    # left
@@ -23,8 +24,7 @@ end
 end
 
 
-
-function neighbours(m::T, at::CartesianIndex{2}; nb::Kernel = Neighbour8(), returndist = false) where T <: AbstractArray
+function neighbours(m::T, at::CartesianIndex{2}; nb::SpatialKernel = Neighbour8(), returndist = false) where T <: AbstractArray
 
     get = (position) -> begin
         new_pos = at .+ CartesianIndex(getfield(nb, position))
