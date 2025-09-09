@@ -4,6 +4,9 @@ function path_based_attenuated_inundation(
     profilemask::SpatialFloodProfileMask,
     wl::Real, attrate::Union{Real, GeoArrays.GeoArray{T,N,A} where {T <: Real, N, A <: AbstractArray{T, N}}};
     returnpaths = false)
+
+    # Ensure all arrays have the same size
+    @assert size(profile.elevation) == size(profilemask.coast) == size(profilemask.sea) "Profile and Mask dimensions do not match"
     
     if attrate isa Real
             attrate = attrate / 1000
@@ -17,16 +20,16 @@ function path_based_attenuated_inundation(
 
     # Initialize the propagation counter - defines which cells are processed in each iteration
     propagationcounter = 0
-    propagation = fill(Inf, profile.height, profile.width)
+    propagation = fill(Inf, profile.width, profile.height)
     propagation[profilemask.coast] .= 0.0f0
 
     # Initialize the attenuation for each cell (Inf) and set attenuation at coast to 0.0
-    attenuation = fill(Inf, profile.height, profile.width)
+    attenuation = fill(Inf, profile.width, profile.height)
     attenuation[profilemask.coast] .= 0.0f0
 
     # Inititalize paths
-    paths = fill(-1, profile.height, profile.width)
-    
+    paths = fill(-1, profile.width, profile.height)
+
     # Assign path IDs to coastal cells
     path_indices = findall(profilemask.coast)
     for (i, idx) in enumerate(path_indices)
@@ -34,7 +37,7 @@ function path_based_attenuated_inundation(
     end
     
     # Set Inundation depth to 0.0 for each land cell and to inf for sea cells
-    inundation_depth = fill(0.0f0, profile.height, profile.width)
+    inundation_depth = fill(0.0f0, profile.width, profile.height)
     inundation_depth[profilemask.sea] .= Inf
     inundation_depth[profilemask.coast] .= elevation_[profilemask.coast] .- wl
 

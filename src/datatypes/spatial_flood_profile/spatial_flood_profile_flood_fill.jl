@@ -1,9 +1,9 @@
 function flood_fill(profile::SpatialFloodProfile, wl::DT) where DT <: Number
 
     # Initialize inundation depth matrix
-    inundation_depth = zeros(DT, profile.height, profile.width)
+    inundation_depth = zeros(DT, profile.width, profile.height)
     # Initialize flooded mask (already checked mask)
-    flooded = falses(profile.height, profile.width)
+    flooded = falses(profile.width, profile.height)
     # Initi queue (need to check queue)
     queue = Queue{CartesianIndex{2}}()
 
@@ -21,7 +21,8 @@ function flood_fill(profile::SpatialFloodProfile, wl::DT) where DT <: Number
         current_ = dequeue!(queue)
     
         # Check if the current cell is already flooded (checked) or if its elevation is greater than the water level
-        if flooded[current_] || profile.elevation[current_] > wl
+
+        if  flooded[current_] || ismissing(profile.elevation[current_]) || profile.elevation[current_] > wl
             continue # skip to the next cell
         end
 

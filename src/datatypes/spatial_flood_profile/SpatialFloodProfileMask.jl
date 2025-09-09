@@ -4,7 +4,11 @@ function private_mask_profile(profile::SpatialFloodProfile)
     coast_mask = falses(size(profile.elevation))
     visited = falses(size(profile.elevation))
 
+    @warn "profile.seed: $(profile.seed)"
+
     sea_value = profile.elevation[profile.seed]
+    check_sea_value = idx -> ismissing(sea_value) ? ismissing(profile.elevation[idx]) : profile.elevation[idx] == sea_value
+
     queue = Queue{CartesianIndex{2}}()
     
     # Mark the seed point as sea and visited
@@ -19,7 +23,7 @@ function private_mask_profile(profile::SpatialFloodProfile)
         for nb in nb_cells
             if !isnothing(nb) && !visited[nb]
                 visited[nb] = true
-                if profile.elevation[nb] == sea_value
+                if check_sea_value(nb)
                     sea_mask[nb] = true
                     enqueue!(queue, nb)
                 else
@@ -42,8 +46,7 @@ end
 
 function SpatialFloodProfileMask(profile::SpatialFloodProfile)
     coast, sea = private_mask_profile(profile::SpatialFloodProfile)
-    width = size(coast, 2)
-    height = size(coast, 1)
+    width, height = size(coast)
     return SpatialFloodProfileMask{Bool}(coast, sea, width, height)
 end
 
