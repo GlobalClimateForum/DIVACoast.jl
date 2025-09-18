@@ -2,7 +2,7 @@
 function path_based_attenuated_inundation(
     profile::SpatialFloodProfile,
     profilemask::SpatialFloodProfileMask,
-    wl::Real, attrate::Union{Real, GeoArrays.GeoArray{T,N,A} where {T <: Real, N, A <: AbstractArray{T, N}}};
+    wl::Real, attrate::Union{Real, AbstractArray{2, <:Real},  GeoArrays.GeoArray{T,N,A} where {T <: Real, N, A <: AbstractArray{T, N}}};
     returnpaths = false)
 
     # Ensure all arrays have the same size

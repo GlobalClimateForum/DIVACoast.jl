@@ -15,8 +15,6 @@ struct SpatialFloodProfile{T}
 	exposures::Vector{AbstractMatrix{T}}
 	exposure_names::Array{Union{String, Nothing}}
 	exposure_units::Array{Union{String, Nothing}}
-	crs::Union{GeoFormatTypes.WellKnownText, Nothing}
-	affinemap::Union{CoordinateTransformations.AffineMap, Nothing}
 end
 
 
@@ -28,10 +26,9 @@ function SpatialFloodProfile(
 	SpatialKernel::SpatialKernel = Neighbour8(),
 	exposures::Vector = [],
 	exposure_names::Union{Vector{String}, Nothing} = nothing,
-	exposure_units::Union{Vector{String}, Nothing} = nothing,
-	crs::Union{GeoFormatTypes.WellKnownText, Nothing} = nothing,
-	affinemap::Union{CoordinateTransformations.AffineMap, Nothing} = nothing) where T
-
+	exposure_units::Union{Vector{String}, Nothing} = nothing
+	) where T
+	
 	width, height = size(elevation)
 
 	# Handle case for empty vectors
@@ -42,11 +39,19 @@ function SpatialFloodProfile(
 	exposure_names = exposure_names === nothing ? Vector{Union{String, Nothing}}() : exposure_names
 	exposure_units = exposure_units === nothing ? Vector{Union{String, Nothing}}() : exposure_units
 
-	return SpatialFloodProfile{T}(elevation, elevation_unit, area_unit, width, height, SpatialKernel, seed, exposures, exposure_names, exposure_units, crs, affinemap)
+	return SpatialFloodProfile{T}(elevation, elevation_unit, area_unit, width, height, SpatialKernel, seed, exposures, exposure_names, exposure_units)
+end
+
+
+function Base.display(io::IO, profile::SpatialFloodProfile)
+	prfstr = ""
+	prfstr *= "Spatial Flood Profile [$(profile.width) x $(profile.height)]"
+	return print(io, prfstr)
 end
 
 
 function RecipesBase.plot(profile::SpatialFloodProfile)
+
 
 	psettings = Dict(
 		:colorbar => true,

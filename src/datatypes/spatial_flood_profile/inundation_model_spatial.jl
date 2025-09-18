@@ -12,3 +12,11 @@ struct PathBasedAttenuatedBathtub <: InundationModel
     end
 end
 
+function Base.show(io::IO, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub})
+   
+    if im isa HydraulicConnectedBathtub
+        print(io, "<DIVACoast.jl | HCB Model>")
+    elseif im isa PathBasedAttenuatedBathtub
+        print(io, "<DIVACoast.jl | PBAB Model>")
+    end
+end

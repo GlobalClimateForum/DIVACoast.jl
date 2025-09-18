@@ -3,7 +3,7 @@ function exposure(profile::SpatialFloodProfile, profilemask::SpatialFloodProfile
     if im isa PathBasedAttenuatedBathtub
         inundation_depth = path_based_attenuated_inundation(profile, profilemask, wl, im.attrate)
     elseif im isa HydraulicConnectedBathtub
-        inundation_depth = flood_fill(profile, wl)
+        inundation_depth = flood_fill(profile, wl; profile_mask = profilemask)
     end
 
     area_ = sum(inundation_depth .> 0.0)
@@ -13,12 +13,16 @@ function exposure(profile::SpatialFloodProfile, profilemask::SpatialFloodProfile
     return exposed_
 end
 
-function inundate(profile::SpatialFloodProfile, profilemask::SpatialFloodProfileMask, wl::Real, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub}) where IM <: InundationModel
+function inundate(profile::SpatialFloodProfile, profilemask::SpatialFloodProfileMask,
+    wl::Real, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub}; 
+    exportdir = nothing) where IM <: InundationModel
+
     if im isa PathBasedAttenuatedBathtub
         inundation_depth = path_based_attenuated_inundation(profile, profilemask, wl, im.attrate)
     elseif im isa HydraulicConnectedBathtub
-        inundation_depth = flood_fill(profile, wl)
+        inundation_depth = flood_fill(profile, wl; profile_mask = profilemask)
     end
+
     return inundation_depth
 end
 
