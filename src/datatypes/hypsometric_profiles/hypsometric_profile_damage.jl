@@ -29,6 +29,9 @@ The default inundation model (if not specified otherwise) is bathtub inundation.
 include("hypsometric_profile_damage_fallback.jl")
 include("hypsometric_profile_damage_standard_ddf.jl")
 
+damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::Vector{Function}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = damage(hspf, wl, map(x -> get_position(hspf, x), s), ddfs, im) 
+damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::Vector{StandardDDF}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = damage(hspf, wl, map(x -> get_position(hspf, x), s), ddfs, im) 
+
 damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{Symbol}, ddfs::Vector{Function}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = damage(hspf, wl, map(x -> String(x),s), ddfs, im) 
 damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{Symbol}, ddfs::Vector{StandardDDF}, im::IM = BathtubInundation()) where {DT<:Real, IM<:InundationModel} = damage(hspf, wl, map(x -> String(x),s), ddfs, im) 
 

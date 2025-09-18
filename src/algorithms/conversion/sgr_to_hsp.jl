@@ -37,14 +37,14 @@ function to_hypsometric_profile(ga::GeoArray{E,N,C}, width::Real, min_elevation:
       a[1] += area(ga, indices)
     else
       i = floor(Int, (elevation - min_elevation) / elevation_incr) + 1
-      if (i <= length(e))
+      if (i <= size(e, 1))
         a[i] += area(ga, indices)
       end
     end
   end
 
   i = 1
-  while (i <= (length(e) - 1))
+  while (i <= (size(e, 1) - 1))
     if (a[i] == 0 && a[i+1] == 0)
       deleteat!(e, i)
       deleteat!(a, i)
@@ -198,7 +198,7 @@ function to_hypsometric_profiles(
   read_geotiff_header!(elevation_data, elevation_file_name)
   ga_dimension_match(category_data, elevation_data)
 
-  gas_exposure = Array{GeoArrays.GeoArray{Float32, 2, SparseArrayDOK{Float32, Int32}}}(undef, size(exposure_file_names, 1))
+  gas_exposure = Array{GeoArrays.GeoArray{Float32,2,SparseArrayDOK{Float32,Int32}}}(undef, size(exposure_file_names, 1))
 
   s = floor(Int, ((max_elevation - min_elevation) / elevation_incr))
   e = Array{DT}(undef, s)
@@ -289,7 +289,7 @@ function attach_to_hypsometric_profiles!(
   read_geotiff_header!(elevation_data, elevation_file_name)
   ga_dimension_match(category_data, elevation_data)
 
-  gas_exposure = Array{GeoArrays.GeoArray{Float32, 2, SparseArrayDOK{Float32, Int32}}}(undef, size(exposure_file_names, 1))
+  gas_exposure = Array{GeoArrays.GeoArray{Float32,2,SparseArrayDOK{Float32,Int32}}}(undef, size(exposure_file_names, 1))
 
   s = floor(Int, ((max_elevation - min_elevation) / elevation_incr))
   e = Array{DT}(undef, s)
@@ -329,8 +329,8 @@ function attach_to_hypsometric_profiles!(
           else
             floor(Int, (elevation_data[x, y] - min_elevation) / elevation_incr) + 1
           end
-          if (i > length(e))
-            i = length(e)
+          if (i > size(e, 1))
+            i = size(e, 1)
           end
 
           for j in 1:size(gas_exposure, 1)
@@ -351,10 +351,8 @@ function attach_to_hypsometric_profiles!(
 
   for (exp_data_index, exp_data_data) in exposure_data
     if (haskey(hspf_data, exp_data_index))
+      exp_data_data = vcat(zeros(DT, 1, size(exp_data_data)[2]), exp_data_data)
       for j in 1:size(exp_data_data, 2)
-        if size(exp_data_data, 2) > 0
-          exp_data_data = vcat(zeros(DT, size(exp_data_data))[1], exp_data_data)
-        end
         add_exposure_variable!(hspf_data[exp_data_index], copy(e), copy(exp_data_data[:, j]), exposure_names[j], exposure_units[j])
       end
     end
@@ -365,9 +363,9 @@ end
 function attach_exposure_variable_to_hypsometric_profiles!(
   hspf_data::Dict{Int32,HypsometricProfile{DT}},
   category_file_name::String, elevation_file_name::String,
-  exposure_file_name::String, exposure_names::String, exposure_units::String,
+  exposure_file_name::String, exposure_name::String, exposure_unit::String,
   min_elevation::DT, max_elevation::DT, elevation_incr::DT) where {DT<:Real}
-  attach_to_hypsometric_profiles!(hspf_data, category_file_name, elevation_file_name, [exposure_file_name], [exposure_names], [exposure_units], min_elevation, max_elevation, elevation_incr)
+  attach_to_hypsometric_profiles!(hspf_data, category_file_name, elevation_file_name, [exposure_file_name], [exposure_name], [exposure_unit], min_elevation, max_elevation, elevation_incr)
 end
 
 function attach_exposure_variable_to_hypsometric_profiles!(
@@ -377,10 +375,11 @@ function attach_exposure_variable_to_hypsometric_profiles!(
   min_elevation::DT, max_elevation::DT, elevation_incr::DT) where {DT<:Real,IT}
 
   if (size(exposure_file_names)[1] != size(exposure_names)[1])
+    @error("exposure_file_names and exposure_names have different lengths ($(exposure_file_names) and $(exposure_names))")
   end
 
   if (size(exposure_file_names)[1] != size(exposure_units)[1])
-
+    @error("exposure_file_names and exposure_units have different lengths ($(exposure_file_names) and $(exposure_units))")
   end
 
   for i in 1:size(exposure_file_names)

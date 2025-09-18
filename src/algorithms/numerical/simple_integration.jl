@@ -23,3 +23,16 @@ function integrate_simple(f, lo, hi, steps=10000, method=midRect)
   return d*ret
 end
 
+function integrate_simple_vectorized(f, lo, hi, steps=10000, method=midRect) 
+  ret = f(lo)
+  if (hi<lo) return map(x->0.0,ret) end
+#  if (hi<lo) return f(lo) end
+  d = (hi-lo)/steps
+  a = lo
+  for i in 1:steps 
+    ret += method(f,a,a+d)
+    a += d
+  end
+  return d*ret
+end
+

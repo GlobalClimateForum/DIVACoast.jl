@@ -1,7 +1,7 @@
 
-function damage(hspf::HypsometricProfile{DT}, wl::Real, s::Array{String}, ddfs::Vector{Function}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
+function damage(hspf::HypsometricProfile{DT}, wl::Real, inds::Array{Int}, ddfs::Vector{Function}, im::IM=BathtubInundation()) where {DT<:Real,IM<:InundationModel}
   # test: size(s,1) = size(ddfs,1)
-  inds = map(x -> get_position(hspf, x), s)
+
   dam = exposure(hspf, wl, inds, im)
   if complete_zero(dam)
     return dam
