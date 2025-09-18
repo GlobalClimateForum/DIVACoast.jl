@@ -49,10 +49,10 @@ function expected_damage(hspf::HypsometricProfile{DT}, dist::DIST, wl_lower_limi
     expected_damage_integral_computation(x -> f_to_integrate(hspf, dist, x, inds, ddfs, im; rtol), x_low, maximum(dist), rtol, hspf.width)
 end
 
-function f_to_integrate(hspf::HypsometricProfile{DT}, dist::DIST, x, inds::Array{Int}, dams, im::IM; rtol::Real) where {DT<:Real,DIST<:Distribution,IM<:InundationModel}
+function f_to_integrate(hspf::HypsometricProfile{DT}, dist::DIST, x, inds::Array{Int}, dams, im::IM; rtol::Real) :: Vector{Float64} where {DT<:Real,DIST<:Distribution,IM<:InundationModel}
     p = pdf(dist, x)
     if isnan(p)
-        return 0.0
+        return map(ind->0.0,inds)
     end
     return damage(hspf, x, inds, dams, im) * p
 end

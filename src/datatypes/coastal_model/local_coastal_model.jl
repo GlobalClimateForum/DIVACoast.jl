@@ -18,7 +18,6 @@ It also holds the current protection level.
 #mutable struct LocalCoastalImpactModel{DT<:Real,IDT,DATA} <: CoastalImpactUnit
 mutable struct LocalCoastalImpactModel{DT<:Real,IDT,DATA,DIST<:Distribution} <: CoastalImpactUnit
   id::IDT
-# surge_model::Distribution
   surge_model::DIST
   coastal_plain_model::HypsometricProfile{DT}
   protection_level::Float64
