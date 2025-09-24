@@ -88,10 +88,6 @@ Faster than the previous
 """
 function get_slr_value_from_grid_cell(slrw::SLRScenarioReader, index_lon::Int, index_lat::Int, index_qtl::Int, time)
 
-#    index_lon = searchsortedfirst(slrw.lon, lon) <= size(slrw.lon, 1) ? searchsortedfirst(slrw.lon, lon) : size(slrw.lon, 1)
-#    index_lat = searchsortedfirst(slrw.lat, lat, rev=true) <= size(slrw.lat, 1) ? searchsortedfirst(slrw.lat, lat, rev=true) : size(slrw.lat, 1)
-#    index_qtl = searchsortedfirst(slrw.quantiles, quantile) <= size(slrw.quantiles, 1) ? searchsortedfirst(slrw.quantiles, quantile) : size(slrw.quantiles, 1)
-
     if time in slrw.time
         index_time = searchsortedfirst(slrw.time, time) <= size(slrw.time, 1) ? searchsortedfirst(slrw.time, time) : size(slrw.time, 1)
         slr_result = slrw.data[index_lon, index_lat, index_time, index_qtl]
@@ -134,16 +130,14 @@ function cursor(index, width, b)
     xbound, ybound = b
     bounded = (x, y) -> (bound(x, xbound, true), bound(y, ybound, false))
     x, y = index
-    # weights = []
     result = []
     for (kx, ky) in Iterators.product((width *-1):width, (width *-1):width)
         i_bounded = bounded((x + kx), (y + ky))
         if !(i_bounded in result)
             push!(result, i_bounded)
-            # push!(weights, weight(kx, ky)) 
         end
     end
-    return result #,weights
+    return result 
 end
 
 function fill_missing_values!(slrw::SLRScenarioReader)

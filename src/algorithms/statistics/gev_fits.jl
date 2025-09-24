@@ -7,7 +7,7 @@ using Distributions
 using Optim
 using LinearAlgebra
 
-#test Vanessa
+
 # the cdf of the three cases. Note: in frechet and weibull case domain restriction has to be taken into account
 gumbel_model(x, p) = @. exp(-exp(-(x - p[1]) / p[2]))
 frechet_model(x, p) = map(x -> (p[1] - p[2] / p[3] <= x) ? exp(-((1 + p[3] * ((x - p[1]) / p[2]))^(-1 / p[3]))) : 0, x)
@@ -57,11 +57,24 @@ weibull_error_x(x_data, y_data) = function (p)
 end
 
 """
-This function tries to fit a gumbel distribution to given data. 
-    wl_data is the actual data (e.g. water level).
-    cdf_data are the empirical cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
-The funtion returns a GeneralizedExtremeValue (GEV) with the third (shape, ξ) parameter being zero. If the cdf fit fails for any reason, 
-the standard gumbel distribution (μ=mean(data), σ=var(data), ξ=0.0) is returned
+    function estimate_gumbel_distribution(x_data::Array{T}, y_data::Array{T}) :: Distribution  where {T<:Real}
+
+estimates a generalized extreme value with ξ=0 distribution from given cdf-quantiles
+# Arguments
+- `x_data::Array{T}`: The values for the given quantiles (usually interpreted as water levels). 
+- `y_data::Array{T}`: The quantiles (cummulative probabilities).
+
+# Returns
+- a Distribution of type GeneralizedExtremeValue with ξ=0. If the cdf fit fails for any reason, a standard Gumbel distribution (μ=mean(x_data), σ=var(x_data), ξ=0.0) is returned
+
+# Example
+```julia
+x_data = [2.48099994659424, 2.57800006866455, 2.69799995422363, 2.78099989891052, 2.8840000629425, 2.95300006866455, 3.01500010490417, 3.09200000762939, 3.13199996948242, 3.18600010871887]
+y_data = [0.0, 0.5, 0.8, 0.9, 0.96, 0.98, 0.99, 0.996, 0.998, 0.999]
+
+estimate_gumbel_distribution(x_data,y_data)
+GeneralizedExtremeValue{Float64}(μ=2.608668051227192, σ=0.08416673465475194, ξ=0.0)
+```
 """
 function estimate_gumbel_distribution(wl_data::Array{T}, cdf_data::Array{T}) where {T<:Real}
 
@@ -99,14 +112,24 @@ end
 
 
 """
-This function fits a Frechet Distribution to the inserted data. y should be the return 
-period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV).
+    function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) :: Distribution  where {T<:Real}
 
-This function tries to fit a Frechet distribution to given data. 
-    x is the actual data (e.g. water level).
-    y are the empirical cdf values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
-The funtion returns a GeneralizedExtremeValue (GEV) with the third (shape, ξ) parameter being bigger than zero. If the cdf fit fails for any reason, 
-a standard Frechet distribution (μ=mean(data), σ=var(data), ξ=0.5) is returned
+estimates a generalized extreme value with ξ>0 distribution from given cdf-quantiles
+# Arguments
+- `x_data::Array{T}`: The values for the given quantiles (usually interpreted as water levels). 
+- `y_data::Array{T}`: The quantiles (cummulative probabilities).
+
+# Returns
+- a Distribution of type GeneralizedExtremeValue with ξ<0. If the cdf fit fails for any reason, a standard Frechet distribution (μ=mean(x_data), σ=var(x_data), ξ=0.5) is returned
+
+# Example
+```julia
+x_data = [2.48099994659424, 2.57800006866455, 2.69799995422363, 2.78099989891052, 2.8840000629425, 2.95300006866455, 3.01500010490417, 3.09200000762939, 3.13199996948242, 3.18600010871887]
+y_data = [0.0, 0.5, 0.8, 0.9, 0.96, 0.98, 0.99, 0.996, 0.998, 0.999]
+
+estimate_frechet_distribution(x_data,y_data)
+GeneralizedExtremeValue{Float64}(μ=2.555389857678009, σ=0.06508007253547156, ξ=0.315690882573291)
+```
 """
 function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     x_mean = sum((1 .- y_data) .* x_data) / sum(1 .- y_data)
@@ -157,17 +180,27 @@ function estimate_frechet_distribution(x_data::Array{T}, y_data::Array{T}) where
     end
 end
 
+"""
+    function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) :: Distribution  where {T<:Real}
 
+estimates a generalized extreme value distribution with ξ<0 from given cdf-quantiles
+# Arguments
+- `x_data::Array{T}`: The values for the given quantiles (usually interpreted as water levels). 
+- `y_data::Array{T}`: The quantiles (cummulative probabilities).
+
+# Returns
+- a Distribution of type GeneralizedExtremeValue with ξ<0. If the cdf fit fails for any reason, a standard Weibull distribution (μ=mean(x_data), σ=var(x_data), ξ=-0.5) is returned
+
+# Example
+```julia
+x_data = [2.48099994659424, 2.57800006866455, 2.69799995422363, 2.78099989891052, 2.8840000629425, 2.95300006866455, 3.01500010490417, 3.09200000762939, 3.13199996948242, 3.18600010871887]
+y_data = [0.0, 0.5, 0.8, 0.9, 0.96, 0.98, 0.99, 0.996, 0.998, 0.999]
+
+estimate_weibull_distribution(x_data,y_data)
+GeneralizedExtremeValue{Float64}(μ=2.561629024639765, σ=0.08241866955131394, ξ=-0.05)
+```
 """
-This function fits a Weibull Distribution to the inserted data. y should be the return 
-    period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV).
-    
-    This function tries to fit a Weibull distribution to given data. 
-        x is the actual data (e.g. water level).
-        y are the cempirical df values for the data in x (i.e. values between 0 and 1 - to be interpreted as quantiles). 
-    The funtion returns a GeneralizedExtremeValue (GEV) with the third (shape, ξ) parameter being smaller than zero. If the cdf fit fails for any reason, 
-    a standard Weibull distribution (μ=mean(data), σ=var(data), ξ=-0.5) is returned
-"""
+
 function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     x_mean = sum((1 .- y_data) .* x_data) / sum(1 .- y_data)
     x_var = max(sqrt(sum((x_data .- x_mean) .^ 2) / size(x_data, 1)), 0.0001)
@@ -211,11 +244,26 @@ function estimate_weibull_distribution(x_data::Array{T}, y_data::Array{T}) where
 end
 
 
-
 """
-This function fits an extreme value distribution to the inserted data. y should be the return 
-period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV) and uses the best fit 
-out of the Gumbel, Frechet and Weibull model based on the summed squared residuals.
+    function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) :: (Distribution,Float64)  where {T<:Real}
+
+estimates a generalized extreme value distribution from given cdf-quantiles
+# Arguments
+- `x_data::Array{T}`: The values for the given quantiles (usually interpreted as water levels). 
+- `y_data::Array{T}`: The quantiles (cummulative probabilities).
+
+# Returns
+- a pair (Ditribution,Float64) where the first element is a distribution of type GeneralizedExtremeValue, 
+  the second element is the squared mean error this distribution produces on the input data
+
+# Example
+```julia
+x_data = [2.48099994659424, 2.57800006866455, 2.69799995422363, 2.78099989891052, 2.8840000629425, 2.95300006866455, 3.01500010490417, 3.09200000762939, 3.13199996948242, 3.18600010871887]
+y_data = [0.0, 0.5, 0.8, 0.9, 0.96, 0.98, 0.99, 0.996, 0.998, 0.999]
+
+estimate_gev_distribution(x_data,y_data)
+(GeneralizedExtremeValue{Float64}(μ=2.608668051227192, σ=0.08416673465475194, ξ=0.0), 0.03157651021504999)
+```
 """
 function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     gev_gumbel = estimate_gumbel_distribution(x_data, y_data)
@@ -225,10 +273,6 @@ function estimate_gev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<
     my_gumbel_error = gumbel_error_x(x_data, y_data)([gev_gumbel.μ, gev_gumbel.σ, gev_gumbel.ξ])
     my_frechet_error = frechet_error_x(x_data, y_data)([gev_frechet.μ, gev_frechet.σ, gev_frechet.ξ])
     my_weibull_error = weibull_error_x(x_data, y_data)([gev_weibull.μ, gev_weibull.σ, gev_weibull.ξ])
-
-    #println("GUMBEL: ", gev_gumbel, " - ", my_gumbel_error)
-    #println("FRECHET: ", gev_frechet, " - ", my_frechet_error)
-    #println("WEIBULL: ", gev_weibull, " - ", my_weibull_error)
 
     if my_gumbel_error <= my_frechet_error && my_gumbel_error <= my_weibull_error
         return (gev_gumbel, my_gumbel_error)

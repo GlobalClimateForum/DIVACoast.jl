@@ -26,6 +26,9 @@ export damage, expected_damage
 # Export Damage -  structs and functions
 export StandardDDF
 
+# Export Adaptation stuff
+export optimal_protection_level_computation
+
 # Export Statistic Operations
 export LinInt, linear_interp, support, probs, cdf, pdf, quantile, manual_integration
 
@@ -123,5 +126,6 @@ include("./io/jld/jld_load.jl")
 include("./tools/geotiff_tools.jl")
 include("./scenario/ssp_scenario_reader.jl")
 include("./scenario/slr_scenario_reader.jl")
+include("./model/adaptation/adaptation_optimal_pl.jl")
 end
 

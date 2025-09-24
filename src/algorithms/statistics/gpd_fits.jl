@@ -63,11 +63,24 @@ end
 
 
 """
-This function tries to fit an exponential distribution to given data. 
-    x is the actual data (i.e. water level).
-    y are the cdf values for the data in x (i.e. values between 0 and 1). 
-The funtion returns a GeneralizedPareto (GPD) with the third shape parameter being zero. If the cdf fit fails for any reason, the standard 
-exponential distribution (μ=0) is returned
+    function estimate_exponential_distribution(x_data::Array{T}, y_data::Array{T}) :: Distribution  where {T<:Real}
+
+estimates a generalized pareto distribution with ξ=0 from given cdf-quantiles
+# Arguments
+- `x_data::Array{T}`: The values for the given quantiles (usually interpreted as water levels). 
+- `y_data::Array{T}`: The quantiles (cummulative probabilities).
+
+# Returns
+- a Distribution of type GeneralizedPareto with ξ=0. If the cdf fit fails for any reason, a standard exponential distribution (μ=mean(x_data), σ=var(x_data), ξ=0) is returned
+
+# Example
+```julia
+x_data = [2.48099994659424, 2.57800006866455, 2.69799995422363, 2.78099989891052, 2.8840000629425, 2.95300006866455, 3.01500010490417, 3.09200000762939, 3.13199996948242, 3.18600010871887]
+y_data = [0.0, 0.5, 0.8, 0.9, 0.96, 0.98, 0.99, 0.996, 0.998, 0.999]
+
+estimate_exponential_distribution(x_data,y_data)
+GeneralizedPareto{Float64}(μ=2.5250140954661506, σ=0.10146756169413544, ξ=0.0)
+```
 """
 function estimate_exponential_distribution(wl_data::Array{T}, cdf_data::Array{T}) where {T<:Real}
   
@@ -90,8 +103,24 @@ function estimate_exponential_distribution(wl_data::Array{T}, cdf_data::Array{T}
 end
 
 """
-This function fits a gpd_pareto Distribution to the inserted data. y should be the return 
-period and x the corresponding water level height. The funtion returns a GeneralizedExtremeValue (GEV).
+    function estimate_pareto_distribution(x_data::Array{T}, y_data::Array{T}) :: Distribution  where {T<:Real}
+
+estimates a generalized pareto distribution with ξ<0 from given cdf-quantiles
+# Arguments
+- `x_data::Array{T}`: The values for the given quantiles (usually interpreted as water levels). 
+- `y_data::Array{T}`: The quantiles (cummulative probabilities).
+
+# Returns
+- a Distribution of type GeneralizedPareto with ξ>0. If the cdf fit fails for any reason, a standard Pareto distribution (μ=mean(x_data), σ=var(x_data), ξ=0.5) is returned
+
+# Example
+```julia
+x_data = [2.48099994659424, 2.57800006866455, 2.69799995422363, 2.78099989891052, 2.8840000629425, 2.95300006866455, 3.01500010490417, 3.09200000762939, 3.13199996948242, 3.18600010871887]
+y_data = [0.0, 0.5, 0.8, 0.9, 0.96, 0.98, 0.99, 0.996, 0.998, 0.999]
+
+estimate_pareto_distribution(x_data,y_data)
+GeneralizedPareto{Float64}(μ=2.4968211086568735, σ=0.11605522717254095, ξ=0.05)
+```
 """
 function estimate_pareto_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     x_mean = sum((1 .- y_data) .* x_data) / sum(1 .- y_data)
@@ -141,8 +170,24 @@ function estimate_pareto_distribution(x_data::Array{T}, y_data::Array{T}) where 
 end
 
 """
-This function fits a Generalized Pareto Distribution with negative shape to the inserted data. y should be the return 
-period and x the corresponding water level height. The funtion returns a GeneralizedPareto (GPD).
+    function estimate_beta_distribution(x_data::Array{T}, y_data::Array{T}) :: Distribution  where {T<:Real}
+
+estimates a generalized pareto distribution from given cdf-quantiles
+# Arguments
+- `x_data::Array{T}`: The values for the given quantiles (usually interpreted as water levels). 
+- `y_data::Array{T}`: The quantiles (cummulative probabilities).
+
+# Returns
+- a Distribution of type GeneralizedPareto with ξ<0. If the cdf fit fails for any reason, a standard Beta distribution (μ=mean(x_data), σ=var(x_data), ξ=-0.5) is returned
+
+# Example
+```julia
+x_data = [2.48099994659424, 2.57800006866455, 2.69799995422363, 2.78099989891052, 2.8840000629425, 2.95300006866455, 3.01500010490417, 3.09200000762939, 3.13199996948242, 3.18600010871887]
+y_data = [0.0, 0.5, 0.8, 0.9, 0.96, 0.98, 0.99, 0.996, 0.998, 0.999]
+
+estimate_beta_distribution(x_data,y_data)
+GeneralizedPareto{Float64}(μ=2.4809617409293696, σ=0.3821696157626704, ξ=-6.909862679190581)
+```
 """
 function estimate_beta_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     x_mean = sum((1 .- y_data) .* x_data) / sum(1 .- y_data)
@@ -192,10 +237,27 @@ function estimate_beta_distribution(x_data::Array{T}, y_data::Array{T}) where {T
     end
 end
 
+
 """
-This function fits an extreme value distribution to the inserted data. y should be the return 
-period and x the corresponding water level height. The funtion returns a GeneralizedPareto (GPD) and uses the best fit 
-out of the exponential, positive GPD and negative GPD model based on the summed squared residuals.
+    function estimate_gp_distribution(x_data::Array{T}, y_data::Array{T}) :: (Distribution,Float64)  where {T<:Real}
+
+estimates a generalized pareto distribution from given cdf-quantiles
+# Arguments
+- `x_data::Array{T}`: The values for the given quantiles (usually interpreted as water levels). 
+- `y_data::Array{T}`: The quantiles (cummulative probabilities).
+
+# Returns
+- a pair (Ditribution,Float64) where the first element is a distribution of type GeneralizedPareto, 
+  the second element is the squared mean error this distribution produces on the input data
+
+# Example
+```julia
+x_data = [2.48099994659424, 2.57800006866455, 2.69799995422363, 2.78099989891052, 2.8840000629425, 2.95300006866455, 3.01500010490417, 3.09200000762939, 3.13199996948242, 3.18600010871887]
+y_data = [0.0, 0.5, 0.8, 0.9, 0.96, 0.98, 0.99, 0.996, 0.998, 0.999]
+
+estimate_gp_distribution(x_data,y_data)
+(GeneralizedPareto{Float64}(μ=2.5250140954661506, σ=0.10146756169413544, ξ=0.0), 0.027488131754383784)
+```
 """
 function estimate_gp_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     gpd_exponential = estimate_exponential_distribution(x_data, y_data) # ξ = 0
@@ -205,10 +267,6 @@ function estimate_gp_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:
     my_exponential_error = exponential_error_x(x_data, y_data)([gpd_exponential.μ, gpd_exponential.σ, gpd_exponential.ξ])
     my_gpd_pareto_error = pareto_error_x(x_data, y_data)([gpd_pareto.μ, gpd_pareto.σ, gpd_pareto.ξ])
     my_gpd_beta_error = beta_error_x(x_data, y_data)([gpd_beta.μ, gpd_beta.σ, gpd_beta.ξ])
-
-    #println("EXPONENTIAL:  ", gpd_exponential, " - ", my_exponential_error)
-    #println("GPD positive: ", gpd_pareto, " - ", my_gpd_pareto_error)
-    #println("GPD negative: ", gpd_beta, " - ", my_gpd_beta_error)
 
     if my_exponential_error <= my_gpd_pareto_error && my_exponential_error <= my_gpd_beta_error
         return (gpd_exponential,my_exponential_error)
