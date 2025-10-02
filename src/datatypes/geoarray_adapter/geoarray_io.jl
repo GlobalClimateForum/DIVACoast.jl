@@ -196,7 +196,6 @@ function partial_read_around!(sga::GeoArray, p::Tuple{Real,Real}, radius::Real, 
   end
 end
 
-
 # todo: handle existing files. 
 function save_geotiff_data_complete(ga::GeoArrays.GeoArray, filename::String)
   GeoArrays.write(filename, ga; nodata=no_data_value(ga), options=Dict("compress" => "deflate", "bigtiff" => "yes"))

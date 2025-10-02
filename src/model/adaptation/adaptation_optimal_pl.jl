@@ -29,7 +29,6 @@ slrcost_under_given_protection(lcm::LocalCoastalImpactModel{DT,IDT,DATA,DIST}, m
         assets_gf = (i == 1) ? assetsgrowth_trajectory[i] : assetsgrowth_trajectory[i] / assetsgrowth_trajectory[i-1]
         time_span = (i == 1) ? 1 : time_trajectory[i] - time_trajectory[i-1]
         multiply_exposure!(lcm_copy.coastal_plain_model, (population=pop_gf, assets=assets_gf))
-        exdam = expected_damage(lcm_copy, ["assets"], [StandardDDF(1.0)], BathtubInundation(); rtol=conf.exdam_rtol)[1] * time_span / 1000000
         if pl > 0
             sea_dike_cost_investment = (i == 1) ? 0 : lcm_copy.data.coast_length * abs((slr_trajectory[i] - slr_trajectory[i-1])) * dike_unitcost
             sea_dike_cost_maintenance = quantile(lcm_copy.surge_model, 1 - 1 / pl) * lcm_copy.data.coast_length * dike_unitcost * conf.maintenance_factor * time_span
@@ -40,6 +39,8 @@ slrcost_under_given_protection(lcm::LocalCoastalImpactModel{DT,IDT,DATA,DIST}, m
                 migration_cost = migration_data[2] / 1000000
             end
         end
+        exdam = expected_damage(lcm_copy, ["assets"], [StandardDDF(1.0)], BathtubInundation(); rtol=conf.exdam_rtol)[1] * time_span / 1000000
+
 
         ret += (exdam + sea_dike_cost_investment + sea_dike_cost_maintenance + migration_cost) * (1 - discount_rate)^(time_trajectory[i] - start_t)
     end
@@ -51,7 +52,7 @@ function optimal_protection_level_computation(lcm::LocalCoastalImpactModel, migr
     coast_length::Real, dike_unitcost::Real, discount_rate::Real, conf::DIVA_configuration_classic=DIVA_configuration_classic()) where {T1,T2,T3<:Real}
 
     result = optimize(x -> slrcost_under_given_protection(lcm, migration, time_trajectory, slr_trajectory, popgrowth_trajectory, assetsgrowth_trajectory,
-        coast_length, dike_unitcost, discount_rate, conf)(x), 1.0, 10000.0)
+            coast_length, dike_unitcost, discount_rate, conf)(x), 1.0, 10000.0)
 
     cost_no_protection = slrcost_under_given_protection(lcm, migration, time_trajectory, slr_trajectory, popgrowth_trajectory, assetsgrowth_trajectory,
         coast_length, dike_unitcost, discount_rate, conf)(0.0)

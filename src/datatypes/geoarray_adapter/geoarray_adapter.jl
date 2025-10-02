@@ -14,6 +14,23 @@ function no_data_value(ga::GeoArray)
   return parse(eltype(ga), ga.metadata["NoData Value"]["NoData Value"])
 end
 
+function set_no_data_value(ga::GeoArray, value)  
+  ga.metadata["NoData Value"]["NoData Value"] = string(value)
+end
+
+function set_no_data_value(ga::GeoArray{E,N,SparseArrayDOK{E,N}}, value)  where {E,N} 
+  ga.metadata["NoData Value"]["NoData Value"] = string(value)
+  ga.A.no_data=0.0
+end
+
+function set_no_data_value(ga::GeoArray{E,N,SparseArrayADOC{E,N}}, value)  where {E,N} 
+  ga.metadata["NoData Value"]["NoData Value"] = string(value)
+  ga.A.no_data=0.0
+end
+
+empty_geo_array(ga::GeoArray{E,N,C}, x::Int, y::Int, ndv) where {E,N,C<:AbstractArray} = GeoArray(C(ndv, x, y), GeoArrays.geotransform_to_affine(SVector(0.0, 1.0, 0.0, 0.0, 0.0, 1.0)), GeoFormatTypes.WellKnownText(GeoFormatTypes.CRS(), ""), Dict{String,Any}())
+function empty_geo_array(ga::GeoArray{E,N,Array{E}}
+
 filename(ga::GeoArray) = ga.metadata["FILENAME"]["FILENAME"]
 pixelsize_x(ga::GeoArray) = ga.f.linear[1, 1]
 pixelsize_y(ga::GeoArray) = ga.f.linear[2, 2]
