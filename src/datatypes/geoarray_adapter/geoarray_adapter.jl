@@ -14,18 +14,13 @@ function no_data_value(ga::GeoArray)
   return parse(eltype(ga), ga.metadata["NoData Value"]["NoData Value"])
 end
 
-function set_no_data_value(ga::GeoArray, value)  
+function set_no_data_value(ga::GeoArray{E,N,C}, value) where {E,N,C<:AbstractArray} 
   ga.metadata["NoData Value"]["NoData Value"] = string(value)
+  ga.A.no_data=value
 end
 
-function set_no_data_value(ga::GeoArray{E,N,SparseArrayDOK{E,N}}, value)  where {E,N} 
+function set_no_data_value(ga::GeoArray{E,N,Array{E}}, value) where {N,E<:Number}
   ga.metadata["NoData Value"]["NoData Value"] = string(value)
-  ga.A.no_data=0.0
-end
-
-function set_no_data_value(ga::GeoArray{E,N,SparseArrayADOC{E,N}}, value)  where {E,N} 
-  ga.metadata["NoData Value"]["NoData Value"] = string(value)
-  ga.A.no_data=0.0
 end
 
 filename(ga::GeoArray) = ga.metadata["FILENAME"]["FILENAME"]
