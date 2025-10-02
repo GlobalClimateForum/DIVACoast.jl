@@ -106,23 +106,23 @@ function geotiff_transform(infilename1::String, outfilename::String, f::Function
 
     driver = GDAL.gdalgetdriverbyname("GTiff")
     opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES", "PREDICTOR=2"]
-    dataset_out = GDAL.gdalcreate(driver, outfilename, sga_in1.xsize, sga_in1.ysize, 1, GDAL.GDT_Float32, opts)
+    dataset_out = GDAL.gdalcreate(driver, outfilename, size(sga_in1)[1], size(sga_in1)[2], 1, GDAL.GDT_Float32, opts)
     band_out_data = GDAL.gdalgetrasterband(dataset_out, 1)
 
-    GDAL.gdalsetrasternodatavalue(band_out_data, sga_in1.nodatavalue)
-    GDAL.gdalsetprojection(dataset_out, sga_in1.projref)
-    GDAL.gdalsetgeotransform(dataset_out, affine_to_geotransform(sga_in1.f))
+    GDAL.gdalsetrasternodatavalue(band_out_data, no_data_value(sga_in1))
+    GDAL.gdalsetprojection(dataset_out, GeoFormatTypes.val(sga_in1.crs))
+    GDAL.gdalsetgeotransform(dataset_out, GeoArrays.affine_to_geotransform(sga_in1.f))
 
-    r_tiles = sga_in1.ysize ÷ 1
-    remaining_r = sga_in1.ysize % 1
-    scanline1 = fill(0.0f0, sga_in1.xsize)
-    outline = fill(0.0f0, sga_in1.xsize)
+    r_tiles = size(sga_in1)[2] ÷ 1
+    remaining_r = size(sga_in1)[2] % 1
+    scanline1 = fill(0.0f0, size(sga_in1)[1])
+    outline = fill(0.0f0, size(sga_in1)[1])
 
     print("processesing progress: 0 ")
     p = 0
 
     for r in 1:(r_tiles)
-        GDAL.gdalrasterio(band_in1_data, GDAL.GF_Read, 0, (r - 1), sga_in1.xsize, 1, scanline1, sga_in1.xsize, 1, GDAL.GDT_Float32, 0, 0)
+        GDAL.gdalrasterio(band_in1_data, GDAL.GF_Read, 0, (r - 1), size(sga_in1)[1], 1, scanline1, size(sga_in1)[1], 1, GDAL.GDT_Float32, 0, 0)
 
         # if we change the number of lines per read ...
         # global_x = 
@@ -131,9 +131,9 @@ function geotiff_transform(infilename1::String, outfilename::String, f::Function
             outline[i] = f(scanline1[i], sga_in1, r, i)
         end
 
-        GDAL.gdalrasterio(band_out_data, GDAL.GF_Write, 0, (r - 1), sga_in1.xsize, 1, outline, sga_in1.xsize, 1, GDAL.GDT_Float32, 0, 0)
-        if ((r * 100 ÷ sga_in1.ysize) ÷ 10) > p
-            p = ((r * 100 ÷ sga_in1.ysize) ÷ 10)
+        GDAL.gdalrasterio(band_out_data, GDAL.GF_Write, 0, (r - 1), size(sga_in1)[1], 1, outline, size(sga_in1)[1], 1, GDAL.GDT_Float32, 0, 0)
+        if ((r * 100 ÷ size(sga_in1)[2]) ÷ 10) > p
+            p = ((r * 100 ÷ size(sga_in1)[2]) ÷ 10)
             print("$(p*10) ")
         end
     end
