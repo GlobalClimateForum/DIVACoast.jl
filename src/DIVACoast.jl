@@ -55,7 +55,7 @@ export SparseArrayADOC, SparseArrayDOK
 export geotiff_connect, geotiff_transform, geotiff_collect
 
 
-# Export DIVACoast2D
+# Export DIVACoast - Spatial
 # structs
 export SpatialFloodProfile, SpatialFloodProfileMask, Kernel, Neighbour8, Neighbour4, HydraulicConnectedBathtub, PathBasedAttenuatedBathtub
 # functions
