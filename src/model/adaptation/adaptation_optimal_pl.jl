@@ -41,8 +41,7 @@ slrcost_under_given_protection(lcm::LocalCoastalImpactModel{DT,IDT,DATA,DIST}, m
         end
         exdam = expected_damage(lcm_copy, ["assets"], [StandardDDF(1.0)], BathtubInundation(); rtol=conf.exdam_rtol)[1] * time_span / 1000000
 
-
-        ret += (exdam + sea_dike_cost_investment + sea_dike_cost_maintenance + migration_cost) * (1 - discount_rate)^(time_trajectory[i] - start_t)
+        ret += (exdam + sea_dike_cost_investment + sea_dike_cost_maintenance + migration_cost) * 1/((1+discount_rate)^(time_trajectory[i] - start_t))
     end
     ret
 end
