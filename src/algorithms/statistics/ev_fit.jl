@@ -1,5 +1,27 @@
 export estimate_ev_distribution
 
+
+"""
+    function estimate_ev_distribution(x_data::Array{T}, y_data::Array{T}) :: (Distribution,Float64)  where {T<:Real}
+
+estimates an extreme value distribution from given cdf-quantiles
+# Arguments
+- `x_data::Array{T}`: The values for the given quantiles (usually interpreted as water levels). 
+- `y_data::Array{T}`: The quantiles (cummulative probabilities).
+
+# Returns
+- a pair (Distribution,Float64) where the first element is a distribution, either of type GeneralizedExtremeValue or of type GeneralizedPareto, 
+  the second element is the squared mean error this distribution produces on the input data
+
+# Example
+```julia
+x_data = [2.48099994659424, 2.57800006866455, 2.69799995422363, 2.78099989891052, 2.8840000629425, 2.95300006866455, 3.01500010490417, 3.09200000762939, 3.13199996948242, 3.18600010871887]
+y_data = [0.0, 0.5, 0.8, 0.9, 0.96, 0.98, 0.99, 0.996, 0.998, 0.999]
+
+estimate_ev_distribution(x_data,y_data)
+(GeneralizedPareto{Float64}(μ=2.5250140954661506, σ=0.10146756169413544, ξ=0.0), 0.027488131754383784)
+```
+"""
 function estimate_ev_distribution(x_data::Array{T}, y_data::Array{T}) where {T<:Real}
     gev_gumbel = estimate_gumbel_distribution(x_data, y_data)
     gev_frechet = estimate_frechet_distribution(x_data, y_data)
