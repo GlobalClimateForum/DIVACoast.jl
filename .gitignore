@@ -13,3 +13,4 @@ testdata/UKIRL/tif/UKIRL_merit_coastplain_elecz_20m.tif.aux.xml
 testdata/Netherlands/tif/netherlands_cop_dem_aligned.tif
 testdata/Netherlands/tif/netherlands_copernicus_landcover_aligned.tif
 testdata/Netherlands/tif/netherlands_copernicus_landcover.tiff
+testdata/uk_the_wash/*
