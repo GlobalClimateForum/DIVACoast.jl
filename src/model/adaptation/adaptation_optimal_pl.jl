@@ -1,3 +1,4 @@
+#=
 Base.@kwdef struct DIVA_configuration_classic
     maintenance_factor::Float64 = 0.01
     exdam_rtol::Float64 = 0.1
@@ -63,3 +64,4 @@ function optimal_protection_level_computation(lcm::LocalCoastalImpactModel, migr
 
     return min_pl
 end
+=#
