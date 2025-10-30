@@ -17,11 +17,7 @@ h2.popShare = (h2.population ./ maximum(h2.population)) * 100
 
 h2.assetsEUR = 0.85 * h2.assets
 
-
 h2 = HypsometricProfile(h2, exposureCols = [:population, :assets, :assetsEUR, :popShare], exposureUnits = ["", "USD", "EUR", "%"])
-
-
-
 
 # save(h2, "./hpfs_test.jld2")
 
