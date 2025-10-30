@@ -1,18 +1,18 @@
 """
-    function exposure(profile::SpatialFloodProfile, profilemask::SpatialFloodProfileMask, wl::Real, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub}) where IM <: InundationModel
+    function exposure(profile::SpatialProfile, profilemask::SpatialProfileMask, wl::Real, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub})
 
-Calculates the cumulative exposure of a `SpatialFloodProfile` and its `SpatialFloodProfileMask` given a water level and an inundation model.
+Calculates the cumulative exposure of a `SpatialProfile` and its `SpatialProfileMask` given a water level and an inundation model.
 # Arguments
-- `profile::SpatialFloodProfile`: The spatial flood profile containing elevation and exposure data.
-- `profilemask::SpatialFloodProfileMask`: The mask defining the sea area and the coastline. 
+- `profile::SpatialProfile`: The spatial flood profile containing elevation and exposure data.
+- `profilemask::SpatialProfileMask`: The mask defining the sea area and the coastline. 
 - `wl::Real`: The water level for the inundation model.
 - `im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub}`: The inundation model to use for calculating inundation depth.
 # Returns
 - `Vector{Real}`: A vector containing the cumulative exposure for each exposure layer in the profile.
 """
-function exposure(profile::SpatialFloodProfile, profilemask::SpatialFloodProfileMask, wl::Real, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub}) where IM <: InundationModel
+function exposure(profile::SpatialProfile, profilemask::SpatialProfileMask, wl::Real, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub})
 
-    inundation_depth = inundate(profile, profilemask, wl, im)
+    inundation_depth = inundate(profile, wl, im)
 
     inundated = falses(size(inundation_depth))
     inundated[inundation_depth .> 0] .= true
@@ -27,7 +27,7 @@ function exposure(profile::SpatialFloodProfile, profilemask::SpatialFloodProfile
     return exp_
 end
 
-function exposure(profile, inundation_arr::AbstractArray{R, 2}) where R <: Real
+function exposure(profile, inundation_arr::Union{AbstractArray{R, 2}, GeoArrays.GeoArray}) where R <: Real
 
     inundated = falses(size(profile.exposures[1]))
 
@@ -44,25 +44,37 @@ function exposure(profile, inundation_arr::AbstractArray{R, 2}) where R <: Real
     return exp_
 end
 
+function damage(profile::SpatialProfile, wl::Real, s::Array{String}, ddfs::Vector{Function}, im::IM = HydraulicConnectedBathtub(profile.seed)) where IM <: InundationModel
+    
+    inundation_depth = flood_fill(profile, im.seed, wl)
+    damages = map(wl -> ddf(wl), findall(inundation_depth .> 0.0))
+
+    area_ = sum(flooded_mask) 
+    e_ = Tuple([sum(exp_[flooded_mask]) for exp_ in profile.exposures])
+    exposed_ = (area_, e_)
+    
+    damages = [ddf(exposed_, wl) for ddf in ddfs]
+    
+    return exposed_, damages
+
+end
 
 """
-Inundates the `SpatialFloodProfile` using a specified water level and inundation model. Inundation takes place according
-to the provided `SpatialFloodProfileMask`.
+Inundates the `SpatialProfile` using a specified water level and inundation model. Inundation takes place according
+to the provided `SpatialProfileMask`.
 # Arguments
-- `profile::SpatialFloodProfile`: The spatial flood profile containing elevation and exposure data.
-- `profilemask::SpatialFloodProfileMask`: The mask defining the sea area and the coastline.
+- `profile::SpatialProfile`: The spatial flood profile containing elevation and exposure data.
 - `wl::Real`: The targeted water level.
 - `im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub}`: The inundation model to use for calculating inundation depth.
 """
-function inundate(profile::SpatialFloodProfile, profilemask::SpatialFloodProfileMask,
-    wl::Real, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub}) where IM <: InundationModel
-
-    if im isa PathBasedAttenuatedBathtub
-        inundation_depth = path_based_attenuated_inundation(profile, profilemask, wl, im.attrate)
-    elseif im isa HydraulicConnectedBathtub
-        inundation_depth = flood_fill(profile, wl; profile_mask = profilemask)
+function inundate(sp::SpatialProfile, wl::Real, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub}) 
+    if im isa HydraulicConnectedBathtub
+        inundation_depth = flood_fill(sp, wl) 
+    elseif im isa PathBasedAttenuatedBathtub
+        inundation_depth = path_based_attenuated_inundation(sp, wl, im.attrate)
     end
-
     return inundation_depth
 end
+
+
 

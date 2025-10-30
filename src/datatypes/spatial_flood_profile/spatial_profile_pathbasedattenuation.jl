@@ -1,12 +1,11 @@
 
 function path_based_attenuated_inundation(
-    profile::SpatialFloodProfile,
-    profilemask::SpatialFloodProfileMask,
+    profile::SpatialProfile,
     wl::Real, attrate::Union{Real, AbstractArray{2, <:Real},  GeoArrays.GeoArray{T,N,A} where {T <: Real, N, A <: AbstractArray{T, N}}};
-    returnpaths = false)
+    returnpaths = false, returnall = false)
 
     # Ensure all arrays have the same size
-    @assert size(profile.elevation) == size(profilemask.coast) == size(profilemask.sea) "Profile and Mask dimensions do not match"
+    @assert size(profile.elevation) == size(profile.mask.coast) == size(profile.mask.sea) "Profile and Mask dimensions do not match"
     
     if attrate isa Real
             attrate = attrate / 1000
@@ -16,30 +15,31 @@ function path_based_attenuated_inundation(
             throw(ArgumentError("attrate must be either a Real, a GeoArrays.GeoArray, or an AbstractArray of Real values"))
     end
 
-    elevation_ = profile.elevation isa GeoArrays.GeoArray ? profile.elevation.A : profile.elevation
+    # elevation_ = profile.elevation isa GeoArrays.GeoArray ? profile.elevation.A : profile.elevation
+    elevation_ = profile.elevation
 
     # Initialize the propagation counter - defines which cells are processed in each iteration
     propagationcounter = 0
     propagation = fill(Inf, profile.width, profile.height)
-    propagation[profilemask.coast] .= 0.0f0
+    propagation[profile.mask.coast] .= 0.0f0
 
     # Initialize the attenuation for each cell (Inf) and set attenuation at coast to 0.0
     attenuation = fill(Inf, profile.width, profile.height)
-    attenuation[profilemask.coast] .= 0.0f0
+    attenuation[profile.mask.coast] .= 0.0f0
 
     # Inititalize paths
     paths = fill(-1, profile.width, profile.height)
 
     # Assign path IDs to coastal cells
-    path_indices = findall(profilemask.coast)
+    path_indices = findall(profile.mask.coast)
     for (i, idx) in enumerate(path_indices)
         paths[idx] = i
     end
     
     # Set Inundation depth to 0.0 for each land cell and to inf for sea cells
     inundation_depth = fill(0.0f0, profile.width, profile.height)
-    inundation_depth[profilemask.sea] .= Inf
-    inundation_depth[profilemask.coast] .= elevation_[profilemask.coast] .- wl
+    inundation_depth[profile.mask.sea] .= Inf
+    inundation_depth[profile.mask.coast] .= elevation_[profile.mask.coast] .- wl
 
     # As long as there are cells to process
     while !isempty(findall(propagation .== propagationcounter))
@@ -47,7 +47,7 @@ function path_based_attenuated_inundation(
        # For each cell in the current propagation step
         for cell in findall(propagation .== propagationcounter)
 
-            profilemask.sea[cell] ? continue : nothing # jump to next cell if current cell is a sea cell
+            profile.mask.sea[cell] ? continue : nothing # jump to next cell if current cell is a sea cell
 
             # Calculate the inundation depth for the current cell - min inundation = 0.0
             inundation_depth[cell] = maximum((wl - elevation_[cell] - attenuation[cell], 0.0f0))
@@ -56,7 +56,8 @@ function path_based_attenuated_inundation(
             if inundation_depth[cell] > 0.0f0
 
                 # Get neighbors of the current cell
-                nbs = values(neighbours(elevation_, cell, nb=profile.SpatialKernel; returndist = true))
+                nbs = neighbours(elevation_, cell, cursor=profile.cursor; returndist = true) |> values |> collect |> x -> filter(!isnothing, x)
+
                 for (nb, distance) in nbs
     
                     # Skip neighbor if the neighbor is out of bounds
@@ -75,7 +76,7 @@ function path_based_attenuated_inundation(
                     end
 
                     # Apply the attenuation rate to the neighbor
-                    new_attenuation = attenuation[cell] + (rate * distance)
+                    new_attenuation = attenuation[cell] + (rate * (distance))
                     # If the new attenuation is less than the current attenuation for the neighbor
                     # assign new attenuation rate and add neighbor 
                     if new_attenuation < attenuation[nb]
@@ -91,8 +92,17 @@ function path_based_attenuated_inundation(
         propagationcounter += 1
     end
 
+    exports = Dict(
+        :attenuation => attenuation, 
+        :propagation => propagation, 
+        :path => paths,
+        :inundation_depth => inundation_depth
+    )
+
     if returnpaths
         return inundation_depth, paths  # return the inundation depth matrix and paths
+    elseif returnall
+        return exports
     else
         return inundation_depth
     end
