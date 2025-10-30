@@ -57,9 +57,9 @@ export geotiff_connect, geotiff_transform, geotiff_collect
 
 # Export DIVACoast - Spatial
 # structs
-export SpatialFloodProfile, SpatialFloodProfileMask, Kernel, Neighbour8, Neighbour4, HydraulicConnectedBathtub, PathBasedAttenuatedBathtub
+export SpatialProfile, SpatialFloodProfileMask, Kernel, SpatialCursor8, SpatialCursor4, SpatialCursorRadial,  HydraulicConnectedBathtub, PathBasedAttenuatedBathtub
 # functions
-export flood_fill, dijkstra_fill, neighbours, get_coast_sea, seamask, private_mask_profile, path_based_attenuated_inundation
+export flood_fill, dijkstra_fill, neighbours, neighbour_vals, get_coast_sea, seamask, private_mask_profile, path_based_attenuated_inundation
 
 # Set constants from local config
 earth_circumference_km = config[:earthCircumferenceKM]
@@ -131,16 +131,11 @@ include("./scenario/ssp_scenario_reader.jl")
 include("./scenario/slr_scenario_reader.jl")
 
 # DIVACoast - Spatial 
-include("./datatypes/spatial_flood_profile/SpatialFloodProfile.jl")
-include("./datatypes/spatial_flood_profile/SpatialFloodProfileMask.jl")
-
-include("./datatypes/spatial_flood_profile/inundation_model_spatial.jl")
-include("./datatypes/spatial_flood_profile/spatial_flood_profile_path_based_att_inundation.jl")
-include("./datatypes/spatial_flood_profile/spatial_flood_profile_flood_fill.jl")
-include("./datatypes/spatial_flood_profile/spatial_flood_profile_dijkstra_fill.jl")
-
+include("./datatypes/spatial_flood_profile/SpatialProfile.jl")
+include("./datatypes/spatial_flood_profile/SpatialCursor.jl")
+include("./datatypes/spatial_flood_profile/spatial_profile_pathbasedattenuation.jl")
+include("./datatypes/spatial_flood_profile/spatial_profile_floodfill.jl")
+include("./datatypes/spatial_flood_profile/spatial_profile_dijkstra.jl")
 include("./datatypes/spatial_flood_profile/spatial_flood_profile_exposure.jl")
-include("./datatypes/spatial_flood_profile/spatial_flood_profile_damage.jl")
-include("./datatypes/spatial_flood_profile/SpatialKernel.jl")
 end
 
