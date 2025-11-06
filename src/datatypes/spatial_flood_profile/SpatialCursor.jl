@@ -96,10 +96,17 @@ function neighbours(from::AbstractArray, at::CartesianIndex{2}; cursor::SpatialC
     end
 end
 
-function neighbour_indices(from::T, at::CartesianIndex{2}; cursor::SpatialCursor = SpatialCursor8()) where T <: AbstractArray
+function nbindices(from::T, at::CartesianIndex{2}; cursor::SpatialCursor = SpatialCursor8()) where T <: AbstractArray
     nbs = neighbours(from, at; cursor = cursor, returndist = false) |> values |> collect 
     return filter(!isnothing, nbs)
 end
+
+function nbvalues(from::T, at::CartesianIndex{2}; cursor::SpatialCursor = SpatialCursor8()) where T <: AbstractArray
+    nbs = neighbours(from, at; cursor = cursor, returndist = false) |> values |> collect 
+    idx = filter(!isnothing, nbs)
+    return [from[i] for i in idx]
+end
+
 
 # function neighbour_vals(m::T, at::CartesianIndex{2}; nb::SpatialCursor = SpatialCursor8()) where T <: AbstractArray
 #     nbs = neighbours(m, at; nb = nb, returndist = false) |> values |> collect 

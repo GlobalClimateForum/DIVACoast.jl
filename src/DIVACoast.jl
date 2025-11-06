@@ -60,9 +60,9 @@ export geotiff_connect, geotiff_transform, geotiff_collect
 
 # Export DIVACoast - Spatial
 # structs
-export SpatialProfile, SpatialFloodProfileMask, Kernel, SpatialCursor8, SpatialCursor4, SpatialCursorRadial,  HydraulicConnectedBathtub, PathBasedAttenuatedBathtub
+export SpatialProfile, SpatialProfileMask, Kernel, SpatialCursor8, SpatialCursor4, SpatialCursorRadial,  HydraulicConnectedBathtub, PathBasedAttenuatedBathtub
 # functions
-export flood_fill, dijkstra_fill, neighbours, neighbour_vals, get_coast_sea, seamask, private_mask_profile, path_based_attenuated_inundation
+export flood_fill, dijkstra_fill, neighbours, nbvalues, nbindices, get_coast_sea, seamask, private_mask_profile, path_based_attenuated_inundation
 
 # Set constants from local config
 earth_circumference_km = config[:earthCircumferenceKM]
