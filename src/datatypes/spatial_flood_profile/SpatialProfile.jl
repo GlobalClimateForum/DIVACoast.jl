@@ -67,7 +67,37 @@ function SpatialProfileMask(
 	return SpatialProfileMask{Bool}(coast, sea)
 end
 
-# Function to get masks for a given elevation array and seed point
+# Create a SpatialProfileMask from an existing mask
+function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, oceanvalue) where DT <: Any
+
+	# prepare boolean masks
+	sea_mask = falses(size(mask))
+	coast_mask = falses(size(mask))
+
+	# ensure oceanvalue has the same element type as the mask
+	ov = try
+		convert(DT, oceanvalue)
+	catch
+		error("oceanvalue cannot be converted to mask element type $(DT)")
+	end
+
+	# find sea cells in the input mask (not in the empty sea_mask)
+	sea_indices = findall(mask .== ov)
+	sea_mask[sea_indices] .= true
+
+	# coast cells are sea-adjacent non-sea cells among found sea_indices
+	coast_indices = filter(idx -> !all(nbvalues(sea_mask, idx)), sea_indices)
+	coast_mask[coast_indices] .= true
+
+	# convert to GeoArrays preserving geo metadata
+	coast_mask = GeoArrays.GeoArray(coast_mask, mask.f, mask.crs)
+	sea_mask = GeoArrays.GeoArray(sea_mask, mask.f, mask.crs)
+
+	return SpatialProfileMask{Bool}(coast_mask, sea_mask)
+
+end
+
+# Calculate a SpatialProfileMask from elevation data and  seed point
 function SpatialProfileMask(elevation::GeoArrays.GeoArray, seed::CartesianIndex{2}, cursor::SpatialCursor)
 
 	sea_mask = falses(size(elevation))
@@ -119,6 +149,7 @@ function Base.show(io::IO, pm::SpatialProfileMask)
 end
 
 function RecipesBase.plot(sp::SpatialProfile; kwargs...)
+
 	elev = Plots.heatmap(sp.elevation; zlims = [-5, maximum(sp.elevation)], title = "Elevation", c = cgrad(:greys, rev = true), colorbar_title = sp.elevation_unit)
 	sea = Plots.heatmap(sp.mask.sea; title = "Sea Mask", c = cgrad([:transparent, :red]), alpha = 0.5)
 	coast = Plots.heatmap(sp.mask.coast; title = "Coast Mask", c = cgrad([:blue, :transparent]))
