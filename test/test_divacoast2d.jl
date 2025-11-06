@@ -2,14 +2,14 @@ using Pkg
 Pkg.activate("$(ENV["DIVA_LIB"])")
 include("$(ENV["DIVA_LIB"])/src/DIVACoast.jl")
 using .DIVACoast
-using Plots
+using Plots; pyplot()
 using GeoArrays
+using Rasters
 using CSV
 using DataFrames
 using Distributions
 using Statistics
 using Logging
-
 # helpers
 
 global_logger(DIVALogger("./log.txt"))
@@ -28,7 +28,6 @@ function reclassify_wbm(wbm::GeoArrays.GeoArray)
     result_ = deepcopy(wbm) 
     result_[result_ .!= mapping["ocean"]] .= false
     result_[result_ .== mapping["ocean"]] .= true
-
     return result_
 end
 
@@ -37,17 +36,16 @@ na_mask_fabdem = (fabdem::GeoArrays.GeoArray, wbm::GeoArrays.GeoArray) -> begin
     return fabdem
 end
 
-
 # data pipeline
 @info "Loading test data"
-
 wbm = "wbm.tif" |> path_to_data |> GeoArrays.read |> reclassify_wbm
 fabdem = "fabdem.tif" |> path_to_data |> GeoArrays.read |> fabdem_ -> na_mask_fabdem(fabdem_, wbm)
 pop = "worldpop.tif" |> path_to_data |> GeoArrays.read
 corine = "corine.tif" |> path_to_data |> GeoArrays.read
-# attrates = "corine_attrates.csv" |> path_to_data |> CSV.File |> DataFrame
 
-@info "Initialize SpatialProfile"
+fm = SpatialProfileMask(wbm, 1)
+
+@info "Initialize SpatialProfile & Initialize SpatialProfileMask"
 fp = SpatialProfile(fabdem; seed = findall(wbm .== true)[1], exposures = [pop])
 
 @info "Running inundation model tests"
@@ -67,7 +65,7 @@ end
 
 attenuation_rates = GeoArrays.GeoArray(attenuation_rates, fp.elevation.f, fp.elevation.crs)
 
-pba_local = inundate(fp, 2.0, PathBasedAttenuatedBathtub(attenuation_rates))
+pba_local = exposure(fp, 2.0, PathBasedAttenuatedBathtub(attenuation_rates))
 
 @info "Inundation model tests completed successfully"
 
