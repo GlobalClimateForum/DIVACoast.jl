@@ -98,6 +98,11 @@ function to_hypsometric_profile(ga_elevation::GeoArray, area_unit::String,
   exposure_tmp::Array{DT} = zeros(s, size(gas_exposure, 1))
 
   for (indices, elevation) in GeoArrayIndexValueIterator(ga_elevation)
+
+    if ismissing(elevation) || isnan(elevation)
+      continue  
+    end
+
     if elevation <= e[1]
       a[1] += area(ga_elevation, indices)
       for j in 1:size(gas_exposure, 1)
