@@ -53,7 +53,7 @@ export AbstractDirection, East, North, West, South
 export geoarray_union, geoarray_intersect
 
 # Export SparseArray's for memory friendly data processing
-export SparseArrayADOC, SparseArrayDOK
+export SparseArrayADOC, SparseArrayADOR, SparseArrayDOK
 
 export geotiff_connect, geotiff_transform, geotiff_collect
 
@@ -93,6 +93,7 @@ end
 # Include scripts
 include("./logger/logger.jl")
 include("./datatypes/sparse_arrays/sparse_array_adoc.jl")
+include("./datatypes/sparse_arrays/sparse_array_ador.jl")
 include("./datatypes/sparse_arrays/sparse_array_dok.jl")
 include("./datatypes/geoarray_adapter/geoutils_types.jl")
 include("./datatypes/geoarray_adapter/geoarray_adapter.jl")

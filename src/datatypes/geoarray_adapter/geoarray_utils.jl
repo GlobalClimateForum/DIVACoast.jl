@@ -375,6 +375,7 @@ end
 
 area(ga::GeoArray, p::Tuple{<:Integer,<:Integer}) = area(ga, p[1], p[2])
 area(ga::GeoArray, p::Tuple{I,I}) where {I<:Integer} = area(ga, p[1], p[2])
+area(ga::GeoArray, p) = area(ga, p[1], p[2])
 
 include("geoarray_helpers.jl")
 

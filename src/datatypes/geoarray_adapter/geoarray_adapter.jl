@@ -11,12 +11,16 @@ function is_circular(ga::GeoArray)
 end
 
 function no_data_value(ga::GeoArray)
-  return parse(eltype(ga), ga.metadata["NoData Value"]["NoData Value"])
+  if haskey(ga.metadata, "NoData Value")
+    return parse(eltype(ga), ga.metadata["NoData Value"]["NoData Value"])
+  else
+    return typemin(eltype(ga))
+  end
 end
 
-function set_no_data_value(ga::GeoArray{E,N,C}, value) where {E,N,C<:AbstractArray} 
+function set_no_data_value(ga::GeoArray{E,N,C}, value) where {E,N,C<:AbstractArray}
   ga.metadata["NoData Value"]["NoData Value"] = string(value)
-  ga.A.no_data=value
+  ga.A.no_data = value
 end
 
 function set_no_data_value(ga::GeoArray{E,N,Array{E}}, value) where {N,E<:Number}
@@ -172,7 +176,7 @@ end
 
 empty_copy_from_geo_array(ga::GeoArray{E,N,C}, ndv::E) where {C,E,N} = empty_copy_from_geo_array(ga)
 
-function empty_copy_from_geo_array(ga::GeoArray, xs::Int, ys::Int, ul, ndv) 
+function empty_copy_from_geo_array(ga::GeoArray, xs::Int, ys::Int, ul, ndv)
   ret = empty_geo_array(ga, xs, ys, ndv)
   t = SVector(ul[1], ul[2])
   l = ga.f.linear * SMatrix{2,2}([1 0; 0 1])
