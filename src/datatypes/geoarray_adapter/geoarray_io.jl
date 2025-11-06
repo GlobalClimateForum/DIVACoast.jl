@@ -136,13 +136,13 @@ function read_geotiff_data_partial!(ga::GeoArray, x_start::Integer, x_end::Integ
   for r in 1:(r_tiles)
     #println("read: $(x_start - 1), $((r - 1) * y_chunk_size + (y_start - 1)), $((x_end - x_start + 1)), $y_chunk_size,")
     GDAL.gdalrasterio(band, GDAL.GF_Read, x_start - 1, (r - 1) * y_chunk_size + (y_start - 1), (x_end - x_start + 1), y_chunk_size, scanline, (x_end - x_start + 1), y_chunk_size, GDAL.GDT_Float32, 0, 0)
-    insert_data!(ga.A, scanline, x_start, x_end, (r - 1) * y_chunk_size + y_start, (r - 1) * y_chunk_size + y_start + y_chunk_size - 1,no_data_value(ga))
+    insert_data!(ga.A, scanline, x_start, x_end, (r - 1) * y_chunk_size + y_start, (r - 1) * y_chunk_size + y_start + y_chunk_size - 1, no_data_value(ga))
   end
 
   if (remaining_r != 0)
     #println("GDAL.gdalrasterio(band,GDAL.GF_Read,$(x_start-1),$((r_tiles)*y_chunk_size+y_start),$(x_end - x_start + 1),$remaining_r,scanline,$(x_end - x_start + 1),$remaining_r,GDAL.GDT_Float32,0,0)")
     GDAL.gdalrasterio(band, GDAL.GF_Read, x_start - 1, (r_tiles) * y_chunk_size + y_start - 1, (x_end - x_start + 1), remaining_r, scanline, (x_end - x_start + 1), remaining_r, GDAL.GDT_Float32, 0, 0)
-    insert_data!(ga.A, scanline, x_start, x_end, (r_tiles) * y_chunk_size + y_start, y_end,no_data_value(ga))
+    insert_data!(ga.A, scanline, x_start, x_end, (r_tiles) * y_chunk_size + y_start, y_end, no_data_value(ga))
   end
   GDAL.gdalclose(dataset)
 end
@@ -196,10 +196,127 @@ function partial_read_around!(sga::GeoArray, p::Tuple{Real,Real}, radius::Real, 
   end
 end
 
-# todo: handle existing files. 
-function save_geotiff_data_complete(ga::GeoArrays.GeoArray, filename::String)
-  GeoArrays.write(filename, ga; nodata=no_data_value(ga), options=Dict("compress" => "deflate", "bigtiff" => "yes"))
+function write_geotiff(ga::GeoArrays.GeoArray, filename::String, y_chunk_size::Integer=1)
+  GeoArrays.write(filename, ga; nodata=no_data_value(ga), options=Dict("compress" => "deflate", "bigtiff" => "yes", "blockxsize" => string(size(ga)[1]), "blockysize" => "1"))
 end
+
+# todo: handle existing files. 
+function save_geotiff_data_complete(ga::GeoArrays.GeoArray, filename::String, y_chunk_size::Integer=1)
+  fn = split(filename, ".")
+  if (size(fn) == 1)
+    return
+  end
+
+  ext = fn[end]
+  driver = GDAL.gdalgetdriverbyname("GTiff")
+  if lowercase(ext) in ["tif" "gtif" "geotif" "tiff" "gtiff" "geotiff"]
+    driver = GDAL.gdalgetdriverbyname("GTiff")
+  end
+
+  opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES", "BLOCKXSIZE=" * string(size(ga)[1]), "BLOCKYSIZE=1"]
+  dataset = GDAL.gdalcreate(driver, filename, size(ga)[1], size(ga)[2], 1, GDAL.GDT_Float32, opts)
+  band = GDAL.gdalgetrasterband(dataset, 1)
+
+  GDAL.gdalsetrasternodatavalue(band, no_data_value(ga))
+  GDAL.gdalsetprojection(dataset, GeoFormatTypes.val(ga.crs))
+  GDAL.gdalsetgeotransform(dataset, GeoArrays.affine_to_geotransform(ga.f))
+
+  r_tiles = size(ga)[2] ÷ y_chunk_size
+  remaining_r = size(ga)[2] % y_chunk_size
+  #scanline = fill(0.0f0, y_chunk_size * size(ga)[1])
+
+  print("write progress: 0 ")
+  p = 0
+
+  #for r in 1:size(ga)[2]
+  for r in 1:r_tiles
+    scanline = ga[:, ((r-1)*y_chunk_size+1):(r*y_chunk_size)]
+    GDAL.gdalrasterio(band, GDAL.GF_Write, 0, (r - 1) * y_chunk_size, size(ga)[1], y_chunk_size, scanline, size(ga)[1], y_chunk_size, GDAL.GDT_Float32, 0, 0)
+
+    if (((r * y_chunk_size) * 100 ÷ size(ga)[2]) ÷ 10) > p
+      p = (((r * y_chunk_size) * 100 ÷ size(ga)[2]) ÷ 10)
+      print("$(p*10) ")
+    end
+  end
+
+  if (remaining_r != 0)
+    scanline = ga[:, ((r_tiles)*y_chunk_size-1):(size(ga)[2])]
+    GDAL.gdalrasterio(band, GDAL.GF_Write, 0, (r_tiles) * y_chunk_size - 1, size(ga)[1], remaining_r, scanline, size(ga)[1], remaining_r, GDAL.GDT_Float32, 0, 0)
+    print("100")
+  end
+
+  println()
+  GDAL.gdalclose(dataset)
+end
+
+# todo: handle existing files. 
+function save_geotiff_data_complete(ga::GeoArrays.GeoArray{DT, 2, SparseArrayADOR{DT, IT}}, filename::String, y_chunk_size::Integer=1) where {DT,IT}
+  fn = split(filename, ".")
+  if (size(fn) == 1)
+    return
+  end
+
+  ext = fn[end]
+  driver = GDAL.gdalgetdriverbyname("GTiff")
+  if lowercase(ext) in ["tif" "gtif" "geotif" "tiff" "gtiff" "geotiff"]
+    driver = GDAL.gdalgetdriverbyname("GTiff")
+  end
+
+  opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES", "BLOCKXSIZE=" * string(size(ga)[1]), "BLOCKYSIZE=1"]
+  dataset = GDAL.gdalcreate(driver, filename, size(ga)[1], size(ga)[2], 1, GDAL.GDT_Float32, opts)
+  band = GDAL.gdalgetrasterband(dataset, 1)
+
+  GDAL.gdalsetrasternodatavalue(band, no_data_value(ga))
+  GDAL.gdalsetprojection(dataset, GeoFormatTypes.val(ga.crs))
+  GDAL.gdalsetgeotransform(dataset, GeoArrays.affine_to_geotransform(ga.f))
+
+  r_tiles = size(ga)[2] ÷ y_chunk_size
+  remaining_r = size(ga)[2] % y_chunk_size
+
+  print("write progress: 0 ")
+  p = 0
+
+  it = iterate(GeoArrayIndexValueIterator(ga))
+
+  for r in 1:r_tiles
+    scanline = fill(no_data_value(ga), y_chunk_size * size(ga)[1])
+
+    while it !== nothing
+      ind_val, state = it
+      if ind_val[1][2] > (r * y_chunk_size)
+        break
+      end
+      row = ind_val[1][2] - ((r-1) * y_chunk_size)
+      scanline[(row-1) * size(ga)[1] + ind_val[1][1]] = ind_val[2]
+      it = iterate(GeoArrayIndexValueIterator(ga), state)
+    end
+
+    GDAL.gdalrasterio(band, GDAL.GF_Write, 0, (r - 1) * y_chunk_size, size(ga)[1], y_chunk_size, scanline, size(ga)[1], y_chunk_size, GDAL.GDT_Float32, 0, 0)
+
+    if (((r * y_chunk_size) * 100 ÷ size(ga)[2]) ÷ 10) > p
+      p = (((r * y_chunk_size) * 100 ÷ size(ga)[2]) ÷ 10)
+      print("$(p*10) ")
+    end
+  end
+
+  if (remaining_r != 0)
+    scanline = fill(no_data_value(ga), (remaining_r * size(ga)[1]))
+
+    while it !== nothing
+      ind_val, state = it
+      row = ind_val[1][2] - (r_tiles*y_chunk_size)
+      scanline[row * size(ga)[1] + ind_val[1][1]] = ind_val[2]
+      it = iterate(GeoArrayIndexValueIterator(ga), state)
+    end
+
+    GDAL.gdalrasterio(band, GDAL.GF_Write, 0, (r_tiles) * y_chunk_size - 1, size(ga)[1], remaining_r, scanline, size(ga)[1], remaining_r, GDAL.GDT_Float32, 0, 0)
+    print("100")
+  end
+
+  println()
+  GDAL.gdalclose(dataset)
+end
+
 
 # todo: handle existing files. 
 function save_data_complete_csv(ga::GeoArray, filename::String, lonlat::Bool=false)
@@ -346,7 +463,7 @@ function read_geotiff_data_filtered!(ga::GeoArray, filename::String, f::Function
     GDAL.gdalrasterio(band, GDAL.GF_Read, 0, (r - 1) * row_chunk_size, ga.xsize, row_chunk_size, scanline, ga.xsize, row_chunk_size, GDAL.GDT_Float32, 0, 0)
     for i in eachindex(scanline)
       if (!f(scanline[i], convert(Int32, ((i - 1) % ga.xsize) + 1), convert(Int32, (r - 1) * row_chunk_size + ((i - 1) ÷ ga.xsize + 1))))
-        scanline[i] = ga.nodatavalue
+        scanline[i] = no_data_value(ga)
       end
     end
     private_insert_data!(ga, scanline, 1, ga.xsize, (r - 1) * row_chunk_size + 1, r * row_chunk_size)
@@ -360,7 +477,7 @@ function read_geotiff_data_filtered!(ga::GeoArray, filename::String, f::Function
     GDAL.gdalrasterio(band, GDAL.GF_Read, 0, (r_tiles) * row_chunk_size - 1, ga.xsize, remaining_r, scanline, ga.xsize, remaining_r, GDAL.GDT_Float32, 0, 0)
     for i in eachindex(scanline)
       if (!f(scanline[i], convert(Int32, ((i - 1) % ga.xsize) + 1), convert(Int32, (r_tiles - 1) * row_chunk_size + ((i - 1) ÷ ga.xsize + 1))))
-        scanline[i] = ga.nodatavalue
+        scanline[i] = no_data_value(ga)
       end
     end
     (ga, scanline, 1, ga.xsize, (r_tiles) * row_chunk_size + 1, (r_tiles) * row_chunk_size + 1 + remaining_r)

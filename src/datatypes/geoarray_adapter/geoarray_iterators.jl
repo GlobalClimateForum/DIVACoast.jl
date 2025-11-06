@@ -56,6 +56,35 @@ function Base.iterate(iter::GeoArrayIndexValueIterator{DT,2,SparseArrayADOC{DT,I
         # case of an empty memory
         return nothing
     else
-        return (((x, iterate(keys(iter.ga.A.memory[x]), it)[1]), iterate(values(iter.ga.A.memory[x]), it)[1]), (x, iterate(keys(iter.ga.A.memory[x]),it)[2]))
+        return (((x, iterate(keys(iter.ga.A.memory[x]), it)[1]), iterate(values(iter.ga.A.memory[x]), it)[1]), 
+        (x, iterate(keys(iter.ga.A.memory[x]),it)[2]))
+    end
+end
+
+# specialisation for GeoArray{DT, 2, SparseArrayADOR{DT, IT}} (taking advantage of the memory structure of SparseArrayADOR)
+function Base.iterate(iter::GeoArrayIndexValueIterator{DT,2,SparseArrayADOR{DT,IT}}) where {DT,IT}
+    for y in 1:size(iter.ga.A.memory)[1]
+        for (x, v) in iter.ga.A.memory[y]
+            return (((x, y), v), (y,iterate(keys(iter.ga.A.memory[y]))[2]))
+        end
+    end
+    # case of an empty memory
+    return nothing
+end
+
+function Base.iterate(iter::GeoArrayIndexValueIterator{DT,2,SparseArrayADOR{DT,IT}}, state) where {DT,IT}
+    #println(state)
+    y = state[1]
+    it = state[2] # x
+    if iterate(keys(iter.ga.A.memory[y]), it) == nothing
+        for yn in (y+1):size(iter.ga.A.memory)[1]
+            for (x, v) in iter.ga.A.memory[yn]
+                return (((x,yn), v), (yn, iterate(keys(iter.ga.A.memory[yn]))[2]))
+            end
+        end
+        # case of an empty memory
+        return nothing
+    else
+        return (((iterate(keys(iter.ga.A.memory[y]), it)[1],y), iterate(values(iter.ga.A.memory[y]), it)[1]), (y,iterate(keys(iter.ga.A.memory[y]),it)[2]))
     end
 end
