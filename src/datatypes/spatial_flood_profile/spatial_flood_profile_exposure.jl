@@ -10,15 +10,16 @@ Calculates the cumulative exposure of a `SpatialProfile` and its `SpatialProfile
 # Returns
 - `Vector{Real}`: A vector containing the cumulative exposure for each exposure layer in the profile.
 """
-function exposure(profile::SpatialProfile, profilemask::SpatialProfileMask, wl::Real, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub})
+function exposure(profile::SpatialProfile, wl::Real, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub})
 
     inundation_depth = inundate(profile, wl, im)
 
     inundated = falses(size(inundation_depth))
     inundated[inundation_depth .> 0] .= true
 
-    exp_ = []
+    print("SIZE INUNDATION: $(size(inundation_depth)), SIZE EXPOSURE: $(size(profile.exposures[1]))\n")
 
+    exp_ = []  
     for exposure in (profile.exposures)
         exposed = sum(exposure[inundated])
         push!(exp_, exposed)
@@ -27,7 +28,7 @@ function exposure(profile::SpatialProfile, profilemask::SpatialProfileMask, wl::
     return exp_
 end
 
-function exposure(profile, inundation_arr::Union{AbstractArray{R, 2}, GeoArrays.GeoArray}) where R <: Real
+function exposure(profile, inundation_arr::Union{GeoArrays.GeoArray}) where R <: Real
 
     inundated = falses(size(profile.exposures[1]))
 
@@ -43,6 +44,27 @@ function exposure(profile, inundation_arr::Union{AbstractArray{R, 2}, GeoArrays.
        
     return exp_
 end
+
+# function exposure(profile::SpatialProfile, wl::Vector{Real}, im::Union{HydraulicConnectedBathtub, PathBasedAttenuatedBathtub})
+
+#     wl = sort(wl) 
+#     inundation_depth = Vector{GeoArrays.GeoArray}(undef, lenght(wl))
+
+#     profile_ = deepcopy(profile)
+
+#     for (i, w) in enumerate(wl) 
+        
+#         if i > 1
+#             profile.mask = SpatialProfileMask(
+#                 inundation_depth[1], 
+#                 Inf
+#             ) 
+#         end
+        
+#         inundation_depth[i] = inundate(profile, w, im)
+#     end
+
+# end
 
 function damage(profile::SpatialProfile, wl::Real, s::Array{String}, ddfs::Vector{Function}, im::IM = HydraulicConnectedBathtub(profile.seed)) where IM <: InundationModel
     
