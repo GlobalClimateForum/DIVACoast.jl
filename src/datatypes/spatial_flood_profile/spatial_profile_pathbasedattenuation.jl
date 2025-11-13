@@ -3,9 +3,6 @@ function path_based_attenuated_inundation(
     profile::SpatialProfile,
     wl::Real, attrate::Union{Real, AbstractArray{2, <:Real},  GeoArrays.GeoArray{T,N,A} where {T <: Real, N, A <: AbstractArray{T, N}}};
     returnpaths = false, returnall = false)
-
-    # Ensure all arrays have the same size
-    @assert size(profile.elevation) == size(profile.mask.coast) == size(profile.mask.sea) "Profile and Mask dimensions do not match"
     
     if attrate isa Real
             attrate = attrate / 1000
