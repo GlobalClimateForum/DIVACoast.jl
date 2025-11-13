@@ -34,11 +34,11 @@ function SpatialProfile(
 	area_unit::String = "m²",
 	cursor::SpatialCursor = SpatialCursor8(),
 
-	exposures::Vector = [],
+	exposures::Vector{GT} = [],
 	exposure_names::Vector{Union{String, Nothing}} = Union{String, Nothing}[],
 	exposure_units::Vector{Union{String, Nothing}} = Union{String, Nothing}[]
 
-	) where GT <: GeoArrays.GeoArray{T, 2} where T <: Real
+	) where GT <: GeoArrays.GeoArray{T, 2} where T <: Union{Real, Missing}
 	
 	if length(exposures) > 0
 		exposure_names = isnothing(exposure_names) ? [nothing for _ in 1:length(exposures)] : exposure_names

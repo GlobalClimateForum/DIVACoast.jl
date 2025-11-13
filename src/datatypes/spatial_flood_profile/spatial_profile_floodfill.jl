@@ -1,3 +1,5 @@
+using Plots
+
 """
     function flood_fill(sp::SpatialProfile, wl::DT) where DT <: Real
 Performs Flood Fill (bathtub) inundation on a SpatialProfile `sp` given a water level `wl`.
@@ -17,6 +19,7 @@ function flood_fill(sp::SpatialProfile, wl::DT) where DT <: Real
     # Initialize flooded mask
     flooded = falses(sp.width, sp.height)
     flooded[findall(sp.mask.sea .== true)] .= true
+    flooded[findall(sp.mask.coast .== true)] .= false
 
     # Init queue (need to check queue)
     queue = Queue{CartesianIndex{2}}()
