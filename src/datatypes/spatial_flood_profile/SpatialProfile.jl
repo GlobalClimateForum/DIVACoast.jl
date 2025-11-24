@@ -81,12 +81,12 @@ function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, oceanvalue) where D
 		error("oceanvalue cannot be converted to mask element type $(DT)")
 	end
 
-	# find sea cells in the input mask (not in the empty sea_mask)
+	# find sea cells in the input mask
 	sea_indices = findall(mask .== ov)
 	sea_mask[sea_indices] .= true
 
 	# coast cells are sea-adjacent non-sea cells among found sea_indices
-	coast_indices = filter(idx -> !all(nbvalues(sea_mask, idx)), sea_indices)
+	coast_indices = filter(idx -> any(nbvalues(sea_mask, idx; cursor = SpatialCursor8())), findall(.!sea_mask))
 	coast_mask[coast_indices] .= true
 
 	# convert to GeoArrays preserving geo metadata
@@ -97,31 +97,46 @@ function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, oceanvalue) where D
 
 end
 
-# Calculate a SpatialProfileMask from elevation data and  seed point
+# Calculate a SpatialProfileMask from elevation data and seed point
 function SpatialProfileMask(elevation::GeoArrays.GeoArray, seed::CartesianIndex{2}, cursor::SpatialCursor)
 
+	# Init masks
 	sea_mask = falses(size(elevation))
 	coast_mask = falses(size(elevation))
 	visited = falses(size(elevation))
 
-	# Init sea value, check sea_value function and tovisit queue
+	# Init sea value (value, being assumed to be sea) 
 	sea_val = elevation[seed]
-	check_sea_value = idx -> ismissing(sea_val) ? ismissing(elevation[idx]) : elevation[idx] == sea_val
-	tovisit = Queue{CartesianIndex{2}}()
 
-	# Init with seed point
+	# Function to check whether a cell is a sea cell
+	check_sea_value = idx -> elevation[idx] == sea_val
+
+	# Init queue for breadth-first search
+	tovisit = Queue{CartesianIndex{2}}()
 	enqueue!(tovisit, seed)
+
+	# Inti first check
 	sea_mask[seed] = true
 	visited[seed] = true
 
 	while !isempty(tovisit)
 
+		# Pop index of the current step from the queue
 		current_ = dequeue!(tovisit)
-		nb_cells = neighbours(elevation, current_, cursor = cursor) |> values
 
+		# Get the values of the neighbouring cells using the spatial cursor
+		nb_cells = nbvalues(elevation, current_; cursor = cursor)
+
+		# For each neighbor cell
 		for nb in nb_cells
+
+			# If the neighbour is not nothing (out of bounds) and not yet visited: 
 			if !isnothing(nb) && !visited[nb]
+				
+				# Mark neighbour as visited
 				visited[nb] = true
+
+				# Check if neighbour is a sea or coast cell
 				if check_sea_value(nb)
 					sea_mask[nb] = true
 					enqueue!(tovisit, nb)
@@ -149,7 +164,6 @@ function Base.show(io::IO, pm::SpatialProfileMask)
 end
 
 function RecipesBase.plot(sp::SpatialProfile; kwargs...)
-
 	elev = Plots.heatmap(sp.elevation; zlims = [-5, maximum(sp.elevation)], title = "Elevation", c = cgrad(:greys, rev = true), colorbar_title = sp.elevation_unit)
 	sea = Plots.heatmap(sp.mask.sea; title = "Sea Mask", c = cgrad([:transparent, :red]), alpha = 0.5)
 	coast = Plots.heatmap(sp.mask.coast; title = "Coast Mask", c = cgrad([:blue, :transparent]))
