@@ -24,6 +24,7 @@ struct SpatialProfile{T}
 	exposure_units::Vector{Union{String, Nothing}}
 end
 
+
 # SpatialProfile constructors
 function SpatialProfile(
 	
@@ -33,8 +34,7 @@ function SpatialProfile(
 	elevation_unit::String = "m",
 	area_unit::String = "m²",
 	cursor::SpatialCursor = SpatialCursor8(),
-
-	exposures::Vector{GT} = [],
+	exposures::Vector{GT} = GT[],
 	exposure_names::Vector{Union{String, Nothing}} = Union{String, Nothing}[],
 	exposure_units::Vector{Union{String, Nothing}} = Union{String, Nothing}[]
 
@@ -164,8 +164,9 @@ function Base.show(io::IO, pm::SpatialProfileMask)
 end
 
 function RecipesBase.plot(sp::SpatialProfile; kwargs...)
-	elev = Plots.heatmap(sp.elevation; zlims = [-5, maximum(sp.elevation)], title = "Elevation", c = cgrad(:greys, rev = true), colorbar_title = sp.elevation_unit)
-	sea = Plots.heatmap(sp.mask.sea; title = "Sea Mask", c = cgrad([:transparent, :red]), alpha = 0.5)
-	coast = Plots.heatmap(sp.mask.coast; title = "Coast Mask", c = cgrad([:blue, :transparent]))
+		
+	elev = Plots.heatmap(sp.elevation; zlims = [-5, maximum(sp.elevation)], title = "Elevation", c = cgrad(:terrain), colorbar_title = sp.elevation_unit)
+	sea = Plots.heatmap(sp.mask.sea; title = "Sea Mask", c = cgrad([:transparent, "#F71735"]), alpha = 0.5)
+	coast = Plots.heatmap(sp.mask.coast; title = "Coast Mask", c = cgrad(["#F71735", :transparent]))
 	return Plots.plot(elev, sea, coast; layout = (1, 3), size = (1200, 400))
 end
