@@ -30,7 +30,7 @@ function SpatialProfile(
 	
 	elevation::GT;
 	mask::Union{SpatialProfileMask{Bool}, Nothing} = nothing, # Will be calculated if not provided
-	seed::CartesianIndex{2} = CartesianIndex(1, 1),
+	seed::Union{CartesianIndex, Tuple, Vector} = CartesianIndex(1, 1),
 	elevation_unit::String = "m",
 	area_unit::String = "m²",
 	cursor::SpatialCursor = SpatialCursor8(),
@@ -68,7 +68,7 @@ function SpatialProfileMask(
 end
 
 # Create a SpatialProfileMask from an existing mask
-function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, oceanvalue) where DT <: Any
+function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, oceanvalue::Union{Number, Missing, Nothing}) where DT <: Any
 
 	# prepare boolean masks
 	sea_mask = falses(size(mask))
@@ -100,6 +100,8 @@ end
 # Calculate a SpatialProfileMask from elevation data and seed point
 function SpatialProfileMask(elevation::GeoArrays.GeoArray, seed::CartesianIndex{2}, cursor::SpatialCursor)
 
+	@debug "Calculating SpatialProfileMask from seed: $(seed)"
+
 	# Init masks
 	sea_mask = falses(size(elevation))
 	coast_mask = falses(size(elevation))
@@ -125,13 +127,13 @@ function SpatialProfileMask(elevation::GeoArrays.GeoArray, seed::CartesianIndex{
 		current_ = dequeue!(tovisit)
 
 		# Get the values of the neighbouring cells using the spatial cursor
-		nb_cells = nbvalues(elevation, current_; cursor = cursor)
-
+		nb_cells = nbindices(elevation, current_; cursor = cursor)
+		
 		# For each neighbor cell
 		for nb in nb_cells
 
 			# If the neighbour is not nothing (out of bounds) and not yet visited: 
-			if !isnothing(nb) && !visited[nb]
+			if !visited[nb]
 				
 				# Mark neighbour as visited
 				visited[nb] = true
