@@ -38,7 +38,7 @@ function geotiff_connect(infilename1::String, infilename2::String, outfilename::
     end
 
     driver = GDAL.gdalgetdriverbyname("GTiff")
-    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES", "PREDICTOR=2"]
+    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES"]
     dataset_out = GDAL.gdalcreate(driver, outfilename, size(sga_in1)[1], size(sga_in1)[2], 1, GDAL.GDT_Float32, opts)
     band_out_data = GDAL.gdalgetrasterband(dataset_out, 1)
 
@@ -105,7 +105,7 @@ function geotiff_transform(infilename1::String, outfilename::String, f::Function
     band_in1_data = GDAL.gdalgetrasterband(dataset_in1_data, 1)
 
     driver = GDAL.gdalgetdriverbyname("GTiff")
-    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES", "PREDICTOR=2"]
+    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES"]
     dataset_out = GDAL.gdalcreate(driver, outfilename, size(sga_in1)[1], size(sga_in1)[2], 1, GDAL.GDT_Float32, opts)
     band_out_data = GDAL.gdalgetrasterband(dataset_out, 1)
 
