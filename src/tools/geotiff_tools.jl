@@ -125,7 +125,7 @@ function geotiff_transform(infilename1::String, outfilename::String, f::Function
         GDAL.gdalrasterio(band_in1_data, GDAL.GF_Read, 0, (r - 1), size(sga_in1)[1], 1, scanline1, size(sga_in1)[1], 1, GDAL.GDT_Float32, 0, 0)
 
         # if we change the number of lines per read ...
-        # global_x = 
+        # global_x =
 
         for i in 1:size(scanline1, 1)
             outline[i] = f(scanline1[i], sga_in1, r, i)
