@@ -69,10 +69,13 @@ function Base.show(io::IO, ::MIME"text/html", hp::HypsometricProfile)
 end
 
 function Base.show(io::IO, hp::HypsometricProfile)
-    basestr = "\n"   
+    basestr = ""   
     if get(io, :compact, false)
+        basestr *= "<DIVACoast.jl |"
         basestr *= "HypsometricProfile[$(minimum(hp.elevation))-$(maximum(hp.elevation))$(hp.elevation_unit)]"
+        basestr *= ">"
     else
+        basestr *= "\n"
         basestr *= "┌ HypsometricProfile\n"
         basestr *= "├ Width: $(hp.width) $(hp.width_unit)\n"
         basestr *= "├ Elevation: $(minimum(hp.elevation)) up to $(maximum(hp.elevation))$(hp.elevation_unit) at $(length(hp.elevation)) increments\n"
