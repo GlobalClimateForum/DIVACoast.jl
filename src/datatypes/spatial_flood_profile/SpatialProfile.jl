@@ -5,10 +5,12 @@ using CoordinateTransformations
 include("./SpatialCursor.jl")
 # SpatialProfile structure
 
-struct SpatialProfileMask{Bool}
+@kwdef struct SpatialProfileMask{Bool}
 	coast::GeoArrays.GeoArray{Bool, 2}
 	sea::GeoArrays.GeoArray{Bool, 2}
 	land::GeoArrays.GeoArray{Bool, 2}
+	distance::Union{GeoArrays.GeoArray{Float64, 2}, Nothing} = nothing
+	path::Union{GeoArrays.GeoArray{Int, 2}, Nothing} = nothing
 end
 
 struct SpatialProfile{T}
@@ -70,6 +72,8 @@ Constructs  a `SpatialProfileMask` directly from provided coast, sea, and land m
 - `coast::GeoArray{Bool, 2}`: A GeoArray where `true` values indicate coastal cells.
 - `sea::GeoArray{Bool, 2}`: A GeoArray where `true` values indicate sea cells.
 - `land::GeoArray{Bool, 2}`: A GeoArray where `true` values indicate land cells. We consider land cells as those that are not sea cells.	
+- `distance::Union{GeoArray{Float64, 2}, Nothing}`: Optional GeoArray containing distances from land cells to the nearest coast cell. Default is `nothing`.
+- `path::Union{GeoArray{Int, 2}, Nothing}`: Optional GeoArray containing path identifiers from land cells to the nearest coast cell. Default is `nothing`.
 
 # Returns
 - `SpatialProfileMask{Bool}`: A `SpatialProfileMask` instance containing the provided masks. 
@@ -78,23 +82,27 @@ function SpatialProfileMask(
 	coast::GeoArrays.GeoArray{Bool, 2},
 	sea::GeoArrays.GeoArray{Bool, 2},
 	land::GeoArrays.GeoArray{Bool, 2}, 
+	distance::Union{GeoArrays.GeoArray{Float64, 2}, Nothing} = nothing,
+	path::Union{GeoArrays.GeoArray{Int, 2}, Nothing} = nothing
 	)
-	return SpatialProfileMask{Bool}(coast, sea, land)
+	return SpatialProfileMask{Bool}(coast, sea, land, distance, path)
 end
 
 """
 	SpatialProfileMask(mask::GeoArray{DT, 2}, sea_class_value::Union{Number, Missing, Nothing})
 
-Constructs a `SpatialProfileMask` from a single water body mask by identifying sea cells based on a specified value and derriving coast and land masks according to the sea mask. 
+Constructs a `SpatialProfileMask` from a single water body mask by identifying sea cells based on a specified value and derriving coast and land masks according to the sea mask. Coast cells 
+are defined as non-sea cells that are adjacent to a sea cell. Land cells are defined as all non-sea cells. 
 
 # Arguments
 - `mask::GeoArray{DT, 2}`: A GeoArray containing values that can be used to identify sea cells based on the `sea_class_value`.
 - `sea_class_value::Union{Number, Missing, Nothing}`: The value in the `mask` that indicates sea cells. Cells with this value will be classified as sea, while adjacent non-sea cells will be classified as coast, and als cells not classified as sea will be classified as land.
+- `distances::Bool`: Default `true`. Wether to calculate a distance mask for all land cells to the nearest coast cells, and a path mask indicating the shortest path to the nearest coast cell by an unique integer identifier.
 
 # Returns 
 - `SpatialProfileMask{Bool}`: A `SpatialProfileMask` instance containing the derived sea, coast, and land masks. 
 """
-function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, sea_class_value::Union{Number, Missing, Nothing}) where DT <: Any
+function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, sea_class_value::Union{Number, Missing, Nothing}; distances = true) where DT <: Any
 
 	# prepare boolean masks
 	sea_mask = falses(size(mask))
@@ -119,14 +127,39 @@ function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, sea_class_value::Un
 	coast_mask = GeoArrays.GeoArray(coast_mask, mask.f, mask.crs)
 	sea_mask = GeoArrays.GeoArray(sea_mask, mask.f, mask.crs)
 	land_mask = .!sea_mask	
+	
+	if distances
+		distances, paths = dijkstra(sea_mask, coast_mask)
+		distances = GeoArrays.GeoArray(distances, mask.f, mask.crs)
+		paths = GeoArrays.GeoArray(paths, mask.f, mask.crs)
+	else
+		distances, paths = nothing, nothing
+	end
 
-	return SpatialProfileMask{Bool}(coast_mask, sea_mask , land_mask)
+	return SpatialProfileMask{Bool}(coast_mask, sea_mask , land_mask, distances, paths)
 
 end
 
 
 # Calculate a SpatialProfileMask from elevation data and seed point
-function SpatialProfileMask(elevation::GeoArrays.GeoArray, seed::CartesianIndex{2}, cursor::SpatialCursor)
+"""
+		SpatialProfileMask(elevation::GeoArrays.GeoArray, seed::CartesianIndex{2}, cursor::SpatialCursor)
+
+Constructs a `SpatialProfileMask` by performing a breadth-first search (BFS) starting from a specified seed cell in the elevation data to identify connected sea cells and their adjacent coast cells.
+The **seed cell is assumed to be a sea cell**, and the BFS explores neighboring cells to classify them sea. Cells that are adjacent to sea cells but not classified as sea are classified as coast cells. 
+All cells that are not classified as sea are classified as land cells.
+
+# Arguments
+- `elevation::GeoArrays.GeoArray`: A GeoArray containing elevation data.
+- `seed::CartesianIndex{2}`: The Cartesian index of the seed cell in the elevation GeoArray, which is assumed to be a sea cell. The BFS will start from this cell to identify connected sea cells and adjacent coast cells.
+- `cursor::SpatialCursor`: A `SpatialCursor` instance that defines the neighborhood structure for the BFS (e.g., 4-connected, 8-connected).
+- `distances::Bool`: Default `true`. Wether to calculate a distance mask for all land cells to the nearest coast cells, and a path mask indicating the shortest path to the nearest coast cell by an unique integer identifier.
+
+# Returns
+- `SpatialProfileMask{Bool}`: A `SpatialProfileMask` instance containing the derived sea, coast, and land masks based on the BFS exploration from the seed cell.
+
+"""
+function SpatialProfileMask(elevation::GeoArrays.GeoArray, seed::CartesianIndex{2}, cursor::SpatialCursor; distances = true)
 
 	@debug "Calculating SpatialProfileMask from seed: $(seed)"
 
@@ -179,8 +212,17 @@ function SpatialProfileMask(elevation::GeoArrays.GeoArray, seed::CartesianIndex{
 
 	coast_mask = GeoArrays.GeoArray(coast_mask, elevation.f, elevation.crs)
 	sea_mask = GeoArrays.GeoArray(sea_mask, elevation.f, elevation.crs)
+	land_mask = .!sea_mask
+	
+	if distances
+		distances, paths = dijkstra(sea_mask, coast_mask)
+		distances = GeoArrays.GeoArray(distances, elevation.f, elevation.crs)
+		paths = GeoArrays.GeoArray(paths, elevation.f, elevation.crs)
+	else
+		distances, paths = nothing, nothing
+	end
 
-	return SpatialProfileMask{Bool}(coast_mask, sea_mask)
+	return SpatialProfileMask{Bool}(coast_mask, sea_mask, land_mask, distances, paths)
 end
 	
 # Plotting and display functions
