@@ -1,3 +1,66 @@
+function dijkstra(sea_mask::GeoArrays.GeoArray{Bool, 2}, coast_mask::GeoArrays.GeoArray{Bool, 2})
+
+    # Init Distance to each pixel to Inf
+    distances = fill(Inf, size(sea_mask))
+
+    # Init visited matrix
+    visited = falses(size(sea_mask))
+
+    # Init path IDs
+    paths = fill(-1, size(sea_mask))
+    path_counter = 0
+
+    # Init a priority queue for Dijkstra Fill - priority is based on lowest distance
+    pqueue = PriorityQueue{CartesianIndex{2}, Float64}()
+
+    visited[sea_mask] .= true
+    distances[sea_mask] .= NaN32
+
+    # Add all coast pixels to the priority queue with distance 0 and assign them a unique path ID - "seed pixels"
+    for (p, cell) in enumerate(findall(coast_mask))
+        distances[cell] = 0
+        paths[cell] = p
+        path_counter = p
+        enqueue!(pqueue, cell, 0)
+    end
+
+    while !isempty(pqueue) 
+
+        index, distance = dequeue_pair!(pqueue)
+
+        # Check if current index is already visited
+        if visited[index]
+            continue
+        end
+
+        # If not visited before, mark it as visited yet
+        visited[index] = true
+
+        # Get neighbors of the current index
+        nbs = neighbours(sea_mask, index; returndist = true)
+
+        for direction in keys(nbs)
+
+            # Check if the neighbor is out of bounds or already visited
+            if isnothing(nbs[direction]) || visited[nbs[direction][1]] || haskey(pqueue, nbs[direction][1])
+                continue
+            else
+                # Calculate a new distance to the neighbor from the current index 
+                dist_to_nb = distances[index] + nbs[direction][2]
+
+                # If the new distance is less than the current distance to the neighbor
+                # update the distance and path and enqueue the neighbor with the new distance
+                if dist_to_nb < distances[nbs[direction][1]]
+                    distances[nbs[direction][1]] = dist_to_nb
+                    paths[nbs[direction][1]] = paths[index]
+                    enqueue!(pqueue, nbs[direction][1], dist_to_nb)
+                end
+            end
+        end
+    end
+
+    return distances, paths
+end
 
 function dijkstra_fill(profile::SpatialProfile, wl::DT) where DT <: Number
 
