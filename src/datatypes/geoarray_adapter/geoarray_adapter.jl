@@ -11,7 +11,13 @@ function is_circular(ga::GeoArray)
 end
 
 function no_data_value(ga::GeoArray{E,N,C}) where {C<:AbstractArray,E,N}
-  return ga.A.no_data
+  if hasproperty(ga.A, :no_data)
+    return ga.A.no_data
+  elseif haskey(ga.metadata, "NoData Value")
+    return parse(eltype(ga), ga.metadata["NoData Value"]["NoData Value"])
+  else
+    return typemin(eltype(ga))
+  end
 end
 
 function no_data_value(ga::GeoArray{E,N,Array{E}}) where {N,E<:Number}
@@ -27,7 +33,9 @@ function set_no_data_value(ga::GeoArray{E,N,C}, value) where {E,N,C<:AbstractArr
     ga.metadata["NoData Value"] = Dict{String,String}()
   end
   ga.metadata["NoData Value"]["NoData Value"] = string(value)
-  ga.A.no_data = value
+  if hasproperty(ga.A, :no_data)
+    ga.A.no_data = value
+  end
 end
 
 function set_no_data_value(ga::GeoArray{E,N,Array{E}}, value) where {N,E<:Number}
