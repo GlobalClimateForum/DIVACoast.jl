@@ -8,6 +8,7 @@ include("./SpatialCursor.jl")
 struct SpatialProfileMask{Bool}
 	coast::GeoArrays.GeoArray{Bool, 2}
 	sea::GeoArrays.GeoArray{Bool, 2}
+	land::GeoArrays.GeoArray{Bool, 2}
 end
 
 struct SpatialProfile{T}
@@ -59,26 +60,51 @@ function SpatialProfile(
 	return SpatialProfile{T}(elevation, elevation_unit, area_unit, cursor, seed, spMask_, width, height, exposures, exposure_names, exposure_units)
 end
 
-# SpatialProfileMask constructors
+# --- SpatialProfileMask constructors ---
+"""
+	SpatialProfileMask(coast::GeoArray{Bool, 2}, sea::GeoArray{Bool, 2}, land::GeoArray{Bool, 2})
+
+Constructs  a `SpatialProfileMask` directly from provided coast, sea, and land masks.
+
+# Arguments
+- `coast::GeoArray{Bool, 2}`: A GeoArray where `true` values indicate coastal cells.
+- `sea::GeoArray{Bool, 2}`: A GeoArray where `true` values indicate sea cells.
+- `land::GeoArray{Bool, 2}`: A GeoArray where `true` values indicate land cells. We consider land cells as those that are not sea cells.	
+
+# Returns
+- `SpatialProfileMask{Bool}`: A `SpatialProfileMask` instance containing the provided masks. 
+"""
 function SpatialProfileMask(
 	coast::GeoArrays.GeoArray{Bool, 2},
-	sea::GeoArrays.GeoArray{Bool, 2}
+	sea::GeoArrays.GeoArray{Bool, 2},
+	land::GeoArrays.GeoArray{Bool, 2}, 
 	)
-	return SpatialProfileMask{Bool}(coast, sea)
+	return SpatialProfileMask{Bool}(coast, sea, land)
 end
 
-# Create a SpatialProfileMask from an existing mask
-function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, oceanvalue::Union{Number, Missing, Nothing}) where DT <: Any
+"""
+	SpatialProfileMask(mask::GeoArray{DT, 2}, sea_class_value::Union{Number, Missing, Nothing})
+
+Constructs a `SpatialProfileMask` from a single water body mask by identifying sea cells based on a specified value and derriving coast and land masks according to the sea mask. 
+
+# Arguments
+- `mask::GeoArray{DT, 2}`: A GeoArray containing values that can be used to identify sea cells based on the `sea_class_value`.
+- `sea_class_value::Union{Number, Missing, Nothing}`: The value in the `mask` that indicates sea cells. Cells with this value will be classified as sea, while adjacent non-sea cells will be classified as coast, and als cells not classified as sea will be classified as land.
+
+# Returns 
+- `SpatialProfileMask{Bool}`: A `SpatialProfileMask` instance containing the derived sea, coast, and land masks. 
+"""
+function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, sea_class_value::Union{Number, Missing, Nothing}) where DT <: Any
 
 	# prepare boolean masks
 	sea_mask = falses(size(mask))
-	coast_mask = falses(size(mask))
+	coast_mask = falses(size(mask)) 
 
-	# ensure oceanvalue has the same element type as the mask
+	# ensure sea_class_value has the same element type as the mask
 	ov = try
-		convert(DT, oceanvalue)
+		convert(DT, sea_class_value)
 	catch
-		error("oceanvalue cannot be converted to mask element type $(DT)")
+		error("sea_class_value cannot be converted to mask element type $(DT)")
 	end
 
 	# find sea cells in the input mask
@@ -92,10 +118,12 @@ function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, oceanvalue::Union{N
 	# convert to GeoArrays preserving geo metadata
 	coast_mask = GeoArrays.GeoArray(coast_mask, mask.f, mask.crs)
 	sea_mask = GeoArrays.GeoArray(sea_mask, mask.f, mask.crs)
+	land_mask = .!sea_mask	
 
-	return SpatialProfileMask{Bool}(coast_mask, sea_mask)
+	return SpatialProfileMask{Bool}(coast_mask, sea_mask , land_mask)
 
 end
+
 
 # Calculate a SpatialProfileMask from elevation data and seed point
 function SpatialProfileMask(elevation::GeoArrays.GeoArray, seed::CartesianIndex{2}, cursor::SpatialCursor)
