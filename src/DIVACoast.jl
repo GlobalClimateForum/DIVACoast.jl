@@ -16,8 +16,8 @@ export HypsometricProfile, HypsometricProfileCollection, slope,
     unit, named, compress!, compress_multithread!, land_raising!
 
 # Export HypsometricProfile - Exposure functions
-export exposure, multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!, 
-    remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!, 
+export exposure, multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!,
+    remove_exposure_below!, add_exposure, add_exposure_above!, add_exposure_between!,
     add_exposure_variable!, remove_exposure_variable!
 
 # Export HypsometricProfile - Damage functions

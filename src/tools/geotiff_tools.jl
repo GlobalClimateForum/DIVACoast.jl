@@ -38,7 +38,7 @@ function geotiff_connect(infilename1::String, infilename2::String, outfilename::
     end
 
     driver = GDAL.gdalgetdriverbyname("GTiff")
-    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES", "PREDICTOR=2"]
+    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES"]
     dataset_out = GDAL.gdalcreate(driver, outfilename, size(sga_in1)[1], size(sga_in1)[2], 1, GDAL.GDT_Float32, opts)
     band_out_data = GDAL.gdalgetrasterband(dataset_out, 1)
 
@@ -105,7 +105,7 @@ function geotiff_transform(infilename1::String, outfilename::String, f::Function
     band_in1_data = GDAL.gdalgetrasterband(dataset_in1_data, 1)
 
     driver = GDAL.gdalgetdriverbyname("GTiff")
-    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES", "PREDICTOR=2"]
+    opts = ["COMPRESS=DEFLATE", "BIGTIFF=YES"]
     dataset_out = GDAL.gdalcreate(driver, outfilename, size(sga_in1)[1], size(sga_in1)[2], 1, GDAL.GDT_Float32, opts)
     band_out_data = GDAL.gdalgetrasterband(dataset_out, 1)
 
@@ -125,7 +125,7 @@ function geotiff_transform(infilename1::String, outfilename::String, f::Function
         GDAL.gdalrasterio(band_in1_data, GDAL.GF_Read, 0, (r - 1), size(sga_in1)[1], 1, scanline1, size(sga_in1)[1], 1, GDAL.GDT_Float32, 0, 0)
 
         # if we change the number of lines per read ...
-        # global_x = 
+        # global_x =
 
         for i in 1:size(scanline1, 1)
             outline[i] = f(scanline1[i], sga_in1, r, i)
