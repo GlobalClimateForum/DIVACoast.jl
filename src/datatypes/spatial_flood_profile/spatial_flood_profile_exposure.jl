@@ -28,7 +28,7 @@ function exposure(profile::SpatialProfile, wl::Real, im::Union{HydraulicConnecte
     return exp_
 end
 
-function exposure(profile, inundation_arr::Union{GeoArrays.GeoArray}) where R <: Real
+function exposure(profile, inundation_arr::Union{GeoArrays.GeoArray}) 
 
     inundated = falses(size(profile.exposures[1]))
 
