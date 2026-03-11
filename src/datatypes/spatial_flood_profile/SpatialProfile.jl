@@ -2,6 +2,7 @@ using Plots
 using DataStructures
 using GeoFormatTypes
 using CoordinateTransformations
+using Extents
 include("./SpatialCursor.jl")
 # SpatialProfile structure
 
@@ -11,6 +12,7 @@ include("./SpatialCursor.jl")
 	land::GeoArrays.GeoArray{Bool, 2}
 	distance::Union{GeoArrays.GeoArray{Float64, 2}, Nothing} = nothing
 	path::Union{GeoArrays.GeoArray{Int, 2}, Nothing} = nothing
+	extent::Extents.Extent
 end
 
 struct SpatialProfile{T}
@@ -82,10 +84,11 @@ function SpatialProfileMask(
 	coast::GeoArrays.GeoArray{Bool, 2},
 	sea::GeoArrays.GeoArray{Bool, 2},
 	land::GeoArrays.GeoArray{Bool, 2}, 
+	extent::Extents.Extent;
 	distance::Union{GeoArrays.GeoArray{Float64, 2}, Nothing} = nothing,
 	path::Union{GeoArrays.GeoArray{Int, 2}, Nothing} = nothing
 	)
-	return SpatialProfileMask{Bool}(coast, sea, land, distance, path)
+	return SpatialProfileMask{Bool}(coast, sea, land, distance, path, extent)
 end
 
 """
@@ -136,7 +139,9 @@ function SpatialProfileMask(mask::GeoArrays.GeoArray{DT, 2}, sea_class_value::Un
 		distances, paths = nothing, nothing
 	end
 
-	return SpatialProfileMask{Bool}(coast_mask, sea_mask , land_mask, distances, paths)
+	extent = GeoArrays.bbox(sea_mask) 
+
+	return SpatialProfileMask{Bool}(coast_mask, sea_mask , land_mask, distances, paths, extent)
 
 end
 
@@ -222,7 +227,9 @@ function SpatialProfileMask(elevation::GeoArrays.GeoArray, seed::CartesianIndex{
 		distances, paths = nothing, nothing
 	end
 
-	return SpatialProfileMask{Bool}(coast_mask, sea_mask, land_mask, distances, paths)
+	extent = GeoArrays.bbox(sea_mask) 
+
+	return SpatialProfileMask{Bool}(coast_mask, sea_mask, land_mask, distances, paths, extent)
 end
 	
 # Plotting and display functions
