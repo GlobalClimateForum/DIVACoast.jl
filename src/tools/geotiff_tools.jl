@@ -163,9 +163,9 @@ function geotiff_collect(maskfilename::String, infilenames::Array{String}, f::Fu
     dataset_mask_data = GDAL.gdalopen(maskfilename, GDAL.GA_ReadOnly)
     band_mask_data = GDAL.gdalgetrasterband(dataset_mask_data, 1)
 
-    sga_ins = Array{SparseGeoArray{Float32,Int32}}(undef, size(infilenames, 1))
+    sga_ins = Array{SparseArrayDOK{Float32,Int32}}(undef, size(infilenames, 1))
     for i in 1:size(infilenames, 1)
-        sga_ins[i] = SparseGeoArray{Float32,Int32}()
+        sga_ins[i] = SparseArrayDOK{Float32,Int32}()
         read_geotiff_header!(sga_ins[i], infilenames[i], 1)
     end
 
