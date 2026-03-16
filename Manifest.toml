@@ -2,7 +2,7 @@
 
 julia_version = "1.12.5"
 manifest_format = "2.0"
-project_hash = "e038c2e6d07dc8762eb02502749f7019e497f84f"
+project_hash = "1950d1c707efb903bb2a7bc9aa6298a764f9ff2b"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "f7304359109c768cf32dc5fa2d371565bb63b68a"
@@ -334,10 +334,10 @@ uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
 version = "4.1.1"
 
 [[deps.DIVACoast]]
-deps = ["ArchGDAL", "CSV", "ColorSchemes", "CoordinateTransformations", "DataFrames", "DataStructures", "Dates", "Distances", "Distributions", "Documenter", "FFMPEG", "FileIO", "Format", "GDAL", "GeoArrays", "GeoFormatTypes", "IterTools", "JLD2", "Latexify", "LinearAlgebra", "Logging", "LsqFit", "NCDatasets", "NearestNeighbors", "Optim", "Plots", "PyPlot", "QuadGK", "Rasters", "Revise", "SpecialFunctions", "StaticArrays", "Statistics", "StatsPlots", "StructArrays", "StyledStrings", "Suppressor", "Tables", "ThreadPools", "UnicodePlots", "UpdateJulia", "YAML"]
+deps = ["ArchGDAL", "CSV", "ColorSchemes", "CoordinateTransformations", "DataFrames", "DataStructures", "Dates", "Distances", "Distributions", "Documenter", "Extents", "FFMPEG", "FileIO", "Format", "GDAL", "GeoArrays", "GeoFormatTypes", "IterTools", "JLD2", "Latexify", "LinearAlgebra", "Logging", "LsqFit", "NCDatasets", "NearestNeighbors", "Optim", "Plots", "PyPlot", "QuadGK", "Rasters", "Revise", "SpecialFunctions", "StaticArrays", "Statistics", "StatsPlots", "StructArrays", "StyledStrings", "Suppressor", "Tables", "ThreadPools", "UnicodePlots", "UpdateJulia", "YAML"]
 path = "."
 uuid = "3ed173c5-9519-4114-bd01-26bfa00af656"
-version = "0.0.0"
+version = "0.1.0"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
