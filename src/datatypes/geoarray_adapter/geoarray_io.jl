@@ -5,6 +5,7 @@ import CoordinateTransformations
 import GeoFormatTypes
 
 using StaticArrays
+using Extents
 
 create(a::A, nd::T, r::Integer, c::Integer) where {A<:AbstractArray,T} = A(nd, r, c)
 create(a::Array{T}, nd::T, r::Integer, c::Integer) where {T} = fill(nd, r, c)
@@ -486,4 +487,96 @@ function read_geotiff_data_filtered!(ga::GeoArray, filename::String, f::Function
   GDAL.gdalclose(dataset)
 end
 
+# Dispatch a GeoArray constructor for a Nothing input, initializing an empty GeoArray with placeholder values
+function GeoArrays.GeoArray(n::Nothing) 
+
+    transform = SVector(0.0, 1.0, 0.0, 0.0, 0.0, 1.0) |> GeoArrays.geotransform_to_affine
+    crs = GeoFormatTypes.WellKnownText(GeoFormatTypes.CRS(), "")
+    meta = Dict{String,Any}()
+    A = Array{Float32}(undef, 0, 0)
+
+    return GeoArray(A, transform, crs, meta)
+
+end
+
+"""
+    function read_extent_from_geotiff(file::AbstractString, window_x::Tuple{Real, Real}, window_y::Tuple{Real, Real})::GeoArrays.GeoArray{Float32, 2}
+
+Reads a defined window from a GeoTIFF to a GeoArray while avoiding loading the entire GeoTIFF into memory. The window is defined by x and y coordinate tuples, which specify the spatial extent of the area to be read.
+# Arguments
+- `file::AbstractString`: The file path to the GeoTIFF file to be read
+- `window_x::Tuple{Real, Real}`: A tuple specifying the minimum and maximum x coordinates of the target window.
+- `window_y::Tuple{Real, Real}`: A tuple specifying the minimum and maximum y coordinates of the target window.
+# Returns
+- `GeoArrays.GeoArray{Float32, 2}`: A GeoArray containing the raster data for the specified window.
+# Example
+```julia
+file = "path/to/geotiff.tif"
+window_x = (xmin, xmax)
+window_y = (ymin, ymax)
+ga = read_extent_from_geotiff(file, window_x, window_y)
+```
+"""
+function read_extent_from_geotiff(file::AbstractString, window_x::Tuple{Real, Real}, window_y::Tuple{Real, Real})::GeoArrays.GeoArray{Float32, 2}
+    window = Extent(X = (minimum(window_x), maximum(window_x)), Y = (minimum(window_y), maximum(window_y)))
+    return read_extent_from_geotiff(file, window)
+end
+
+"""
+    function read_geotiff_window(file::AbstractString, window::Extents.Extent)::GeoArrays.GeoArray{Float32, 2}
+
+Reads a defined window from a GeoTIFF to a GeoArray while avoiding loading the entire GeoTIFF into memory. The window is defined by an Extents.Extent object, which specifies the spatial extent of the area to be read. 
+# Arguments
+- `file::AbstractString`: The file path to the GeoTIFF file to be read.
+- `window::Extents.Extent`: An Extents.Extent object defining the spatial extent
+
+# Returns
+- `GeoArrays.GeoArray{Float32, 2}`: A GeoArray containing the raster data for the specified window.
+
+# Example
+```julia
+file = "path/to/geotiff.tif"
+window = Extent(X = (xmin, xmax), Y = (ymin, ymax))
+ga = read_geotiff_window(file, window)
+```
+"""
+function read_geotiff_window(file::AbstractString, window::Extents.Extent)::GeoArrays.GeoArray{Float32, 2}
+
+
+    dataset = ArchGDAL.readraster(file) # Read the GeoTIFF file into a GDAL dataset object
+    band = ArchGDAL.getband(dataset, 1) # Get the band from the GDAL-dataset object
+
+    transformation = ArchGDAL.getgeotransform(dataset) # Get the geotransform parameters from the GDAL dataset
+    xmin_org, xres, _, ymax_org, _, yres = transformation
+    affine_org = GeoArrays.geotransform_to_affine(transformation) # Get the affine transformation from the GDAL dataset
+    crs_org = GeoFormatTypes.WellKnownText(GeoFormatTypes.CRS(), ArchGDAL.getproj(dataset)) # Get the CRS from the GDAL dataset
+
+    ga = GeoArray(nothing) # Initialize an empty GeoArray
+    ga.f = affine_org # Set the affine transformation of the empty GeoArray to the one from the GDAL dataset
+    ga.crs = crs_org # Set the CRS of the geo array to the one from the GDAL dataset
+    
+    xmin, xmax = minmax(window.X ...) # Get the minimum and maximum x values from the target window
+    ymin, ymax = minmax(window.Y ...) # Get the minimum and maximum y values from the target window
+
+    indices_ul = GeoArrays.indices(ga, (xmin, ymax)) # Get the upper-left indices of the target window
+    indices_br = GeoArrays.indices(ga, (xmax, ymin)) # Get the bottom-right indices of the target window
+    xoff, yoff = indices_ul |> Tuple # Extract x and y offsets from the upper-left indices (::CartesianIndex) 
+
+    width = abs(indices_br[1] - indices_ul[1]) + 1 # Calculate the width of the target window in pixels
+    height = abs(indices_br[2] - indices_ul[2]) + 1 # Calculate the height of the target window in pixels
+
+    buffer = Matrix{Float32}(undef, width, height) # Initialize a buffer to hold the raster data for the target window
+   
+    # Read the raster data for the target window into the buffer using GDAL's gdalrasterio function
+    GDAL.gdalrasterio(band,GDAL.GF_Read,xoff, yoff, width, height, buffer, width, height,GDAL.GDT_Float32,0, 0)
+
+    ga.A = buffer # Assign the buffer to the data array of the GeoArray
+    # Update the affine transformation of the GeoArray to reflect the new origin (xmin, ymax) (GDAL reads from the pixel center, so we add half a pixel to the origin)
+    ga.f = GeoArrays.geotransform_to_affine([xmin + (xres / 2), xres, 0.0, ymax + (yres / 2), 0.0, yres])
+
+    GDAL.gdalclose(dataset) # Close the GDAL dataset to free resources
+
+    return ga
+
+end
 
