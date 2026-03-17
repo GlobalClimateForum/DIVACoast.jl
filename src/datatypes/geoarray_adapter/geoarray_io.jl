@@ -541,20 +541,18 @@ ga = read_geotiff_window(file, window)
 ```
 """
 function read_geotiff_window(file::AbstractString, window::Extents.Extent)::GeoArrays.GeoArray{Float32, 2}
-
-
-    dataset = ArchGDAL.readraster(file) # Read the GeoTIFF file into a GDAL dataset object
+  return ArchGDAL.readraster(file) do dataset
     band = ArchGDAL.getband(dataset, 1) # Get the band from the GDAL-dataset object
 
     transformation = ArchGDAL.getgeotransform(dataset) # Get the geotransform parameters from the GDAL dataset
-    xmin_org, xres, _, ymax_org, _, yres = transformation
+    _, xres, _, _, _, yres = transformation
     affine_org = GeoArrays.geotransform_to_affine(transformation) # Get the affine transformation from the GDAL dataset
     crs_org = GeoFormatTypes.WellKnownText(GeoFormatTypes.CRS(), ArchGDAL.getproj(dataset)) # Get the CRS from the GDAL dataset
 
     ga = GeoArray(nothing) # Initialize an empty GeoArray
     ga.f = affine_org # Set the affine transformation of the empty GeoArray to the one from the GDAL dataset
     ga.crs = crs_org # Set the CRS of the geo array to the one from the GDAL dataset
-    
+        
     xmin, xmax = minmax(window.X ...) # Get the minimum and maximum x values from the target window
     ymin, ymax = minmax(window.Y ...) # Get the minimum and maximum y values from the target window
 
@@ -566,7 +564,7 @@ function read_geotiff_window(file::AbstractString, window::Extents.Extent)::GeoA
     height = abs(indices_br[2] - indices_ul[2]) + 1 # Calculate the height of the target window in pixels
 
     buffer = Matrix{Float32}(undef, width, height) # Initialize a buffer to hold the raster data for the target window
-   
+       
     # Read the raster data for the target window into the buffer using GDAL's gdalrasterio function
     GDAL.gdalrasterio(band,GDAL.GF_Read,xoff, yoff, width, height, buffer, width, height,GDAL.GDT_Float32,0, 0)
 
@@ -574,9 +572,8 @@ function read_geotiff_window(file::AbstractString, window::Extents.Extent)::GeoA
     # Update the affine transformation of the GeoArray to reflect the new origin (xmin, ymax) (GDAL reads from the pixel center, so we add half a pixel to the origin)
     ga.f = GeoArrays.geotransform_to_affine([xmin + (xres / 2), xres, 0.0, ymax + (yres / 2), 0.0, yres])
 
-    GDAL.gdalclose(dataset) # Close the GDAL dataset to free resources
-
     return ga
+  end
 
 end
 
