@@ -29,7 +29,11 @@ function flood_fill(sp::SpatialProfile, wl::DT) where DT <: Real
 
         current_ = dequeue!(queue)
 
-        if flooded[current_] || sp.elevation[current_] > wl
+        # Get the current elevation
+        elev_ = sp.elevation[current_]
+
+        # Check if cell already flooded, NaN / missing, or elevation larger than water level
+        if flooded[current_] || !isfinite(elev_val) || elev_val > wl
             continue # skip to the next cell
         end
 
@@ -37,7 +41,7 @@ function flood_fill(sp::SpatialProfile, wl::DT) where DT <: Real
         flooded[current_] = true
 
         # Calculate inundation depth
-        inundation_depth[current_] = wl - sp.elevation[current_]
+        inundation_depth[current_] = wl - elev_
 
         # Get all neighbors within the bounds and enqueue them if they are not flooded and their 
         # elevation is less than or equal to the water level

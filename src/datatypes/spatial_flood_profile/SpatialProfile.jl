@@ -177,8 +177,12 @@ function SpatialProfileMask(elevation::GeoArrays.GeoArray, seed::CartesianIndex{
 	sea_val = elevation[seed]
 
 	# Function to check whether a cell is a sea cell
-	check_sea_value = idx -> elevation[idx] == sea_val
-
+	# Safe comparison accounting for nodata
+	check_sea_value = idx -> begin
+		val = elevation[idx]
+		(!ismissing(val) && !isnan(val) && !isinf(val)) && (val == sea_val)
+	end
+	
 	# Init queue for breadth-first search
 	tovisit = Queue{CartesianIndex{2}}()
 	enqueue!(tovisit, seed)
@@ -248,4 +252,22 @@ function RecipesBase.plot(sp::SpatialProfile; kwargs...)
 	sea = Plots.heatmap(sp.mask.sea; title = "Sea Mask", c = cgrad([:transparent, "#F71735"]), alpha = 0.5)
 	coast = Plots.heatmap(sp.mask.coast; title = "Coast Mask", c = cgrad(["#F71735", :transparent]))
 	return Plots.plot(elev, sea, coast; layout = (1, 3), size = (1200, 400))
+end
+
+function RecipesBase.plot(pm::SpatialProfileMask; kwargs...)
+
+	# coast::GeoArrays.GeoArray{Bool, 2}
+	# sea::GeoArrays.GeoArray{Bool, 2}
+	# land::GeoArrays.GeoArray{Bool, 2}
+	# distance::Union{GeoArrays.GeoArray{Float64, 2}, Nothing} = nothing
+	# path::Union{GeoArrays.GeoArray{Int, 2}, Nothing} = nothing
+	# extent::Extents.Extent
+
+	p = Plots.plot(pm.coast; title = "Coast Mask", c = cgrad(["#F71735", :transparent]), alpha = 0.5)
+	p = Plots.plot!(p, pm.sea; title = "Sea Mask", c = cgrad([:transparent, "#F71735"]), alpha = 0.5)
+	p = Plots.plot!(p, pm.land; title = "Land Mask", c = cgrad([:transparent, "#1B998B"]), alpha = 0.5)
+
+	if !isnothing(pm.distance)
+		p = Plots.plot(pm.distance; title = "Distance to Coast", c = cgrad(:viridis), alpha = 0.3, colorbar_title = "Distance (m)")
+	end
 end

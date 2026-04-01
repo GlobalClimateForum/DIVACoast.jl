@@ -14,7 +14,7 @@ function dijkstra(sea_mask::GeoArrays.GeoArray{Bool, 2}, coast_mask::GeoArrays.G
     pqueue = PriorityQueue{CartesianIndex{2}, Float64}()
 
     visited[sea_mask] .= true
-    distances[sea_mask] .= NaN32
+    distances[sea_mask] .= Inf32
 
     # Add all coast pixels to the priority queue with distance 0 and assign them a unique path ID - "seed pixels"
     for (p, cell) in enumerate(findall(coast_mask))

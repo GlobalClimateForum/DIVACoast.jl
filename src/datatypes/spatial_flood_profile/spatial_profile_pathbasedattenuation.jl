@@ -44,7 +44,10 @@ function path_based_attenuated_inundation(
        # For each cell in the current propagation step
         for cell in findall(propagation .== propagationcounter)
 
-            profile.mask.sea[cell] ? continue : nothing # jump to next cell if current cell is a sea cell
+            # jump to next cell if current cell is a sea cell or not fininte (NaN)
+            if profile.mask.sea[cell] || !isfinite(elevation_)
+                continue
+            end
 
             # Calculate the inundation depth for the current cell - min inundation = 0.0
             inundation_depth[cell] = maximum((wl - elevation_[cell] - attenuation[cell], 0.0f0))
