@@ -1,4 +1,4 @@
-# Test Hypsometric Profile
+# Test Hypsometric Profiles
 #exit()
 using Distributions
 
