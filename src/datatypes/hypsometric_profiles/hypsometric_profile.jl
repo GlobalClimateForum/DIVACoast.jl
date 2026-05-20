@@ -6,13 +6,13 @@ A HypsometricProfile represents the variation in elevation from the coastline to
 mutable struct HypsometricProfile{DT<:Real}
   width::DT
   width_unit::String
-  elevation::Array{DT}
+  elevation::Vector{DT}
   elevation_unit::String
-  cumulativeArea::Array{DT}
+  cumulativeArea::Vector{DT}
   area_unit::String
-  cumulativeExposure::Array{DT,2}
-  exposureNames::Array{String}
-  exposureUnits::Array{String}
+  cumulativeExposure::Matrix{DT}
+  exposureNames::Vector{String}
+  exposureUnits::Vector{String}
   doLog::Bool
 
   # Constructors
