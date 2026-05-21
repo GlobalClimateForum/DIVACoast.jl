@@ -13,7 +13,7 @@ export convert, display, enumerate
 
 # Export HypsometricProfile structs and functions
 export HypsometricProfile, HypsometricProfileCollection, slope,
-    unit, named, compress!, compress_multithread!, land_raising!
+    unit, named, compress!, compress_multithread!, land_raising!, distance!, slope!
 
 # Export HypsometricProfile - Exposure functions
 export exposure, multiply_exposure!, multiply_exposure_above!, multiply_exposure_below!,

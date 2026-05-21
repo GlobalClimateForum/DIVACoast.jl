@@ -39,7 +39,15 @@ function inundate(hspf::HypsometricProfile{DT}, wl::Number, im::IM)::Tuple{Array
     end
 end
 
-function inundate(hspf::DIVACoast.HypsometricProfile{DT}, wl::Real, im::IM, distances::Vector{DT}, slopes::Vector{DT})::Tuple{Vector{DT},Vector{DT}} where {DT<:Real,IM<:DIVACoast.LinearDistanceAttenuatedInundation}
+function inundate(hspf::HypsometricProfile{DT}, wl::Number, im::IM)::Tuple{Array{DT},Array{DT}} where {DT<:Real,IM<:LinearDistanceAttenuatedInundation}
+    if !isdefined(hspf, :distance) && !isdefined(hspf, :slope)
+        return private_inundate(hspf, wl, im)
+    else
+        return private_inundate(hspf, wl, im, hspf.distance, hspf.slope)
+    end
+end
+
+function private_inundate(hspf::DIVACoast.HypsometricProfile{DT}, wl::Real, im::IM, distances::Vector{DT}, slopes::Vector{DT})::Tuple{Vector{DT},Vector{DT}} where {DT<:Real,IM<:DIVACoast.LinearDistanceAttenuatedInundation}
 
     # Guard clause: If the water level is below the first elevation, nothing is inundated, return the first elevation and the water level as the only point in the profile.
     if wl <= hspf.elevation[1]
@@ -112,7 +120,7 @@ function inundate(hspf::DIVACoast.HypsometricProfile{DT}, wl::Real, im::IM, dist
     end
 end
 
-function inundate(hspf::HypsometricProfile{DT}, wl::Real, im::IM)::Tuple{Array{DT},Array{DT}} where {DT<:Real,IM<:LinearDistanceAttenuatedInundation}
+function private_inundate(hspf::HypsometricProfile{DT}, wl::Real, im::IM)::Tuple{Array{DT},Array{DT}} where {DT<:Real,IM<:LinearDistanceAttenuatedInundation}
     if (wl <= hspf.elevation[1])
         return ([hspf.elevation[1]], [wl])
     end
