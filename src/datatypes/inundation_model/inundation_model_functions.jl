@@ -261,7 +261,7 @@ end
 
 function max_water_level(hspf::HypsometricProfile{DT}, wl::Real, im::IM)::DT where {DT<:Real,IM<:LinearDistanceAttenuatedInundation}
     water_levels=inundate(hspf, wl, im)
-    last(water_levels)[2]
+    last(water_levels[2])
 end
 
 

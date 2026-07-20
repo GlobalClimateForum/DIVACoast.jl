@@ -194,7 +194,8 @@ function slope!(hspf::HypsometricProfile{DT}) where {DT <: Real}
   return hspf.slope
 end
 
-function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT <: Real}
+function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}; recalculate_slopes::Bool=false, 
+	recalculate_distances::Bool=false) where {DT <: Real}
 	if (hspf.elevation != elevation)
 		el = copy(elevation)
 
@@ -214,6 +215,20 @@ function resample!(hspf::HypsometricProfile{DT}, elevation::Array{DT}) where {DT
 		hspf.elevation = el
 		hspf.cumulativeArea = can
 		hspf.cumulativeExposure = cden
+
+	# Check if distance, and slope are already calculated, if so, recalculate them
+		if recalculate_distances
+			distance!(hspf)
+		else
+			hspf.distance = DT[] # Invalidate the distance vector if not recalculating
+		end
+
+		if recalculate_slopes
+			slope!(hspf)
+		else
+			hspf.slope = DT[] # Invalidate the slope vector if not recalculating
+		end
+
 	end
 end
 
@@ -223,7 +238,8 @@ end
   
 Comress a hypsometric profile by removing colinear points. Calculations on compressed hypsometric profiles can be faster. Idempotent operation.
 """
-function compress!(hspf::HypsometricProfile{DT}) where {DT <: Real}
+function compress!(hspf::HypsometricProfile{DT}; recalculate_slopes::Bool=false, 
+	recalculate_distances::Bool=false) where {DT <: Real}
 	if (size(hspf.elevation, 1) > 2)
 		i = 2
 		d = 0
@@ -265,10 +281,23 @@ function compress!(hspf::HypsometricProfile{DT}) where {DT <: Real}
 		resize!(hspf.elevation, c - 1)
 		resize!(hspf.cumulativeArea, c - 1)
 		hspf.cumulativeExposure = newCumulativeExposure
+
+		# Check if distance, and slope are already calculated, if so, recalculate them
+		if recalculate_distances
+			distance!(hspf)
+		else
+			hspf.distance = DT[] # Invalidate the distance vector if not recalculating
+		end
+		if recalculate_slopes
+			slope!(hspf)
+		else
+			hspf.slope = DT[] # Invalidate the slope vector if not recalculating
+		end
 	end
 end
 
-function compress_multithread!(hspf::HypsometricProfile{DT}, mtlock) where {DT <: Real}
+function compress_multithread!(hspf::HypsometricProfile{DT}, mtlock;
+	recalculate_slopes::Bool=false, recalculate_distances::Bool=false) where {DT <: Real}
 	if (size(hspf.elevation, 1) > 2)
 		i = 2
 		d = 0
@@ -309,10 +338,21 @@ function compress_multithread!(hspf::HypsometricProfile{DT}, mtlock) where {DT <
 			end
 		end
 
+		
 		Threads.lock(mtlock) do
 			resize!(hspf.elevation, c - 1)
 			resize!(hspf.cumulativeArea, c - 1)
 			hspf.cumulativeExposure = newCumulativeExposure
+			if recalculate_distances
+				distance!(hspf)
+			else
+				hspf.distance = DT[] # Invalidate the distance vector if not recalculating
+			end
+			if recalculate_slopes
+				slope!(hspf)
+			else
+				hspf.slope = DT[] # Invalidate the slope vector if not recalculating
+			end
 		end
 	end
 end
