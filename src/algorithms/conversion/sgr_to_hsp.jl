@@ -24,7 +24,7 @@ to_hypsometric_profile(ga, 1.0, -2.0, 20.0, 5.0)
 ```
 """
 
-function to_hypsometric_profile(ga::GeoArray{E,N,C}, width::Real, min_elevation::Real, max_elevation::Real, elevation_incr::Real)::HypsometricProfile where {E,N,C}
+function to_hypsometric_profile(ga_elevation::GeoArray{E,N,C}, width::Real, min_elevation::Real, max_elevation::Real, elevation_incr::Real)::HypsometricProfile where {E,N,C}
   s = floor(Int, ((max_elevation - min_elevation) / elevation_incr))
   a::Array{E} = zeros(s)
   e = Array{E}(undef, s)
@@ -33,12 +33,15 @@ function to_hypsometric_profile(ga::GeoArray{E,N,C}, width::Real, min_elevation:
   end
 
   for (indices, elevation) in GeoArrayIndexValueIterator(ga_elevation)
+
+    (ismissing(elevation) || isnan(elevation) || isinf(elevation)) && continue
+
     if elevation <= e[1]
-      a[1] += area(ga, indices)
+      a[1] += area(ga_elevation, indices)
     else
       i = floor(Int, (elevation - min_elevation) / elevation_incr) + 1
       if (i <= size(e, 1))
-        a[i] += area(ga, indices)
+        a[i] += area(ga_elevation, indices)
       end
     end
   end
@@ -53,7 +56,7 @@ function to_hypsometric_profile(ga::GeoArray{E,N,C}, width::Real, min_elevation:
     end
   end
 
-  return HypsometricProfile(w, pushfirst!(e, min_elevation), pushfirst!(a, 0), a[:, :])
+  return HypsometricProfile(width, pushfirst!(e, min_elevation), pushfirst!(a, 0), a[:, :])
 end
 
 """
