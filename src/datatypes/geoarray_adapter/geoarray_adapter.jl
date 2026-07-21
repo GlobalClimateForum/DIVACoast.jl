@@ -14,7 +14,7 @@ function no_data_value(ga::GeoArray{E,N,C}) where {C<:AbstractArray,E,N}
   return ga.A.no_data
 end
 
-function no_data_value(ga::GeoArray{E,N,Array{E}}) where {N,E<:Number}
+function no_data_value(ga::GeoArray{E,N,Array{E,N}}) where {N,E<:Number}
   if haskey(ga.metadata, "NoData Value")
     return parse(eltype(ga), ga.metadata["NoData Value"]["NoData Value"])
   else
@@ -30,7 +30,7 @@ function set_no_data_value(ga::GeoArray{E,N,C}, value) where {E,N,C<:AbstractArr
   ga.A.no_data = value
 end
 
-function set_no_data_value(ga::GeoArray{E,N,Array{E}}, value) where {N,E<:Number}
+function set_no_data_value(ga::GeoArray{E,N,Array{E,N}}, value) where {N,E<:Number}
   if !haskey(ga.metadata, "NoData Value")
     ga.metadata["NoData Value"] = Dict{String,String}()
   end
